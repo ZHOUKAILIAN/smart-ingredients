@@ -11,6 +11,7 @@ mod utils;
 
 use leptos::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
+use leptos_router::path;
 
 use crate::pages::{AnalyzingPage, CapturePage, ResultPage};
 
@@ -20,10 +21,10 @@ pub fn App() -> impl IntoView {
     view! {
         <Router>
             <main class="app-shell">
-                <Routes>
-                    <Route path="/" view=CapturePage />
-                    <Route path="/analyzing" view=AnalyzingPage />
-                    <Route path="/result" view=ResultPage />
+                <Routes fallback=|| view! { <p>"Not found"</p> }>
+                    <Route path=path!("/") view=CapturePage />
+                    <Route path=path!("/analyzing") view=AnalyzingPage />
+                    <Route path=path!("/result") view=ResultPage />
                 </Routes>
             </main>
         </Router>
