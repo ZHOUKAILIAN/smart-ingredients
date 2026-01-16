@@ -1,0 +1,43 @@
+[workspace]
+members = ["shared", "backend", "frontend"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Smart Ingredients Team"]
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+anyhow = "1"
+thiserror = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# UUID
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# HTTP
+reqwest = { version = "0.12", features = ["json", "multipart"] }
+
+# Backend specific
+axum = "0.7"
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "chrono", "uuid"] }
+redis = { version = "0.26", features = ["tokio-comp", "connection-manager"] }
+
+# Frontend specific
+tauri = { version = "2" }
+leptos = { version = "0.7", features = ["csr"] }
+leptos-use = "0.15"
