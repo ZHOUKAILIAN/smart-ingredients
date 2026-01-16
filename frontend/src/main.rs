@@ -1,9 +1,13 @@
 //! Tauri application entry point
 
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
+use leptos::prelude::*;
+use smart_ingredients_app::App;
 
 fn main() {
-    // TODO: Set up Leptos mounting for Tauri
-    // For now, just print to console
-    println!("Smart Ingredients Frontend");
+    mount_to_body(App);
 }
