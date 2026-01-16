@@ -10,27 +10,22 @@ mod types;
 mod utils;
 
 use leptos::prelude::*;
+use leptos_router::components::{Route, Router, Routes};
+
+use crate::pages::{AnalyzingPage, CapturePage, ResultPage};
 
 /// Main App component
 #[component]
 pub fn App() -> impl IntoView {
     view! {
-        <main class="app-container">
-            <Home />
-        </main>
-    }
-}
-
-/// Home page component
-#[component]
-fn Home() -> impl IntoView {
-    view! {
-        <div class="home">
-            <h1>"Smart Ingredients"</h1>
-            <p>"食品配料表分析助手"</p>
-            <button>
-                "开始分析"
-            </button>
-        </div>
+        <Router>
+            <main class="app-shell">
+                <Routes>
+                    <Route path="/" view=CapturePage />
+                    <Route path="/analyzing" view=AnalyzingPage />
+                    <Route path="/result" view=ResultPage />
+                </Routes>
+            </main>
+        </Router>
     }
 }
