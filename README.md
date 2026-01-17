@@ -67,7 +67,7 @@ cargo tauri dev
 | 后端   | Rust + Axum + SQLx    |
 | 共享   | Rust 共享类型库       |
 | 数据库 | PostgreSQL + Redis    |
-| OCR    | OCR                   |
+| OCR    | PaddleOCR (FastAPI) + Tesseract 备用 |
 | LLM    | DeepSeek / 智谱 AI    |
 
 ## 开发计划
