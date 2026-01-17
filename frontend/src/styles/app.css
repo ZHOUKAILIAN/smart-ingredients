@@ -64,7 +64,8 @@ body {
   gap: 12px;
 }
 
-.action-area > a {
+.action-area > a,
+.action-area > button {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -78,14 +79,35 @@ body {
   border: none;
 }
 
-.action-area > a:active {
+.action-area > a:active,
+.action-area > button:active {
   background: var(--primary-dark);
+}
+
+.action-area > button:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.file-input {
+  width: 100%;
 }
 
 .hint {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
+}
+
+.summary-text {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.error {
+  color: #d94b4b;
 }
 
 .loading-card {
@@ -129,7 +151,7 @@ body {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 1.1fr 0.6fr 1.6fr;
+  grid-template-columns: 1.1fr 0.8fr 1.6fr 0.6fr 1.6fr;
   gap: 8px;
   padding: 12px 14px;
 }

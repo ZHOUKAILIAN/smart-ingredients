@@ -1,4 +1,4 @@
-FROM rust:1.88-slim
+FROM docker.io/library/rust:1.88-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

@@ -70,12 +70,17 @@ impl AppConfig {
             .unwrap_or_else(|_| "https://api.deepseek.com/v1/chat/completions".to_string());
         let model = env::var("DEEPSEEK_MODEL").unwrap_or_else(|_| "deepseek-chat".to_string());
 
+        let llm_timeout = env::var("LLM_TIMEOUT")
+            .ok()
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(60);
+
         let llm = LlmConfig {
             provider,
             api_key,
             api_url,
             model,
-            timeout: Duration::from_secs(30),
+            timeout: Duration::from_secs(llm_timeout),
         };
 
         let ocr = OcrConfig {

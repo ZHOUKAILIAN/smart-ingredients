@@ -29,9 +29,17 @@ pub struct UploadResponse {
 pub struct AnalysisResult {
     /// Health score (0-100)
     pub health_score: i32,
+    /// Summary of the ingredient list
+    #[serde(default)]
+    pub summary: String,
+    /// Table-friendly ingredient rows
+    #[serde(default)]
+    pub table: Vec<TableRow>,
     /// List of detected ingredients
+    #[serde(default)]
     pub ingredients: Vec<IngredientInfo>,
     /// Warnings about harmful ingredients
+    #[serde(default)]
     pub warnings: Vec<Warning>,
     /// Overall recommendation
     pub recommendation: String,
@@ -48,6 +56,25 @@ pub struct IngredientInfo {
     pub risk_level: String,
     /// Description of the ingredient
     pub description: Option<String>,
+}
+
+/// Ingredient row for table rendering
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TableRow {
+    /// Ingredient name
+    pub name: String,
+    /// Category (additive, allergen, nutrition, etc.)
+    #[serde(default)]
+    pub category: String,
+    /// Ingredient function or role
+    #[serde(default)]
+    pub function: String,
+    /// Health risk level (low, medium, high, unknown)
+    #[serde(default)]
+    pub risk_level: String,
+    /// Additional note
+    #[serde(default)]
+    pub note: String,
 }
 
 /// Warning about harmful ingredients

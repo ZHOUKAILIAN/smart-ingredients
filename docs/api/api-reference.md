@@ -44,6 +44,16 @@ Run OCR and LLM analysis for an uploaded image.
   "ocr_text": "识别文本...",
   "result": {
     "health_score": 85,
+    "summary": "配料以茶叶提取物为主，含少量甜味剂，整体风险较低。",
+    "table": [
+      {
+        "name": "乌龙茶",
+        "category": "nutrition",
+        "function": "提供茶香与基础风味",
+        "risk_level": "low",
+        "note": ""
+      }
+    ],
     "ingredients": [
       {
         "name": "乌龙茶",
@@ -65,6 +75,12 @@ Run OCR and LLM analysis for an uploaded image.
   "created_at": "2026-01-17T05:40:56.802230+00:00"
 }
 ```
+
+### Response Notes
+
+- When `result.summary` is empty, the backend may provide a short default summary (e.g. based on ingredient count).
+- When `result.table` is empty, clients can fall back to `result.ingredients` to render a basic table.
+- While analysis is running, `status` will be `pending` or `processing` and `result` may be `null`.
 
 ## Get Analysis
 
@@ -115,3 +131,15 @@ List history items (paginated).
 ### `AnalysisStatus`
 
 `pending | processing | completed | failed`
+
+### `TableRow`
+
+```json
+{
+  "name": "string",
+  "category": "string",
+  "function": "string",
+  "risk_level": "low | medium | high | unknown",
+  "note": "string"
+}
+```
