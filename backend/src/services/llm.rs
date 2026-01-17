@@ -1,25 +1,17 @@
 //! LLM service for ingredient analysis
 
-use anyhow::Result;
+use async_trait::async_trait;
 
-/// Analyze ingredients and return health assessment
-///
-/// # Arguments
-///
-/// * `text` - Extracted text from OCR
-///
-/// # Returns
-///
-/// Analysis result with health score and recommendations
-pub async fn analyze_ingredients(_text: &str) -> Result<shared::AnalysisResult> {
-    // TODO: Integrate LLM service
-    // Options:
-    // 1. DeepSeek API
-    // 2. 智谱 AI API
-    Ok(shared::AnalysisResult {
-        health_score: 75,
-        ingredients: vec![],
-        warnings: vec![],
-        recommendation: "Placeholder recommendation".to_string(),
-    })
+use crate::config::{LlmConfig, LlmProvider};
+use crate::services::llm_deepseek::DeepSeekClient;
+
+#[async_trait]
+pub trait LlmProviderClient: Send + Sync {
+    async fn analyze_ingredients(&self, text: &str) -> anyhow::Result<shared::AnalysisResult>;
+}
+
+pub fn build_llm_client(config: &LlmConfig, http: reqwest::Client) -> Box<dyn LlmProviderClient> {
+    match config.provider {
+        LlmProvider::DeepSeek => Box::new(DeepSeekClient::new(config, http)),
+    }
 }

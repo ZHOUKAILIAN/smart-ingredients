@@ -69,6 +69,7 @@ OCR_SERVICE_URL=http://localhost:5000
 OCR_TIMEOUT=30
 
 # LLM Service
+LLM_PROVIDER=deepseek
 LLM_API_KEY=your_api_key
 LLM_API_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-chat

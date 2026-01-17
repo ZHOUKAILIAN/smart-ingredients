@@ -1,0 +1,8 @@
+target
+**/target
+.git
+.gitignore
+.DS_Store
+node_modules
+frontend/target
+backend/uploads

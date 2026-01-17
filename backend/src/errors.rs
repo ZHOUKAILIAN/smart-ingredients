@@ -14,6 +14,12 @@ pub enum AppError {
     #[error("Bad request: {0}")]
     BadRequest(String),
 
+    #[error("Unsupported media type: {0}")]
+    UnsupportedMediaType(String),
+
+    #[error("Payload too large: {0}")]
+    PayloadTooLarge(String),
+
     #[error("Not found: {0}")]
     NotFound(String),
 
@@ -34,6 +40,16 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, code, message) = match &self {
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "BAD_REQUEST", msg),
+            AppError::UnsupportedMediaType(msg) => (
+                StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                "UNSUPPORTED_MEDIA_TYPE",
+                msg,
+            ),
+            AppError::PayloadTooLarge(msg) => (
+                StatusCode::PAYLOAD_TOO_LARGE,
+                "PAYLOAD_TOO_LARGE",
+                msg,
+            ),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, "NOT_FOUND", msg),
             AppError::Ocr(msg) => (StatusCode::SERVICE_UNAVAILABLE, "OCR_ERROR", msg),
             AppError::Llm(msg) => (StatusCode::SERVICE_UNAVAILABLE, "LLM_ERROR", msg),

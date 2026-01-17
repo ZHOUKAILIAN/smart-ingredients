@@ -18,6 +18,25 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: smart-ingredients-backend
+    environment:
+      DATABASE_URL: postgresql://smart_ingredients:smart_ingredients@postgres:5432/smart_ingredients
+      UPLOAD_DIR: /app/uploads
+      LLM_PROVIDER: deepseek
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   redis:
     image: redis:7-alpine
     container_name: smart-ingredients-redis

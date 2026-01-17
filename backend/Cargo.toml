@@ -15,9 +15,10 @@ tracing-subscriber.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 reqwest.workspace = true
+async-trait = "0.1"
 
 # Backend specific
-axum.workspace = true
+axum = { workspace = true, features = ["multipart"] }
 sqlx.workspace = true
 redis.workspace = true
 

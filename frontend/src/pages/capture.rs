@@ -1,6 +1,4 @@
 use leptos::prelude::*;
-use leptos_router::components::A;
-
 #[component]
 pub fn CapturePage() -> impl IntoView {
     view! {
@@ -10,9 +8,9 @@ pub fn CapturePage() -> impl IntoView {
                 <p class="subtitle">"拍一张配料表，快速看到风险信息"</p>
             </header>
             <div class="action-area">
-                <A href="/analyzing">
+                <a class="primary-button" href="/analyzing">
                     "拍照"
-                </A>
+                </a>
                 <p class="hint">"目前为静态展示，后续接入相机"</p>
             </div>
         </section>

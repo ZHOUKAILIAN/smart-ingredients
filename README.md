@@ -45,7 +45,7 @@ smart-ingredients/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/smart-ingredients.git
+git clone git@github.com:ZHOUKAILIAN/smart-ingredients.git
 cd smart-ingredients
 
 # 启动后端
@@ -61,14 +61,14 @@ cargo tauri dev
 
 详见 [TECH-STACK.md](./TECH-STACK.md)
 
-| 模块 | 技术 |
-|------|------|
-| 前端 | Rust + Tauri + Leptos |
-| 后端 | Rust + Axum + SQLx |
-| 共享 | Rust 共享类型库 |
-| 数据库 | PostgreSQL + Redis |
-| OCR | 百度 OCR |
-| LLM | DeepSeek / 智谱 AI |
+| 模块   | 技术                  |
+| ------ | --------------------- |
+| 前端   | Rust + Tauri + Leptos |
+| 后端   | Rust + Axum + SQLx    |
+| 共享   | Rust 共享类型库       |
+| 数据库 | PostgreSQL + Redis    |
+| OCR    | OCR                   |
+| LLM    | DeepSeek / 智谱 AI    |
 
 ## 开发计划
 

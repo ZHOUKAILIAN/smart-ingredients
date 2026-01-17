@@ -1,20 +1,27 @@
 //! OCR service for text extraction
 
-use anyhow::Result;
+use std::path::Path;
 
-/// Extract text from image
-///
-/// # Arguments
-///
-/// * `image_data` - Raw image bytes
-///
-/// # Returns
-///
-/// Extracted text as string
-pub async fn extract_text(_image_data: &[u8]) -> Result<String> {
-    // TODO: Integrate OCR service
-    // Options:
-    // 1. tesseract-rs for local processing
-    // 2. HTTP call to PaddleOCR service
-    Ok("Extracted text placeholder".to_string())
+use anyhow::Result;
+use tokio::process::Command;
+
+use crate::config::OcrConfig;
+
+/// Extract text from image using local tesseract
+pub async fn extract_text(image_path: &Path, config: &OcrConfig) -> Result<String> {
+    let output = Command::new("tesseract")
+        .arg(image_path)
+        .arg("stdout")
+        .arg("-l")
+        .arg(&config.lang)
+        .output()
+        .await?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow::anyhow!("tesseract failed: {}", stderr.trim()));
+    }
+
+    let text = String::from_utf8(output.stdout)?;
+    Ok(text.trim().to_string())
 }
