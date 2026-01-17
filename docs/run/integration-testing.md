@@ -46,6 +46,22 @@ Expected response includes:
 - `ocr_text`
 - `result` (LLM JSON)
 
+## 4) Verify data in Postgres
+
+Option A: via container `psql`:
+
+```bash
+docker exec -i smart-ingredients-db psql -U smart_ingredients -d smart_ingredients \
+  -c "select id, status, image_url, text, result, created_at, updated_at from analyses order by created_at desc limit 5;"
+```
+
+Option B: via local `psql`:
+
+```bash
+psql "postgresql://smart_ingredients:smart_ingredients@localhost:5432/smart_ingredients" \
+  -c "select id, status, image_url, text, result, created_at, updated_at from analyses order by created_at desc limit 5;"
+```
+
 ## Tips
 
 - Use JPEG/PNG/WebP for uploads.

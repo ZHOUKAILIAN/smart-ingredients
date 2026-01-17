@@ -2,6 +2,7 @@
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 use crate::config::LlmConfig;
 use crate::services::llm::LlmProviderClient;
@@ -43,7 +44,23 @@ impl LlmProviderClient for DeepSeekClient {
             .send()
             .await?;
 
-        let response: DeepSeekResponse = response.error_for_status()?.json().await?;
+        let status = response.status();
+        let body = response.text().await?;
+        if !status.is_success() {
+            return Err(anyhow::anyhow!(
+                "DeepSeek API error: status={}, body={}",
+                status,
+                truncate_for_log(&body, 2000)
+            ));
+        }
+
+        let response: DeepSeekResponse = serde_json::from_str(&body).map_err(|err| {
+            anyhow::anyhow!(
+                "DeepSeek API response parse error: {}; body={}",
+                err,
+                truncate_for_log(&body, 2000)
+            )
+        })?;
         let content = response
             .choices
             .get(0)
@@ -52,7 +69,14 @@ impl LlmProviderClient for DeepSeekClient {
             .content
             .clone();
 
-        let result: shared::AnalysisResult = serde_json::from_str(&content)?;
+        let result = parse_analysis_result(&content).map_err(|err| {
+            warn!(
+                "DeepSeek content parse failed: {}; content={}",
+                err,
+                truncate_for_log(&content, 2000)
+            );
+            err
+        })?;
         Ok(result)
     }
 }
@@ -115,4 +139,53 @@ struct DeepSeekResponse {
 #[derive(Debug, Deserialize)]
 struct Choice {
     message: Message,
+}
+
+fn parse_analysis_result(content: &str) -> anyhow::Result<shared::AnalysisResult> {
+    let trimmed = content.trim();
+    if let Ok(result) = serde_json::from_str::<shared::AnalysisResult>(trimmed) {
+        return Ok(result);
+    }
+
+    let without_fence = strip_code_fence(trimmed);
+    if let Ok(result) = serde_json::from_str::<shared::AnalysisResult>(&without_fence) {
+        return Ok(result);
+    }
+
+    let extracted = extract_json_block(&without_fence).ok_or_else(|| {
+        anyhow::anyhow!("unable to extract JSON object from DeepSeek content")
+    })?;
+    serde_json::from_str::<shared::AnalysisResult>(extracted).map_err(Into::into)
+}
+
+fn strip_code_fence(content: &str) -> String {
+    let trimmed = content.trim();
+    if !trimmed.starts_with("```") {
+        return trimmed.to_string();
+    }
+
+    let mut lines = trimmed.lines();
+    let _ = lines.next();
+    let mut remainder = lines.collect::<Vec<_>>().join("\n");
+    if remainder.ends_with("```") {
+        remainder.truncate(remainder.len() - 3);
+    }
+    remainder.trim().to_string()
+}
+
+fn extract_json_block(content: &str) -> Option<&str> {
+    let start = content.find('{')?;
+    let end = content.rfind('}')?;
+    if end <= start {
+        return None;
+    }
+    content.get(start..=end)
+}
+
+fn truncate_for_log(value: &str, max: usize) -> String {
+    if value.len() <= max {
+        value.to_string()
+    } else {
+        format!("{}...<truncated>", &value[..max])
+    }
 }
