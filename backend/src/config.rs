@@ -12,13 +12,37 @@ pub struct AppConfig {
 
 #[derive(Debug, Clone)]
 pub struct OcrConfig {
+    pub provider: OcrProvider,
     pub lang: String,
     pub timeout: Duration,
+    pub paddle_url: String,
+    pub psm: Option<u8>,
+    pub oem: Option<u8>,
+    pub preprocess: OcrPreprocessConfig,
+}
+
+#[derive(Debug, Clone)]
+pub struct OcrPreprocessConfig {
+    pub enabled: bool,
+    pub min_width: i32,
+    pub max_width: i32,
+    pub deskew: bool,
+    pub binary: bool,
+    pub denoise: bool,
+    pub clahe: bool,
+    pub sharpen: bool,
+    pub morph_close: bool,
 }
 
 #[derive(Debug, Clone)]
 pub enum LlmProvider {
     DeepSeek,
+}
+
+#[derive(Debug, Clone)]
+pub enum OcrProvider {
+    Tesseract,
+    Paddle,
 }
 
 #[derive(Debug, Clone)]
@@ -55,8 +79,52 @@ impl AppConfig {
         };
 
         let ocr = OcrConfig {
+            provider: parse_ocr_provider(
+                env::var("OCR_PROVIDER").unwrap_or_else(|_| "tesseract".to_string()),
+            )?,
             lang: env::var("OCR_LANG").unwrap_or_else(|_| "chi_sim+eng".to_string()),
-            timeout: Duration::from_secs(10),
+            timeout: Duration::from_secs(
+                env::var("OCR_TIMEOUT")
+                    .ok()
+                    .and_then(|value| value.parse::<u64>().ok())
+                    .unwrap_or(30),
+            ),
+            paddle_url: env::var("OCR_PADDLE_URL")
+                .unwrap_or_else(|_| "http://ocr:8000/ocr".to_string()),
+            psm: parse_optional_u8("OCR_PSM")?,
+            oem: parse_optional_u8("OCR_OEM")?,
+            preprocess: OcrPreprocessConfig {
+                enabled: parse_bool(
+                    env::var("OCR_PREPROCESS_ENABLE").unwrap_or_else(|_| "true".to_string()),
+                ),
+                min_width: env::var("OCR_PREPROCESS_MIN_WIDTH")
+                    .ok()
+                    .and_then(|value| value.parse::<i32>().ok())
+                    .unwrap_or(1600),
+                max_width: env::var("OCR_PREPROCESS_MAX_WIDTH")
+                    .ok()
+                    .and_then(|value| value.parse::<i32>().ok())
+                    .unwrap_or(2000),
+                deskew: parse_bool(
+                    env::var("OCR_PREPROCESS_DESKEW").unwrap_or_else(|_| "true".to_string()),
+                ),
+                binary: parse_bool(
+                    env::var("OCR_PREPROCESS_BINARY").unwrap_or_else(|_| "true".to_string()),
+                ),
+                denoise: parse_bool(
+                    env::var("OCR_PREPROCESS_DENOISE").unwrap_or_else(|_| "true".to_string()),
+                ),
+                clahe: parse_bool(
+                    env::var("OCR_PREPROCESS_CLAHE").unwrap_or_else(|_| "true".to_string()),
+                ),
+                sharpen: parse_bool(
+                    env::var("OCR_PREPROCESS_SHARPEN").unwrap_or_else(|_| "true".to_string()),
+                ),
+                morph_close: parse_bool(
+                    env::var("OCR_PREPROCESS_MORPH_CLOSE")
+                        .unwrap_or_else(|_| "false".to_string()),
+                ),
+            },
         };
 
         Ok(Self {
@@ -73,4 +141,28 @@ fn parse_llm_provider(value: String) -> anyhow::Result<LlmProvider> {
         "deepseek" => Ok(LlmProvider::DeepSeek),
         other => Err(anyhow::anyhow!("unsupported LLM_PROVIDER: {}", other)),
     }
+}
+
+fn parse_ocr_provider(value: String) -> anyhow::Result<OcrProvider> {
+    match value.trim().to_lowercase().as_str() {
+        "tesseract" => Ok(OcrProvider::Tesseract),
+        "paddle" => Ok(OcrProvider::Paddle),
+        other => Err(anyhow::anyhow!("unsupported OCR_PROVIDER: {}", other)),
+    }
+}
+
+fn parse_optional_u8(key: &str) -> anyhow::Result<Option<u8>> {
+    let value = match env::var(key) {
+        Ok(value) => value,
+        Err(_) => return Ok(None),
+    };
+    let parsed = value
+        .trim()
+        .parse::<u8>()
+        .map_err(|_| anyhow::anyhow!("{} must be a number", key))?;
+    Ok(Some(parsed))
+}
+
+fn parse_bool(value: String) -> bool {
+    matches!(value.trim().to_lowercase().as_str(), "1" | "true" | "yes" | "on")
 }

@@ -27,6 +27,8 @@ services:
       DATABASE_URL: postgresql://smart_ingredients:smart_ingredients@postgres:5432/smart_ingredients
       UPLOAD_DIR: /app/uploads
       LLM_PROVIDER: deepseek
+      OCR_PROVIDER: paddle
+      OCR_PADDLE_URL: http://ocr:8000/ocr
     env_file:
       - .env
     ports:
@@ -36,6 +38,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ocr:
+        condition: service_started
 
   redis:
     image: redis:7-alpine
@@ -49,6 +53,16 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  ocr:
+    build:
+      context: .
+      dockerfile: ocr_service/Dockerfile
+    container_name: smart-ingredients-ocr
+    environment:
+      PADDLE_OCR_LANG: ch
+    ports:
+      - "8000:8000"
 
   # Optional: MinIO for object storage
   minio:

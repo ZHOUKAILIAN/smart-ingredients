@@ -3,7 +3,10 @@ FROM rust:1.88-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        clang \
+        libclang-dev \
         libssl-dev \
+        libopencv-dev \
         pkg-config \
         tesseract-ocr \
         tesseract-ocr-chi-sim \
