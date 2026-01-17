@@ -14,10 +14,21 @@ use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
 use crate::pages::{AnalyzingPage, CapturePage, ResultPage};
+use crate::stores::AppState;
 
 /// Main App component
 #[component]
 pub fn App() -> impl IntoView {
+    let analysis_id = create_rw_signal(None);
+    let analysis_result = create_rw_signal(None);
+    let error_message = create_rw_signal(None);
+
+    provide_context(AppState {
+        analysis_id,
+        analysis_result,
+        error_message,
+    });
+
     view! {
         <Router>
             <main class="app-shell">

@@ -6,7 +6,10 @@ use axum::{
     Router,
 };
 use serde::Deserialize;
-use shared::{AnalysisResponse, AnalysisResult, AnalysisStatus, HistoryItem, HistoryResponse, UploadResponse};
+use shared::{
+    AnalysisResponse, AnalysisResult, AnalysisStatus, HistoryItem, HistoryResponse, TableRow,
+    UploadResponse,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -142,6 +145,7 @@ async fn analyze_handler(
         }
     };
 
+    let result = ensure_summary_table(result);
     let result_json = serde_json::to_value(&result)
         .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -234,4 +238,31 @@ fn parse_status(status: &str) -> AnalysisStatus {
         "failed" => AnalysisStatus::Failed,
         _ => AnalysisStatus::Pending,
     }
+}
+
+fn ensure_summary_table(mut result: AnalysisResult) -> AnalysisResult {
+    if result.summary.trim().is_empty() {
+        let count = result.ingredients.len();
+        result.summary = if count == 0 {
+            "未识别到配料信息，请尝试上传更清晰的图片。".to_string()
+        } else {
+            format!("识别到 {} 项配料，可查看表格详情。", count)
+        };
+    }
+
+    if result.table.is_empty() {
+        result.table = result
+            .ingredients
+            .iter()
+            .map(|item| TableRow {
+                name: item.name.clone(),
+                category: item.category.clone(),
+                function: item.description.clone().unwrap_or_default(),
+                risk_level: item.risk_level.clone(),
+                note: String::new(),
+            })
+            .collect();
+    }
+
+    result
 }

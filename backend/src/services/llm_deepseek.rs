@@ -91,6 +91,16 @@ fn build_analysis_prompt(text: &str) -> String {
 请严格按照以下 JSON 格式返回：
 {{
   "health_score": <0-100 的整数>,
+  "summary": "<1-3 句概括配料表特点>",
+  "table": [
+    {{
+      "name": "<配料名称>",
+      "category": "<additive|allergen|nutrition|other>",
+      "function": "<主要作用或用途>",
+      "risk_level": "<low|medium|high|unknown>",
+      "note": "<补充说明，可为空>"
+    }}
+  ],
   "ingredients": [
     {{
       "name": "<配料名称>",
@@ -112,8 +122,10 @@ fn build_analysis_prompt(text: &str) -> String {
 要求：
 1. health_score 基于配料的整体健康程度评分
 2. 识别所有添加剂、过敏原和关键营养成分
-3. 对高风险配料给出明确警告
-4. recommendation 提供实用的食用建议"#,
+3. summary 简要概括配料表特点
+4. table 与配料顺序保持一致，同名可去重并保留风险更高项
+5. 对高风险配料给出明确警告
+6. recommendation 提供实用的食用建议"#,
         text
     )
 }
