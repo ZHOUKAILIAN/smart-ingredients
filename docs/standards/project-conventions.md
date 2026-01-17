@@ -65,14 +65,16 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=3000
 
 # OCR Service
-OCR_SERVICE_URL=http://localhost:5000
+OCR_PROVIDER=paddle  # tesseract | paddle
+OCR_PADDLE_URL=http://localhost:8000/ocr
 OCR_TIMEOUT=30
+OCR_LANG=chi_sim+eng
 
 # LLM Service
-LLM_API_KEY=your_api_key
-LLM_API_URL=https://api.deepseek.com
-LLM_MODEL=deepseek-chat
-LLM_TIMEOUT=60
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your_api_key
+DEEPSEEK_API_URL=https://api.deepseek.com/v1/chat/completions
+DEEPSEEK_MODEL=deepseek-chat
 
 # Storage
 STORAGE_TYPE=local  # local | oss | s3
@@ -311,10 +313,7 @@ All API endpoints documented in `docs/api/`:
 
 ```
 docs/api/
-├── v1/
-│   ├── analysis.md
-│   └── auth.md
-└── openapi.json  # OpenAPI specification
+└── api-reference.md  # API reference
 ```
 
 ### Code Documentation

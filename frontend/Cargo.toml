@@ -3,12 +3,8 @@ name = "smart-ingredients-app"
 version.workspace = true
 edition.workspace = true
 
-[build-dependencies]
-tauri-build = { version = "2", features = [] }
-
 [dependencies]
 # Workspace dependencies
-tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
@@ -18,7 +14,6 @@ chrono.workspace = true
 reqwest.workspace = true
 
 # Frontend specific
-tauri = { workspace = true, features = [] }
 leptos.workspace = true
 leptos-use.workspace = true
 
@@ -31,5 +26,4 @@ image = "0.25"
 base64 = "0.22"
 
 [features]
-default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
+default = []

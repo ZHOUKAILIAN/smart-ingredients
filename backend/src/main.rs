@@ -8,6 +8,8 @@ mod handlers;
 mod middleware;
 mod routes;
 mod services;
+mod config;
+mod state;
 
 use anyhow::Result;
 use std::net::SocketAddr;
@@ -23,8 +25,22 @@ async fn main() -> Result<()> {
 
     info!("Starting Smart Ingredients Backend");
 
+    dotenvy::dotenv().ok();
+
+    let config = config::AppConfig::from_env()?;
+    let pool = db::create_pool(&config.database_url).await?;
+    db::run_migrations(&pool).await?;
+
+    let http = reqwest::Client::new();
+    let llm = services::llm::build_llm_client(&config.llm, http.clone());
+    let state = state::AppState {
+        pool,
+        config,
+        llm: std::sync::Arc::from(llm),
+    };
+
     // Build application
-    let app = routes::create_routes();
+    let app = routes::create_routes(state);
 
     // Start server
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
