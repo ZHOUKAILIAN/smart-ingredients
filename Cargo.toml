@@ -1,5 +1,5 @@
 [workspace]
-members = ["shared", "backend", "frontend"]
+members = ["shared", "backend", "frontend", "frontend/src-tauri"]
 resolver = "2"
 
 [workspace.package]

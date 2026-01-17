@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use crate::components::{IngredientRow, IngredientTable};
+use crate::components::{IngredientRow, IngredientCardList, HealthScoreCard, SummaryCard};
 use leptos::leptos_dom::helpers::set_timeout;
 use leptos::task::spawn_local;
 use crate::services;
@@ -165,17 +165,65 @@ pub fn ResultPage() -> impl IntoView {
     view! {
         <section class="page page-result">
             <header class="page-header">
-                <h1 class="title">"配料表"</h1>
+                <h1 class="title">"分析结果"</h1>
                 <p class="subtitle">"以下为模型分析结果"</p>
             </header>
-            <Show
-                when=move || error_text().is_some()
-                fallback=move || view! { <p class="summary-text">{summary_text()}</p> }
-            >
+
+            // Error message
+            <Show when=move || error_text().is_some()>
                 <p class="summary-text error">
                     {move || error_text().unwrap_or_default()}
                 </p>
             </Show>
+
+            // Health score card
+            <Show when=move || {
+                state.analysis_result.get()
+                    .and_then(|r| r.result)
+                    .is_some()
+            }>
+                {move || {
+                    state.analysis_result.get()
+                        .and_then(|r| r.result)
+                        .map(|result| view! {
+                            <HealthScoreCard
+                                score={result.health_score}
+                                recommendation={result.recommendation.clone()}
+                            />
+                        })
+                }}
+            </Show>
+
+            // Summary card
+            <Show when=move || {
+                state.analysis_result.get()
+                    .and_then(|r| r.result)
+                    .is_some()
+            }>
+                {move || {
+                    state.analysis_result.get()
+                        .and_then(|r| r.result)
+                        .map(|result| view! {
+                            <SummaryCard
+                                summary={if result.summary.trim().is_empty() {
+                                    if result.ingredients.is_empty() {
+                                        "暂无摘要".to_string()
+                                    } else {
+                                        format!("识别到 {} 项配料，可查看详情。", result.ingredients.len())
+                                    }
+                                } else {
+                                    result.summary.clone()
+                                }}
+                                warnings={result.warnings.clone()}
+                            />
+                        })
+                }}
+            </Show>
+
+            // Section title
+            <h2 class="section-title">"配料详情"</h2>
+
+            // Ingredient card list
             <Show
                 when=move || !table_rows().is_empty()
                 fallback=move || {
@@ -187,13 +235,14 @@ pub fn ResultPage() -> impl IntoView {
                         Some(AnalysisStatus::Pending) | Some(AnalysisStatus::Processing) => {
                             "正在分析中，请稍候…"
                         }
-                        _ => "暂无表格数据",
+                        _ => "暂无配料数据",
                     };
                     view! { <p class="hint">{message}</p> }
                 }
             >
-                <IngredientTable items=table_rows() />
+                <IngredientCardList items=table_rows() />
             </Show>
+
             <div class="action-area">
                 <a class="primary-button" href="/">
                     "重新拍照"
