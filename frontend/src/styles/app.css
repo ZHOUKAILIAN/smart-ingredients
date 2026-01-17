@@ -64,7 +64,7 @@ body {
   gap: 12px;
 }
 
-.primary-button {
+.action-area > a {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -78,7 +78,7 @@ body {
   border: none;
 }
 
-.primary-button:active {
+.action-area > a:active {
   background: var(--primary-dark);
 }
 
@@ -113,7 +113,7 @@ body {
   color: var(--muted);
 }
 
-.secondary-link {
+.page-analyzing > a {
   align-self: center;
   text-decoration: none;
   font-size: 13px;

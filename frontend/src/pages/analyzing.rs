@@ -1,4 +1,6 @@
 use leptos::prelude::*;
+use leptos_router::components::A;
+
 #[component]
 pub fn AnalyzingPage() -> impl IntoView {
     view! {
@@ -7,9 +9,9 @@ pub fn AnalyzingPage() -> impl IntoView {
                 <div class="spinner" aria-hidden="true"></div>
                 <p class="loading-text">"正在分析配料表…"</p>
             </div>
-            <a class="secondary-link" href="/result">
+            <A href="/result">
                 "跳到结果页"
-            </a>
+            </A>
         </section>
     }
 }

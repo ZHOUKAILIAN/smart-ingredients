@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use leptos_router::components::A;
 use crate::components::{IngredientRow, IngredientTable};
 
 #[component]
@@ -29,9 +30,9 @@ pub fn ResultPage() -> impl IntoView {
             </header>
             <IngredientTable items=items />
             <div class="action-area">
-                <a class="primary-button" href="/">
+                <A href="/">
                     "重新拍照"
-                </a>
+                </A>
             </div>
         </section>
     }
