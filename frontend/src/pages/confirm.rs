@@ -1,0 +1,87 @@
+use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos_router::hooks::use_navigate;
+
+use crate::services;
+use crate::stores::AppState;
+
+#[component]
+pub fn ConfirmPage() -> impl IntoView {
+    let state = use_context::<AppState>().expect("AppState not found");
+    let navigate = use_navigate();
+    let state_for_confirm = state.clone();
+    let state_for_error = state.clone();
+    let navigate_for_retake = navigate.clone();
+    let navigate_for_confirm = navigate.clone();
+
+    let initial_text = state
+        .confirmed_text
+        .get()
+        .or_else(|| state.ocr_text.get())
+        .unwrap_or_default();
+    let (edited_text, set_edited_text) = create_signal(initial_text);
+
+    let on_confirm = move |_| {
+        let text = edited_text.get();
+        let analysis_id = state_for_confirm.analysis_id.get();
+
+        if let Some(id) = analysis_id {
+            let state = state_for_confirm.clone();
+            let navigate = navigate_for_confirm.clone();
+            spawn_local(async move {
+                state.error_message.set(None);
+                match services::confirm_and_analyze(id, text).await {
+                    Ok(response) => {
+                        state.analysis_result.set(Some(response));
+                        state.confirmed_text.set(Some(edited_text.get()));
+                        navigate("/analyzing", Default::default());
+                    }
+                    Err(err) => state.error_message.set(Some(err)),
+                }
+            });
+        }
+    };
+
+    let on_retake = move |_| {
+        navigate_for_retake("/", Default::default());
+    };
+
+    view! {
+        <section class="page page-confirm">
+            <header class="page-header">
+                <h1>"识别结果确认"</h1>
+                <p class="subtitle">"请确认识别文本是否正确，可以编辑修改"</p>
+            </header>
+
+            <div class="text-editor-container">
+                <textarea
+                    class="text-editor"
+                    rows="10"
+                    placeholder="OCR识别的文本..."
+                    prop:value=move || edited_text.get()
+                    on:input=move |ev| {
+                        set_edited_text.set(event_target_value(&ev));
+                    }
+                />
+                <p class="edit-tips">
+                    "💡 提示：您可以修改识别错误的文字，以提高分析准确性"
+                </p>
+            </div>
+
+            <Show when=move || state_for_error.error_message.get().is_some()>
+                <p class="hint error">
+                    {move || state_for_error.error_message.get().unwrap_or_default()}
+                </p>
+            </Show>
+
+            <div class="action-buttons">
+                <button class="btn-secondary" on:click=on_retake>
+                    "重新拍照"
+                </button>
+                <button class="btn-primary" on:click=on_confirm>
+                    "确认并分析"
+                </button>
+            </div>
+        </section>
+    }
+}

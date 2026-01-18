@@ -8,12 +8,7 @@ use shared::AnalysisStatus;
 use std::time::Duration;
 
 fn risk_label(level: &str) -> String {
-    match level {
-        "low" => "低".to_string(),
-        "medium" => "中".to_string(),
-        "high" => "高".to_string(),
-        _ => "未知".to_string(),
-    }
+    level.to_string()
 }
 
 fn to_rows(table: &[shared::TableRow]) -> Vec<IngredientRow> {
@@ -91,7 +86,7 @@ pub fn ResultPage() -> impl IntoView {
 
         let should_poll = matches!(
             status,
-            Some(AnalysisStatus::Pending | AnalysisStatus::Processing)
+            Some(AnalysisStatus::LlmPending | AnalysisStatus::LlmProcessing)
         );
 
         if should_poll {
@@ -232,9 +227,11 @@ pub fn ResultPage() -> impl IntoView {
                         .get()
                         .map(|response| response.status);
                     let message = match status {
-                        Some(AnalysisStatus::Pending) | Some(AnalysisStatus::Processing) => {
-                            "正在分析中，请稍候…"
-                        }
+                        Some(AnalysisStatus::OcrPending)
+                        | Some(AnalysisStatus::OcrProcessing) => "正在识别配料表，请稍候…",
+                        Some(AnalysisStatus::OcrCompleted) => "等待确认文本后进行分析。",
+                        Some(AnalysisStatus::LlmPending)
+                        | Some(AnalysisStatus::LlmProcessing) => "正在分析中，请稍候…",
                         _ => "暂无配料数据",
                     };
                     view! { <p class="hint">{message}</p> }

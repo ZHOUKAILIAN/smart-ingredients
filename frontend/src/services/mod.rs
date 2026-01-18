@@ -2,7 +2,7 @@
 
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{FormData, Request, RequestInit, RequestMode, Response};
+use web_sys::{FormData, Headers, Request, RequestInit, RequestMode, Response};
 
 const API_BASE: &str = "http://127.0.0.1:3000";
 
@@ -28,13 +28,59 @@ pub async fn upload_image(file: web_sys::File) -> Result<shared::UploadResponse,
     serde_json::from_str(&body).map_err(|err| format!("invalid response: {}", err))
 }
 
-pub async fn analyze_image(id: uuid::Uuid) -> Result<shared::AnalysisResponse, String> {
+pub async fn confirm_and_analyze(
+    id: uuid::Uuid,
+    confirmed_text: String,
+) -> Result<shared::AnalysisResponse, String> {
+    let payload = shared::ConfirmRequest { confirmed_text };
+    let body = serde_json::to_string(&payload)
+        .map_err(|_| "failed to serialize request".to_string())?;
+
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| "failed to build headers".to_string())?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| "failed to set content type".to_string())?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/analysis/{}/confirm", API_BASE, id),
+        &init,
+    )
+    .map_err(|_| "failed to build request".to_string())?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|err| format!("invalid response: {}", err))
+}
+
+pub async fn retry_ocr(id: uuid::Uuid) -> Result<shared::AnalysisResponse, String> {
     let mut init = RequestInit::new();
     init.set_method("POST");
     init.set_mode(RequestMode::Cors);
 
     let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/analysis/{}/analyze", API_BASE, id),
+        &format!("{}/api/v1/analysis/{}/retry-ocr", API_BASE, id),
+        &init,
+    )
+    .map_err(|_| "failed to build request".to_string())?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|err| format!("invalid response: {}", err))
+}
+
+pub async fn retry_llm(id: uuid::Uuid) -> Result<shared::AnalysisResponse, String> {
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/analysis/{}/retry-llm", API_BASE, id),
         &init,
     )
     .map_err(|_| "failed to build request".to_string())?;

@@ -27,9 +27,12 @@ pub fn SummaryCard(
     };
 
     view! {
-        <div class="card summary-card">
-            <p class="summary-text">{summary}</p>
-            {warning_section}
-        </div>
+        <details class="card summary-card" open>
+            <summary class="summary-toggle">"摘要"</summary>
+            <div class="summary-content">
+                <p class="summary-text">{summary}</p>
+                {warning_section}
+            </div>
+        </details>
     }
 }

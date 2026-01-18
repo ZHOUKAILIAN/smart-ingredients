@@ -9,7 +9,7 @@ use crate::stores::AppState;
 use shared::AnalysisStatus;
 
 #[component]
-pub fn AnalyzingPage() -> impl IntoView {
+pub fn OcrPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = use_navigate();
     let fetching = create_rw_signal(false);
@@ -55,10 +55,13 @@ pub fn AnalyzingPage() -> impl IntoView {
         let analysis_id = state.analysis_id.get();
 
         match status {
-            Some(AnalysisStatus::Completed) => {
-                navigate("/result", Default::default());
+            Some(AnalysisStatus::OcrCompleted) => {
+                if let Some(response) = state.analysis_result.get() {
+                    state.ocr_text.set(response.ocr_text.clone());
+                    navigate("/confirm", Default::default());
+                }
             }
-            Some(AnalysisStatus::LlmPending) | Some(AnalysisStatus::LlmProcessing) => {
+            Some(AnalysisStatus::OcrPending) | Some(AnalysisStatus::OcrProcessing) => {
                 if let Some(id) = analysis_id {
                     polling.set(true);
                     let state = state.clone();
@@ -90,7 +93,7 @@ pub fn AnalyzingPage() -> impl IntoView {
             let state = state.clone();
             spawn_local(async move {
                 state.error_message.set(None);
-                match services::retry_llm(id).await {
+                match services::retry_ocr(id).await {
                     Ok(response) => {
                         state.analysis_result.set(Some(response));
                     }
@@ -102,11 +105,11 @@ pub fn AnalyzingPage() -> impl IntoView {
     let on_retry = Callback::new(on_retry);
 
     view! {
-        <section class="page page-analyzing">
+        <section class="page page-ocr">
             <div class="loading-card">
                 <div class="spinner" aria-hidden="true"></div>
-                <p class="loading-text">"AI正在分析成分..."</p>
-                <p class="loading-hint">"请稍候，通常需要5-10秒"</p>
+                <p class="loading-text">"正在识别配料表..."</p>
+                <p class="loading-hint">"请稍候，通常需要3-5秒"</p>
             </div>
 
             <Show when=move || state.error_message.get().is_some()>

@@ -21,6 +21,8 @@ COPY shared/Cargo.toml shared/Cargo.toml
 COPY shared/src shared/src
 COPY frontend/Cargo.toml frontend/Cargo.toml
 COPY frontend/src frontend/src
+COPY frontend/src-tauri/Cargo.toml frontend/src-tauri/Cargo.toml
+COPY frontend/src-tauri/src frontend/src-tauri/src
 
 RUN cargo fetch
 

@@ -13,14 +13,50 @@ pub use analysis::*;
 pub use error::*;
 pub use ingredient::*;
 
-/// Analysis status tracking
+/// OCR status tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum AnalysisStatus {
-    /// Analysis is queued
+pub enum OcrStatus {
+    /// OCR is queued
     Pending,
-    /// OCR and LLM processing in progress
+    /// OCR is processing
     Processing,
+    /// OCR completed
+    Completed,
+    /// OCR failed
+    Failed,
+}
+
+/// LLM status tracking
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LlmStatus {
+    /// LLM is queued
+    Pending,
+    /// LLM is processing
+    Processing,
+    /// LLM completed
+    Completed,
+    /// LLM failed
+    Failed,
+}
+
+/// Analysis status tracking
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AnalysisStatus {
+    /// OCR is queued
+    OcrPending,
+    /// OCR is processing
+    OcrProcessing,
+    /// OCR completed, waiting for user confirmation
+    OcrCompleted,
+    /// OCR failed
+    OcrFailed,
+    /// LLM is queued
+    LlmPending,
+    /// LLM is processing
+    LlmProcessing,
     /// Analysis completed successfully
     Completed,
     /// Analysis failed
