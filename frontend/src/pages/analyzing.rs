@@ -14,21 +14,25 @@ pub fn AnalyzingPage() -> impl IntoView {
     let navigate = use_navigate();
     let fetching = create_rw_signal(false);
     let polling = create_rw_signal(false);
+    let state_for_fetch = state.clone();
+    let state_for_poll = state.clone();
+    let state_for_retry = StoredValue::new(state.clone());
+    let state_for_error = StoredValue::new(state.clone());
 
     create_effect(move |_| {
         if fetching.get() {
             return;
         }
-        let analysis_id = state.analysis_id.get();
+        let analysis_id = state_for_fetch.analysis_id.get();
         if analysis_id.is_none() {
             return;
         }
-        if state.analysis_result.get().is_some() {
+        if state_for_fetch.analysis_result.get().is_some() {
             return;
         }
 
         fetching.set(true);
-        let state = state.clone();
+        let state = state_for_fetch.clone();
         spawn_local(async move {
             if let Some(id) = analysis_id {
                 match services::fetch_analysis(id).await {
@@ -48,11 +52,11 @@ pub fn AnalyzingPage() -> impl IntoView {
             return;
         }
 
-        let status = state
+        let status = state_for_poll
             .analysis_result
             .get()
             .map(|response| response.status);
-        let analysis_id = state.analysis_id.get();
+        let analysis_id = state_for_poll.analysis_id.get();
 
         match status {
             Some(AnalysisStatus::Completed) => {
@@ -61,7 +65,7 @@ pub fn AnalyzingPage() -> impl IntoView {
             Some(AnalysisStatus::LlmPending) | Some(AnalysisStatus::LlmProcessing) => {
                 if let Some(id) = analysis_id {
                     polling.set(true);
-                    let state = state.clone();
+                    let state = state_for_poll.clone();
                     let polling = polling.clone();
                     set_timeout(
                         move || {
@@ -84,36 +88,43 @@ pub fn AnalyzingPage() -> impl IntoView {
         }
     });
 
-    let on_retry = move |_| {
-        let analysis_id = state.analysis_id.get();
-        if let Some(id) = analysis_id {
-            let state = state.clone();
-            spawn_local(async move {
-                state.error_message.set(None);
-                match services::retry_llm(id).await {
-                    Ok(response) => {
-                        state.analysis_result.set(Some(response));
-                    }
-                    Err(err) => state.error_message.set(Some(err)),
-                }
-            });
-        }
-    };
-    let on_retry = Callback::new(on_retry);
-
     view! {
         <section class="page page-analyzing">
             <div class="loading-card">
-                <div class="spinner" aria-hidden="true"></div>
+                <div class="progress-bar" aria-hidden="true">
+                    <div class="progress-bar-fill"></div>
+                </div>
                 <p class="loading-text">"AI正在分析成分..."</p>
                 <p class="loading-hint">"请稍候，通常需要5-10秒"</p>
             </div>
 
-            <Show when=move || state.error_message.get().is_some()>
+            <Show when=move || {
+                state_for_error.with_value(|state| state.error_message.get().is_some())
+            }>
                 <p class="hint error">
-                    {move || state.error_message.get().unwrap_or_default()}
+                    {move || {
+                        state_for_error
+                            .with_value(|state| state.error_message.get().unwrap_or_default())
+                    }}
                 </p>
-                <button class="btn-retry" on:click=move |_| on_retry.call(())>
+                <button
+                    class="btn-retry"
+                    on:click=move |_| {
+                        let state = state_for_retry.get_value();
+                        let analysis_id = state.analysis_id.get();
+                        if let Some(id) = analysis_id {
+                            spawn_local(async move {
+                                state.error_message.set(None);
+                                match services::retry_llm(id).await {
+                                    Ok(response) => {
+                                        state.analysis_result.set(Some(response));
+                                    }
+                                    Err(err) => state.error_message.set(Some(err)),
+                                }
+                            });
+                        }
+                    }
+                >
                     "重试"
                 </button>
             </Show>

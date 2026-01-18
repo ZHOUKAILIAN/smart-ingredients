@@ -98,27 +98,28 @@ pub fn CapturePage() -> impl IntoView {
                 <p>"拍照识别配料表，AI分析健康风险"</p>
             </div>
 
-            // Steps (collapsible)
-            <details class="collapsible-section">
-                <summary class="section-toggle">"使用步骤 ▼"</summary>
-                <div class="steps-content">
-                    <div class="step-item-compact">
-                        <span class="step-number">"1"</span>
-                        <span>"拍摄配料表"</span>
+            // Steps (always visible)
+            <div class="steps-section">
+                <p class="section-title">"使用步骤"</p>
+                <div class="stepper">
+                    <div class="stepper-line" aria-hidden="true"></div>
+                    <div class="stepper-item">
+                        <span class="stepper-dot">"1"</span>
+                        <span class="stepper-label">"拍摄配料表"</span>
                     </div>
-                    <div class="step-item-compact">
-                        <span class="step-number">"2"</span>
-                        <span>"确认识别文本"</span>
+                    <div class="stepper-item">
+                        <span class="stepper-dot">"2"</span>
+                        <span class="stepper-label">"确认识别文本"</span>
                     </div>
-                    <div class="step-item-compact">
-                        <span class="step-number">"3"</span>
-                        <span>"查看健康报告"</span>
+                    <div class="stepper-item">
+                        <span class="stepper-dot">"3"</span>
+                        <span class="stepper-label">"查看健康报告"</span>
                     </div>
                 </div>
-            </details>
+            </div>
 
             // Example images (collapsible)
-            <details class="collapsible-section">
+            <details class="collapsible-section example-section">
                 <summary class="section-toggle">"查看示例 ▼"</summary>
                 <ExampleImages />
             </details>
