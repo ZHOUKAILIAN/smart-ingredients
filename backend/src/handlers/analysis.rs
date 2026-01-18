@@ -7,8 +7,8 @@ use axum::{
 };
 use serde::Deserialize;
 use shared::{
-    AnalysisResponse, AnalysisResult, AnalysisStatus, HistoryItem, HistoryResponse, TableRow,
-    UploadResponse,
+    AnalysisResponse, AnalysisResult, AnalysisStatus, ConfirmRequest, HistoryItem, HistoryResponse,
+    LlmStatus, OcrStatus, TableRow, UploadResponse,
 };
 use uuid::Uuid;
 
@@ -24,7 +24,9 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/upload", axum::routing::post(upload_handler))
         .route("/:id", axum::routing::get(get_handler))
-        .route("/:id/analyze", axum::routing::post(analyze_handler))
+        .route("/:id/confirm", axum::routing::post(confirm_handler))
+        .route("/:id/retry-ocr", axum::routing::post(retry_ocr_handler))
+        .route("/:id/retry-llm", axum::routing::post(retry_llm_handler))
         .route("/history", axum::routing::get(history_handler))
 }
 
@@ -75,9 +77,16 @@ async fn upload_handler(
 
     let id = db::insert_analysis(&state.pool, &image_url).await?;
 
+    let pool = state.pool.clone();
+    let config = state.config.clone();
+    let image_url_clone = image_url.clone();
+    tokio::spawn(async move {
+        run_ocr_task(pool, config, id, image_url_clone).await;
+    });
+
     Ok(Json(UploadResponse {
         id,
-        status: AnalysisStatus::Pending,
+        status: AnalysisStatus::OcrPending,
         image_url,
     }))
 }
@@ -94,8 +103,47 @@ async fn get_handler(
     Ok(Json(to_analysis_response(&row)))
 }
 
-/// Run OCR + LLM analysis
-async fn analyze_handler(
+/// Confirm OCR text and start LLM analysis
+async fn confirm_handler(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    Json(payload): Json<ConfirmRequest>,
+) -> Result<Json<AnalysisResponse>, AppError> {
+    let row = db::get_analysis(&state.pool, id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
+
+    if row.ocr_status != "completed" {
+        return Err(AppError::BadRequest(
+            "OCR not completed yet".to_string(),
+        ));
+    }
+
+    let confirmed_text = payload.confirmed_text.trim().to_string();
+    if confirmed_text.is_empty() || confirmed_text.len() > MAX_TEXT_LENGTH {
+        return Err(AppError::BadRequest(
+            "confirmed text length must be 1-5000".to_string(),
+        ));
+    }
+
+    db::update_confirmed_text(&state.pool, id, &confirmed_text, "llm_pending")
+        .await?;
+
+    let pool = state.pool.clone();
+    let llm = state.llm.clone();
+    tokio::spawn(async move {
+        run_llm_task(pool, llm, id, confirmed_text).await;
+    });
+
+    let updated = db::get_analysis(&state.pool, id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
+
+    Ok(Json(to_analysis_response(&updated)))
+}
+
+/// Retry OCR step
+async fn retry_ocr_handler(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<AnalysisResponse>, AppError> {
@@ -103,61 +151,40 @@ async fn analyze_handler(
         .await?
         .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
 
-    db::update_analysis_status(&state.pool, id, "processing").await?;
+    let pool = state.pool.clone();
+    let config = state.config.clone();
+    tokio::spawn(async move {
+        run_ocr_task(pool, config, id, row.image_url).await;
+    });
 
-    let image_path =
-        storage::resolve_image_path(&state.config.upload_dir, &row.image_url)?;
-    let ocr_text = ocr::extract_text(&image_path, &state.config.ocr)
-        .await
-        .map_err(|err| AppError::Ocr(err.to_string()))?;
+    let updated = db::get_analysis(&state.pool, id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
 
-    let ocr_text = ocr_text.trim().to_string();
-    if ocr_text.is_empty() || ocr_text.len() > MAX_TEXT_LENGTH {
-        db::update_analysis_result(
-            &state.pool,
-            id,
-            "failed",
-            None,
-            None,
-            Some("OCR text length invalid".to_string()),
-        )
+    Ok(Json(to_analysis_response(&updated)))
+}
+
+/// Retry LLM step
+async fn retry_llm_handler(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<AnalysisResponse>, AppError> {
+    let row = db::get_analysis(&state.pool, id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
+
+    let confirmed_text = row.confirmed_text.clone().ok_or_else(|| {
+        AppError::BadRequest("missing confirmed text".to_string())
+    })?;
+
+    db::update_llm_status(&state.pool, id, "pending", "llm_pending", None)
         .await?;
-        return Err(AppError::BadRequest(
-            "OCR text length must be 1-5000".to_string(),
-        ));
-    }
 
-    db::update_analysis_text(&state.pool, id, &ocr_text, "processing").await?;
-
-    let result = match state.llm.analyze_ingredients(&ocr_text).await {
-        Ok(result) => result,
-        Err(err) => {
-            db::update_analysis_result(
-                &state.pool,
-                id,
-                "failed",
-                None,
-                None,
-                Some(err.to_string()),
-            )
-            .await?;
-            return Err(AppError::Llm(err.to_string()));
-        }
-    };
-
-    let result = ensure_summary_table(result);
-    let result_json = serde_json::to_value(&result)
-        .map_err(|err| AppError::Internal(err.to_string()))?;
-
-    db::update_analysis_result(
-        &state.pool,
-        id,
-        "completed",
-        Some(result.health_score),
-        Some(result_json),
-        None,
-    )
-    .await?;
+    let pool = state.pool.clone();
+    let llm = state.llm.clone();
+    tokio::spawn(async move {
+        run_llm_task(pool, llm, id, confirmed_text).await;
+    });
 
     let updated = db::get_analysis(&state.pool, id)
         .await?
@@ -221,22 +248,53 @@ fn to_analysis_response(row: &db::AnalysisRow) -> AnalysisResponse {
     AnalysisResponse {
         id: row.id,
         status: parse_status(&row.status),
-        ocr_text: row.text.clone(),
+        ocr_status: parse_ocr_status(&row.ocr_status),
+        llm_status: parse_llm_status(&row.llm_status),
+        ocr_text: row.ocr_text.clone(),
+        confirmed_text: row.confirmed_text.clone(),
+        ocr_completed_at: row
+            .ocr_completed_at
+            .as_ref()
+            .map(|ts| ts.to_rfc3339()),
         result: row
             .result
             .as_ref()
             .and_then(|value| serde_json::from_value::<AnalysisResult>(value.clone()).ok()),
         error_message: row.error_message.clone(),
         created_at: row.created_at.to_rfc3339(),
+        updated_at: row.updated_at.to_rfc3339(),
     }
 }
 
 fn parse_status(status: &str) -> AnalysisStatus {
     match status {
-        "processing" => AnalysisStatus::Processing,
+        "ocr_pending" => AnalysisStatus::OcrPending,
+        "ocr_processing" => AnalysisStatus::OcrProcessing,
+        "ocr_completed" => AnalysisStatus::OcrCompleted,
+        "ocr_failed" => AnalysisStatus::OcrFailed,
+        "llm_pending" => AnalysisStatus::LlmPending,
+        "llm_processing" => AnalysisStatus::LlmProcessing,
         "completed" => AnalysisStatus::Completed,
         "failed" => AnalysisStatus::Failed,
-        _ => AnalysisStatus::Pending,
+        _ => AnalysisStatus::OcrPending,
+    }
+}
+
+fn parse_ocr_status(status: &str) -> OcrStatus {
+    match status {
+        "processing" => OcrStatus::Processing,
+        "completed" => OcrStatus::Completed,
+        "failed" => OcrStatus::Failed,
+        _ => OcrStatus::Pending,
+    }
+}
+
+fn parse_llm_status(status: &str) -> LlmStatus {
+    match status {
+        "processing" => LlmStatus::Processing,
+        "completed" => LlmStatus::Completed,
+        "failed" => LlmStatus::Failed,
+        _ => LlmStatus::Pending,
     }
 }
 
@@ -265,4 +323,122 @@ fn ensure_summary_table(mut result: AnalysisResult) -> AnalysisResult {
     }
 
     result
+}
+
+async fn run_ocr_task(
+    pool: sqlx::PgPool,
+    config: crate::config::AppConfig,
+    analysis_id: Uuid,
+    image_url: String,
+) {
+    let _ = db::update_ocr_status(
+        &pool,
+        analysis_id,
+        "processing",
+        "ocr_processing",
+        None,
+    )
+    .await;
+
+    let image_path = match storage::resolve_image_path(&config.upload_dir, &image_url) {
+        Ok(path) => path,
+        Err(err) => {
+            let _ = db::update_ocr_status(
+                &pool,
+                analysis_id,
+                "failed",
+                "ocr_failed",
+                Some(err.to_string()),
+            )
+            .await;
+            return;
+        }
+    };
+
+    let ocr_text = match ocr::extract_text(&image_path, &config.ocr).await {
+        Ok(text) => text.trim().to_string(),
+        Err(err) => {
+            let _ = db::update_ocr_status(
+                &pool,
+                analysis_id,
+                "failed",
+                "ocr_failed",
+                Some(err.to_string()),
+            )
+            .await;
+            return;
+        }
+    };
+
+    if ocr_text.is_empty() || ocr_text.len() > MAX_TEXT_LENGTH {
+        let _ = db::update_ocr_status(
+            &pool,
+            analysis_id,
+            "failed",
+            "ocr_failed",
+            Some("OCR text length invalid".to_string()),
+        )
+        .await;
+        return;
+    }
+
+    let _ = db::save_ocr_result(&pool, analysis_id, &ocr_text, "ocr_completed")
+        .await;
+}
+
+async fn run_llm_task(
+    pool: sqlx::PgPool,
+    llm: std::sync::Arc<dyn crate::services::llm::LlmProviderClient>,
+    analysis_id: Uuid,
+    text: String,
+) {
+    let _ = db::update_llm_status(
+        &pool,
+        analysis_id,
+        "processing",
+        "llm_processing",
+        None,
+    )
+    .await;
+
+    let result = match llm.analyze_ingredients(&text).await {
+        Ok(result) => result,
+        Err(err) => {
+            let _ = db::update_llm_status(
+                &pool,
+                analysis_id,
+                "failed",
+                "failed",
+                Some(err.to_string()),
+            )
+            .await;
+            return;
+        }
+    };
+
+    let result = ensure_summary_table(result);
+    let result_json = match serde_json::to_value(&result) {
+        Ok(value) => value,
+        Err(err) => {
+            let _ = db::update_llm_status(
+                &pool,
+                analysis_id,
+                "failed",
+                "failed",
+                Some(err.to_string()),
+            )
+            .await;
+            return;
+        }
+    };
+
+    let _ = db::update_analysis_result(
+        &pool,
+        analysis_id,
+        "completed",
+        Some(result.health_score),
+        Some(result_json),
+        None,
+    )
+    .await;
 }

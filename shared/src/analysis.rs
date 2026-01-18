@@ -1,6 +1,6 @@
 //! Analysis request and response types
 
-use crate::AnalysisStatus;
+use crate::{AnalysisStatus, LlmStatus, OcrStatus};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -22,6 +22,13 @@ pub struct UploadResponse {
     pub status: AnalysisStatus,
     /// Image URL
     pub image_url: String,
+}
+
+/// Request to confirm OCR text and trigger LLM analysis
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfirmRequest {
+    /// User confirmed/edited text
+    pub confirmed_text: String,
 }
 
 /// Analysis result from LLM
@@ -95,14 +102,24 @@ pub struct AnalysisResponse {
     pub id: Uuid,
     /// Current status
     pub status: AnalysisStatus,
+    /// OCR status
+    pub ocr_status: OcrStatus,
+    /// LLM status
+    pub llm_status: LlmStatus,
     /// Extracted OCR text
     pub ocr_text: Option<String>,
+    /// User confirmed/edited text
+    pub confirmed_text: Option<String>,
+    /// OCR completion timestamp
+    pub ocr_completed_at: Option<String>,
     /// Analysis result (available when completed)
     pub result: Option<AnalysisResult>,
     /// Error message (if failed)
     pub error_message: Option<String>,
     /// Creation timestamp
     pub created_at: String,
+    /// Update timestamp
+    pub updated_at: String,
 }
 
 /// History list item

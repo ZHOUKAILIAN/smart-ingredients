@@ -6,6 +6,8 @@ Cargo.lock
 
 # Tauri
 frontend/src-tauri/target/
+frontend/src-tauri/gen/
+frontend/src-tauri/build.rs
 frontend/dist/
 
 # IDE

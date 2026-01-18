@@ -11,26 +11,33 @@ pub fn IngredientCard(
     risk_level: String,
     note: String,
 ) -> impl IntoView {
-    let has_note = !note.is_empty();
-    let note_view = if has_note {
-        Some(view! {
-            <p class="ingredient-note">{note}</p>
-        })
-    } else {
-        None
-    };
+    let is_valid = |value: &str| !value.is_empty() && value != "未知" && value != "暂无";
+    let category_value = create_rw_signal(category);
+    let function_value = create_rw_signal(function);
+    let note_value = create_rw_signal(note);
+    let show_category = is_valid(&category_value.get_untracked());
+    let show_function = is_valid(&function_value.get_untracked());
+    let show_note = is_valid(&note_value.get_untracked());
 
     view! {
-        <div class="card ingredient-card">
-            <div class="ingredient-card-header">
+        <div class="ingredient-card-compact">
+            <div class="card-header">
                 <h3 class="ingredient-name">{name}</h3>
                 <RiskBadge level={risk_level.clone()} />
             </div>
-            <div class="ingredient-meta">
-                <span class="category">{category}</span>
-            </div>
-            <p class="ingredient-function">{function}</p>
-            {note_view}
+            <Show when=move || show_category || show_function>
+                <div class="tags-row">
+                    <Show when=move || show_category>
+                        <span class="tag tag-category">{category_value.get()}</span>
+                    </Show>
+                    <Show when=move || show_function>
+                        <span class="tag tag-function">{function_value.get()}</span>
+                    </Show>
+                </div>
+            </Show>
+            <Show when=move || show_note>
+                <p class="ingredient-note">{note_value.get()}</p>
+            </Show>
         </div>
     }
 }

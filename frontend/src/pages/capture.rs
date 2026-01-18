@@ -71,7 +71,10 @@ pub fn CapturePage() -> impl IntoView {
                 Ok(response) => {
                     state.analysis_id.set(Some(response.id));
                     state.analysis_result.set(None);
-                    navigate("/analyzing", Default::default());
+                    state.error_message.set(None);
+                    state.ocr_text.set(None);
+                    state.confirmed_text.set(None);
+                    navigate("/ocr", Default::default());
                 }
                 Err(err) => {
                     state.error_message.set(Some(err.clone()));
@@ -82,39 +85,44 @@ pub fn CapturePage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-home">
+        <section class="page page-capture compact">
             // Brand section
-            <div class="brand-section">
-                <div class="brand-icon">"🥗"</div>
-                <h1 class="brand-name">"Smart Ingredients"</h1>
-                <p class="brand-tagline">"食品配料表分析助手"</p>
+            <div class="brand-section-compact">
+                <div class="brand-icon-small">"🥗"</div>
+                <h1 class="brand-name-small">"Smart Ingredients"</h1>
+                <p class="brand-tagline-small">"AI智能配料表分析"</p>
             </div>
 
             // Feature card
-            <div class="card feature-card">
-                <p class="feature-text">
-                    "智能识别配料表，快速了解食品成分和健康风险"
-                </p>
+            <div class="feature-card-compact">
+                <p>"拍照识别配料表，AI分析健康风险"</p>
             </div>
 
-            // Steps card
-            <div class="card steps-card">
-                <div class="step-item">
-                    <span class="step-icon">"1️⃣"</span>
-                    <span class="step-text">"拍摄配料表"</span>
-                </div>
-                <div class="step-item">
-                    <span class="step-icon">"2️⃣"</span>
-                    <span class="step-text">"AI智能分析"</span>
-                </div>
-                <div class="step-item">
-                    <span class="step-icon">"3️⃣"</span>
-                    <span class="step-text">"查看健康报告"</span>
+            // Steps (always visible)
+            <div class="steps-section">
+                <p class="section-title">"使用步骤"</p>
+                <div class="stepper">
+                    <div class="stepper-line" aria-hidden="true"></div>
+                    <div class="stepper-item">
+                        <span class="stepper-dot">"1"</span>
+                        <span class="stepper-label">"拍摄配料表"</span>
+                    </div>
+                    <div class="stepper-item">
+                        <span class="stepper-dot">"2"</span>
+                        <span class="stepper-label">"确认识别文本"</span>
+                    </div>
+                    <div class="stepper-item">
+                        <span class="stepper-dot">"3"</span>
+                        <span class="stepper-label">"查看健康报告"</span>
+                    </div>
                 </div>
             </div>
 
             // Example images (collapsible)
-            <ExampleImages />
+            <details class="collapsible-section example-section">
+                <summary class="section-toggle">"查看示例 ▼"</summary>
+                <ExampleImages />
+            </details>
 
             // Hidden file input
             <input
@@ -127,13 +135,10 @@ pub fn CapturePage() -> impl IntoView {
 
             // Main action button (only show when no preview)
             <Show when=move || preview_url.get().is_none()>
-                <div class="action-area">
-                    <button
-                        class="primary-button-large"
-                        on:click=on_select_image
-                    >
-                        <span class="button-icon">"📷"</span>
-                        <span class="button-text">"开始分析"</span>
+                <div class="main-action-compact">
+                    <button class="btn-start-large" on:click=on_select_image>
+                        <span class="icon">"📷"</span>
+                        <span>"开始分析"</span>
                     </button>
                 </div>
             </Show>
@@ -146,10 +151,7 @@ pub fn CapturePage() -> impl IntoView {
 
             // Upload button (show when preview exists)
             <Show when=move || preview_url.get().is_some()>
-                <button
-                    class="secondary-button"
-                    on:click=move |ev| on_upload.with_value(|f| f(ev))
-                >
+                <button class="btn-confirm" on:click=move |ev| on_upload.with_value(|f| f(ev))>
                     "确认上传"
                 </button>
             </Show>

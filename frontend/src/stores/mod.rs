@@ -9,4 +9,6 @@ pub struct AppState {
     pub analysis_id: RwSignal<Option<Uuid>>,
     pub analysis_result: RwSignal<Option<AnalysisResponse>>,
     pub error_message: RwSignal<Option<String>>,
+    pub ocr_text: RwSignal<Option<String>>,
+    pub confirmed_text: RwSignal<Option<String>>,
 }
