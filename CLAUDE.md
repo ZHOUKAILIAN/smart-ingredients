@@ -85,11 +85,11 @@
 ```
 docs/
 ├── requirements/          # Feature requirements and specifications
-│   ├── XXX-feature-requirements.md
-│   └── XXX-feature-technical-plan.md
+│   └── XXX-feature-requirements.md
 ├── design/               # Technical design documents
 │   ├── technical-design.md
-│   └── ui-design.md
+│   ├── ui-design.md
+│   └── XXX-feature-technical-plan.md
 ├── api/                  # API documentation
 │   └── api-reference.md
 ├── standards/            # Coding standards and conventions
@@ -152,7 +152,7 @@ Assistant: "I need to document this feature first. Let me check existing docs...
 Assistant: "I don't see authentication requirements. Let me create the documentation."
 
 [Creates docs/requirements/005-authentication-requirements.md]
-[Creates docs/requirements/005-authentication-technical-plan.md]
+[Creates docs/design/005-authentication-technical-plan.md]
 [Creates docs/design/auth-flow.md]
 [Updates docs/api/api-reference.md with auth endpoints]
 ```
