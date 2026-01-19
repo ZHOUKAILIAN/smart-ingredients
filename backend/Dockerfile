@@ -19,16 +19,18 @@ COPY backend/Cargo.toml backend/Cargo.toml
 COPY backend/src backend/src
 COPY shared/Cargo.toml shared/Cargo.toml
 COPY shared/src shared/src
-COPY frontend/Cargo.toml frontend/Cargo.toml
-COPY frontend/src frontend/src
-COPY frontend/src-tauri/Cargo.toml frontend/src-tauri/Cargo.toml
-COPY frontend/src-tauri/src frontend/src-tauri/src
+
+# Workspace placeholders to satisfy Cargo when frontend sources are not in the build context.
+RUN mkdir -p frontend/src frontend/src-tauri/src \
+    && printf '[package]\nname = "frontend-placeholder"\nversion = "0.1.0"\nedition = "2021"\n\n[lib]\npath = "src/lib.rs"\n' > frontend/Cargo.toml \
+    && printf 'pub fn placeholder() {}\n' > frontend/src/lib.rs \
+    && printf '[package]\nname = "frontend-tauri-placeholder"\nversion = "0.1.0"\nedition = "2021"\n\n[lib]\npath = "src/lib.rs"\n' > frontend/src-tauri/Cargo.toml \
+    && printf 'pub fn placeholder() {}\n' > frontend/src-tauri/src/lib.rs
 
 RUN cargo fetch
 
 COPY backend ./backend
 COPY shared ./shared
-COPY frontend ./frontend
 
 ENV RUST_LOG=info
 

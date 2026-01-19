@@ -3,6 +3,10 @@ name = "smart-ingredients-tauri"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "smart_ingredients_tauri"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
