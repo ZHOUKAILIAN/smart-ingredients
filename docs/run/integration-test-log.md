@@ -195,6 +195,76 @@ Output:
 curl -s http://127.0.0.1:3000/health
 ```
 
+---
+
+# Integration Test Log (Remote Server Template)
+
+## Environment
+
+- Backend: `http://xxxxx:3000`
+- Image (local): `/Users/zhoukailian/Desktop/mySelf/smart-ingredients/image.png`
+
+## 1) Health check
+
+```bash
+curl -s http://xxxx:3000/health
+```
+
+Expected:
+
+```
+ok
+```
+
+## 2) Upload image (triggers OCR async)
+
+```bash
+curl -s -X POST http://xxxx:3000/api/v1/analysis/upload \
+  -F "file=@/Users/zhoukailian/Desktop/mySelf/smart-ingredients/image.png"
+```
+
+Example response:
+
+```json
+{"id":"<analysis_id>","status":"ocr_pending","image_url":"/uploads/<file>.jpg"}
+```
+
+## 3) Poll OCR status
+
+```bash
+curl -s http://xxxx:3000/api/v1/analysis/<analysis_id>
+```
+
+Wait until:
+
+- `status = ocr_completed` with `ocr_text` populated, or
+- `status = ocr_failed` with `error_message`.
+
+## 4) Confirm OCR and trigger LLM
+
+```bash
+curl -s -X POST http://xxxx:3000/api/v1/analysis/<analysis_id>/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"text":"<ocr_text>"}'
+```
+
+Example response:
+
+```json
+{"id":"<analysis_id>","status":"llm_pending","ocr_text":"..."}
+```
+
+## 5) Poll LLM status
+
+```bash
+curl -s http://xxxxxxx:3000/api/v1/analysis/<analysis_id>
+```
+
+Wait until:
+
+- `status = completed` with `result`, or
+- `status = failed` with `error_message`.
+
 Output:
 
 ```
