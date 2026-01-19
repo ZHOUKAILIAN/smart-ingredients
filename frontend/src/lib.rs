@@ -13,8 +13,8 @@ use leptos::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
-use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, OcrPage, ResultPage};
-use crate::stores::AppState;
+use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, OcrPage, ResultPage, SummaryPage};
+use crate::stores::{AppState, LoadingState, ResultPageState};
 
 /// Main App component
 #[component]
@@ -25,12 +25,22 @@ pub fn App() -> impl IntoView {
     let ocr_text = create_rw_signal(None);
     let confirmed_text = create_rw_signal(None);
 
+    // New state for interaction optimization
+    let loading_state = create_rw_signal(LoadingState::Idle);
+    let result_page_state = create_rw_signal(ResultPageState::Summary);
+    let error = create_rw_signal(None);
+    let selected_image_path = create_rw_signal(None);
+
     provide_context(AppState {
         analysis_id,
         analysis_result,
         error_message,
         ocr_text,
         confirmed_text,
+        loading_state,
+        result_page_state,
+        error,
+        selected_image_path,
     });
 
     view! {
@@ -42,6 +52,8 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/confirm") view=ConfirmPage />
                     <Route path=path!("/analyzing") view=AnalyzingPage />
                     <Route path=path!("/result") view=ResultPage />
+                    <Route path=path!("/summary") view=SummaryPage />
+                    <Route path=path!("/detail") view=DetailPage />
                 </Routes>
             </main>
         </Router>

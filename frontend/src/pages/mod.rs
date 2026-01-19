@@ -5,9 +5,13 @@ mod capture;
 mod confirm;
 mod ocr;
 mod result;
+mod summary;
+mod detail;
 
 pub use analyzing::AnalyzingPage;
 pub use capture::CapturePage;
 pub use confirm::ConfirmPage;
 pub use ocr::OcrPage;
 pub use result::ResultPage;
+pub use summary::SummaryPage;
+pub use detail::DetailPage;

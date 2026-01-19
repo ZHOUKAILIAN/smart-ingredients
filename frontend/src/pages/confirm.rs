@@ -3,7 +3,7 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 
 use crate::services;
-use crate::stores::AppState;
+use crate::stores::{AppState, LoadingState};
 
 #[component]
 pub fn ConfirmPage() -> impl IntoView {
@@ -28,15 +28,23 @@ pub fn ConfirmPage() -> impl IntoView {
         if let Some(id) = analysis_id {
             let state = state_for_confirm.clone();
             let navigate = navigate_for_confirm.clone();
+
+            // Set loading state
+            state.loading_state.set(LoadingState::LlmAnalyzing);
+
             spawn_local(async move {
                 state.error_message.set(None);
                 match services::confirm_and_analyze(id, text).await {
                     Ok(response) => {
                         state.analysis_result.set(Some(response));
                         state.confirmed_text.set(Some(edited_text.get()));
+                        state.loading_state.set(LoadingState::Idle);
                         navigate("/analyzing", Default::default());
                     }
-                    Err(err) => state.error_message.set(Some(err)),
+                    Err(err) => {
+                        state.error_message.set(Some(err));
+                        state.loading_state.set(LoadingState::Idle);
+                    }
                 }
             });
         }
@@ -75,11 +83,25 @@ pub fn ConfirmPage() -> impl IntoView {
             </Show>
 
             <div class="action-buttons">
-                <button class="btn-secondary" on:click=on_retake>
+                <button
+                    class="btn-secondary"
+                    on:click=on_retake
+                    disabled=move || state.loading_state.get() != LoadingState::Idle
+                >
                     "重新拍照"
                 </button>
-                <button class="btn-primary" on:click=on_confirm>
-                    "确认并分析"
+                <button
+                    class="btn-primary"
+                    on:click=on_confirm
+                    disabled=move || state.loading_state.get() != LoadingState::Idle
+                >
+                    {move || {
+                        if state.loading_state.get() == LoadingState::LlmAnalyzing {
+                            "提交中..."
+                        } else {
+                            "确认并分析"
+                        }
+                    }}
                 </button>
             </div>
         </section>
