@@ -3,7 +3,7 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use crate::components::{ExampleImages, ImagePreview};
 use crate::services;
-use crate::stores::AppState;
+use crate::stores::{AppState, LoadingState};
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, Url};
 
@@ -54,6 +54,7 @@ pub fn CapturePage() -> impl IntoView {
         }
     };
 
+    let state_for_upload = state.clone();
     let on_upload = store_value(move |_| {
         let file = selected_file.get();
         if file.is_none() {
@@ -62,9 +63,12 @@ pub fn CapturePage() -> impl IntoView {
         }
 
         local_error.set(None);
-        state.error_message.set(None);
-        let state = state.clone();
+        state_for_upload.error_message.set(None);
+        let state = state_for_upload.clone();
         let navigate = navigate.clone();
+
+        // Set loading state
+        state.loading_state.set(LoadingState::OcrProcessing);
 
         spawn_local(async move {
             match services::upload_image(file.unwrap()).await {
@@ -74,11 +78,13 @@ pub fn CapturePage() -> impl IntoView {
                     state.error_message.set(None);
                     state.ocr_text.set(None);
                     state.confirmed_text.set(None);
+                    state.loading_state.set(LoadingState::Idle);
                     navigate("/ocr", Default::default());
                 }
                 Err(err) => {
                     state.error_message.set(Some(err.clone()));
                     local_error.set(Some(err));
+                    state.loading_state.set(LoadingState::Idle);
                 }
             }
         });
@@ -124,12 +130,13 @@ pub fn CapturePage() -> impl IntoView {
                 <ExampleImages />
             </details>
 
-            // Hidden file input
+            // Hidden file input with camera support
             <input
                 node_ref=file_input_ref
                 class="file-input-hidden"
                 type="file"
                 accept="image/*"
+                capture="environment"
                 on:change=on_file_change
             />
 
@@ -138,7 +145,7 @@ pub fn CapturePage() -> impl IntoView {
                 <div class="main-action-compact">
                     <button class="btn-start-large" on:click=on_select_image>
                         <span class="icon">"📷"</span>
-                        <span>"开始分析"</span>
+                        <span>"拍照"</span>
                     </button>
                 </div>
             </Show>
@@ -151,8 +158,18 @@ pub fn CapturePage() -> impl IntoView {
 
             // Upload button (show when preview exists)
             <Show when=move || preview_url.get().is_some()>
-                <button class="btn-confirm" on:click=move |ev| on_upload.with_value(|f| f(ev))>
-                    "确认上传"
+                <button
+                    class="btn-confirm"
+                    on:click=move |ev| on_upload.with_value(|f| f(ev))
+                    disabled=move || state.loading_state.get() != LoadingState::Idle
+                >
+                    {move || {
+                        if state.loading_state.get() == LoadingState::OcrProcessing {
+                            "上传中..."
+                        } else {
+                            "确认上传"
+                        }
+                    }}
                 </button>
             </Show>
 

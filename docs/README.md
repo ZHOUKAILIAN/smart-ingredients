@@ -10,11 +10,11 @@ This directory contains all project documentation following a documentation-driv
 docs/
 ├── README.md                     # This file - documentation guide
 ├── requirements/                 # Feature requirements and specifications
-│   ├── XXX-feature-requirements.md
-│   └── XXX-feature-technical-plan.md
+│   └── XXX-feature-requirements.md
 ├── design/                       # Technical design documents
 │   ├── technical-design.md       # Overall system design
-│   └── ui-design.md             # UI/UX design decisions
+│   ├── ui-design.md             # UI/UX design decisions
+│   └── XXX-feature-technical-plan.md # Technical plans
 ├── api/                          # API documentation
 │   └── api-reference.md         # API endpoint reference
 ├── standards/                    # Coding standards and conventions
@@ -50,7 +50,7 @@ docs/
 ```bash
 # For feature "User Authentication"
 docs/requirements/005-authentication-requirements.md
-docs/requirements/005-authentication-technical-plan.md
+docs/design/005-authentication-technical-plan.md
 ```
 
 ### 2. Design Phase
@@ -100,11 +100,11 @@ Examples:
 
 ### Technical Plans
 
-Format: `NNN-feature-name-technical-plan.md`
+Format: `NNN-feature-name-technical-plan.md` (located in `design/`)
 
 Examples:
-- `001-mobile-ui-technical-plan.md`
-- `002-mvp-backend-technical-plan.md`
+- `design/001-mobile-ui-technical-plan.md`
+- `design/002-mvp-backend-technical-plan.md`
 
 ### Design Documents
 
@@ -136,7 +136,7 @@ Examples:
 3. **Create technical plan**
    ```bash
    cp docs/standards/technical-design-template.md \
-      docs/requirements/NNN-feature-technical-plan.md
+      docs/design/NNN-feature-technical-plan.md
    # Fill in the template
    ```
 

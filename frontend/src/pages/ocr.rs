@@ -18,6 +18,7 @@ pub fn OcrPage() -> impl IntoView {
     let state_for_poll = state.clone();
     let state_for_retry = StoredValue::new(state.clone());
     let state_for_error = StoredValue::new(state.clone());
+    let navigate_for_home = StoredValue::new(navigate.clone());
 
     create_effect(move |_| {
         if fetching.get() {
@@ -110,26 +111,42 @@ pub fn OcrPage() -> impl IntoView {
                             .with_value(|state| state.error_message.get().unwrap_or_default())
                     }}
                 </p>
-                <button
-                    class="btn-retry"
-                    on:click=move |_| {
-                        let state = state_for_retry.get_value();
-                        let analysis_id = state.analysis_id.get();
-                        if let Some(id) = analysis_id {
-                            spawn_local(async move {
-                                state.error_message.set(None);
-                                match services::retry_ocr(id).await {
-                                    Ok(response) => {
-                                        state.analysis_result.set(Some(response));
-                                    }
-                                    Err(err) => state.error_message.set(Some(err)),
-                                }
-                            });
+                <div class="action-buttons">
+                    <button
+                        class="btn-secondary"
+                        on:click=move |_| {
+                            // Clear state and go back to home
+                            state.analysis_id.set(None);
+                            state.analysis_result.set(None);
+                            state.ocr_text.set(None);
+                            state.confirmed_text.set(None);
+                            state.error_message.set(None);
+                            navigate_for_home.with_value(|nav| nav("/", Default::default()));
                         }
-                    }
-                >
-                    "重试"
-                </button>
+                    >
+                        "返回首页"
+                    </button>
+                    <button
+                        class="btn-retry"
+                        on:click=move |_| {
+                            let state = state_for_retry.get_value();
+                            let analysis_id = state.analysis_id.get();
+                            if let Some(id) = analysis_id {
+                                spawn_local(async move {
+                                    state.error_message.set(None);
+                                    match services::retry_ocr(id).await {
+                                        Ok(response) => {
+                                            state.analysis_result.set(Some(response));
+                                        }
+                                        Err(err) => state.error_message.set(Some(err)),
+                                    }
+                                });
+                            }
+                        }
+                    >
+                        "重试"
+                    </button>
+                </div>
             </Show>
         </section>
     }
