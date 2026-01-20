@@ -123,69 +123,75 @@ pub fn SummaryPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-summary">
-            <header class="page-header">
-                <h1 class="title">"分析结果概要"</h1>
-                <p class="subtitle">"以下为模型分析概要"</p>
-            </header>
+        <section class="page page-summary figma">
+            <div class="figma-body">
+                <header class="page-header">
+                    <div class="figma-header">
+                        <span class="icon-placeholder"></span>
+                        <h1 class="figma-title">"分析结果概要"</h1>
+                        <span class="icon-placeholder"></span>
+                    </div>
+                    <p class="subtitle">"以下为模型分析概要"</p>
+                </header>
 
-            // Error message
-            <Show when=move || error_text().is_some()>
-                <p class="summary-text error">
-                    {move || error_text().unwrap_or_default()}
-                </p>
-            </Show>
+                // Error message
+                <Show when=move || error_text().is_some()>
+                    <p class="summary-text error">
+                        {move || error_text().unwrap_or_default()}
+                    </p>
+                </Show>
 
-            // Health score card
-            <Show when=move || {
-                state.analysis_result.get()
-                    .and_then(|r| r.result)
-                    .is_some()
-            }>
-                {move || {
+                // Health score card
+                <Show when=move || {
                     state.analysis_result.get()
                         .and_then(|r| r.result)
-                        .map(|result| view! {
-                            <HealthScoreCard
-                                score={result.health_score}
-                                recommendation={result.recommendation.clone()}
-                            />
-                        })
-                }}
-            </Show>
+                        .is_some()
+                }>
+                    {move || {
+                        state.analysis_result.get()
+                            .and_then(|r| r.result)
+                            .map(|result| view! {
+                                <HealthScoreCard
+                                    score={result.health_score}
+                                    recommendation={result.recommendation.clone()}
+                                />
+                            })
+                    }}
+                </Show>
 
-            // Summary card
-            <Show when=move || {
-                state.analysis_result.get()
-                    .and_then(|r| r.result)
-                    .is_some()
-            }>
-                {move || {
+                // Summary card
+                <Show when=move || {
                     state.analysis_result.get()
                         .and_then(|r| r.result)
-                        .map(|result| view! {
-                            <SummaryCard
-                                summary={if result.summary.trim().is_empty() {
-                                    format!("识别到 {} 项配料", result.ingredients.len())
-                                } else {
-                                    result.summary.clone()
-                                }}
-                                warnings={result.warnings.clone()}
-                            />
-                        })
-                }}
-            </Show>
+                        .is_some()
+                }>
+                    {move || {
+                        state.analysis_result.get()
+                            .and_then(|r| r.result)
+                            .map(|result| view! {
+                                <SummaryCard
+                                    summary={if result.summary.trim().is_empty() {
+                                        format!("识别到 {} 项配料", result.ingredients.len())
+                                    } else {
+                                        result.summary.clone()
+                                    }}
+                                    warnings={result.warnings.clone()}
+                                />
+                            })
+                    }}
+                </Show>
 
-            // Action buttons
-            <div class="summary-actions">
-                <button class="btn-view-detail" on:click=on_view_detail>
-                    <span class="btn-icon">"📋"</span>
-                    <span class="btn-title">"查看详细配料表"</span>
-                    <span class="btn-arrow">"→"</span>
-                </button>
-                <button class="btn-back-home-summary" on:click=on_back_home>
-                    "🏠 返回首页"
-                </button>
+                // Action buttons
+                <div class="summary-actions">
+                    <button class="btn-view-detail" on:click=on_view_detail>
+                        <span class="btn-icon">"📋"</span>
+                        <span class="btn-title">"查看详细配料表"</span>
+                        <span class="btn-arrow">"→"</span>
+                    </button>
+                    <button class="btn-back-home-summary" on:click=on_back_home>
+                        "🏠 返回首页"
+                    </button>
+                </div>
             </div>
         </section>
     }

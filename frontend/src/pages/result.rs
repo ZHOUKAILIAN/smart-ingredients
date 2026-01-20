@@ -1,38 +1,44 @@
 use leptos::prelude::*;
-use crate::components::{IngredientRow, IngredientCardList, HealthScoreCard, SummaryCard};
+use crate::components::{HealthScoreCard, RiskBadge};
 use leptos::leptos_dom::helpers::set_timeout;
 use leptos::task::spawn_local;
+use leptos_router::hooks::use_navigate;
 use crate::services;
 use crate::stores::AppState;
 use shared::AnalysisStatus;
 use std::time::Duration;
 
-fn risk_label(level: &str) -> String {
-    level.to_string()
+#[derive(Clone)]
+struct AnalysisItem {
+    name: String,
+    risk_level: String,
+    description: String,
 }
 
-fn to_rows(table: &[shared::TableRow]) -> Vec<IngredientRow> {
-    table
+fn analysis_items(result: &shared::AnalysisResult) -> Vec<AnalysisItem> {
+    if !result.ingredients.is_empty() {
+        return result
+            .ingredients
+            .iter()
+            .map(|item| AnalysisItem {
+                name: item.name.clone(),
+                risk_level: item.risk_level.clone(),
+                description: item.description.clone().unwrap_or_default(),
+            })
+            .collect();
+    }
+
+    result
+        .table
         .iter()
-        .map(|row| IngredientRow {
+        .map(|row| AnalysisItem {
             name: row.name.clone(),
-            category: row.category.clone(),
-            function: row.function.clone(),
-            risk_level: risk_label(&row.risk_level),
-            note: row.note.clone(),
-        })
-        .collect()
-}
-
-fn ingredient_rows(items: &[shared::IngredientInfo]) -> Vec<IngredientRow> {
-    items
-        .iter()
-        .map(|item| IngredientRow {
-            name: item.name.clone(),
-            category: item.category.clone(),
-            function: item.description.clone().unwrap_or_default(),
-            risk_level: risk_label(&item.risk_level),
-            note: String::new(),
+            risk_level: row.risk_level.clone(),
+            description: if row.function.is_empty() {
+                row.note.clone()
+            } else {
+                row.function.clone()
+            },
         })
         .collect()
 }
@@ -40,9 +46,8 @@ fn ingredient_rows(items: &[shared::IngredientInfo]) -> Vec<IngredientRow> {
 #[component]
 pub fn ResultPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
+    let navigate = use_navigate();
     let state_for_effect = state.clone();
-    let state_for_summary = state.clone();
-    let state_for_table = state.clone();
     let state_for_error = state.clone();
     let state_for_status = state.clone();
     let fetching = create_rw_signal(false);
@@ -123,50 +128,79 @@ pub fn ResultPage() -> impl IntoView {
         })
     };
 
-    let summary_text = move || {
-        state_for_summary
+    let ingredient_items = move || {
+        state
             .analysis_result
             .get()
             .and_then(|response| response.result)
-            .map(|result| {
-                if result.summary.trim().is_empty() {
-                    if result.ingredients.is_empty() {
-                        "暂无摘要".to_string()
-                    } else {
-                        format!("识别到 {} 项配料，可查看表格详情。", result.ingredients.len())
-                    }
-                } else {
-                    result.summary
-                }
-            })
-            .unwrap_or_else(|| "暂无摘要".to_string())
+            .map(|result| analysis_items(&result))
+            .unwrap_or_default()
     };
 
-    let table_rows = move || {
-        state_for_table
+    let advice_items = move || {
+        state
             .analysis_result
             .get()
             .and_then(|response| response.result)
             .map(|result| {
-                if result.table.is_empty() {
-                    ingredient_rows(&result.ingredients)
+                if !result.warnings.is_empty() {
+                    result
+                        .warnings
+                        .iter()
+                        .map(|warning| warning.message.clone())
+                        .collect::<Vec<_>>()
+                } else if result.recommendation.trim().is_empty() {
+                    vec!["建议搭配新鲜水果蔬菜，保持均衡饮食".to_string()]
                 } else {
-                    to_rows(&result.table)
+                    vec![result.recommendation.clone()]
                 }
             })
             .unwrap_or_default()
     };
 
+    let on_back_home_top = {
+        let state = state.clone();
+        let navigate = navigate.clone();
+        move |_| {
+            state.analysis_id.set(None);
+            state.analysis_result.set(None);
+            navigate("/", Default::default());
+        }
+    };
+    let on_back_home_bottom = {
+        let state = state.clone();
+        let navigate = navigate.clone();
+        move |_| {
+            state.analysis_id.set(None);
+            state.analysis_result.set(None);
+            navigate("/", Default::default());
+        }
+    };
+    let on_new_analysis = {
+        let state = state.clone();
+        let navigate = navigate.clone();
+        move |_| {
+            state.analysis_id.set(None);
+            state.analysis_result.set(None);
+            navigate("/?view=scan", Default::default());
+        }
+    };
+
     view! {
-        <section class="page page-result">
-            <header class="page-header">
-                <h1 class="title">"分析结果"</h1>
-                <p class="subtitle">"以下为模型分析结果"</p>
-            </header>
+        <section class="page page-result figma">
+            <div class="scan-header">
+                <button class="icon-button" on:click=on_back_home_top>
+                    "←"
+                </button>
+                <h1 class="figma-title">"分析报告"</h1>
+                <button class="icon-button" type="button" aria-label="分享" disabled>
+                    "↗"
+                </button>
+            </div>
 
             // Error message
             <Show when=move || error_text().is_some()>
-                <p class="summary-text error">
+                <p class="hint error section-padding">
                     {move || error_text().unwrap_or_default()}
                 </p>
             </Show>
@@ -189,61 +223,79 @@ pub fn ResultPage() -> impl IntoView {
                 }}
             </Show>
 
-            // Summary card
-            <Show when=move || {
-                state.analysis_result.get()
-                    .and_then(|r| r.result)
-                    .is_some()
-            }>
-                {move || {
-                    state.analysis_result.get()
-                        .and_then(|r| r.result)
-                        .map(|result| view! {
-                            <SummaryCard
-                                summary={if result.summary.trim().is_empty() {
-                                    if result.ingredients.is_empty() {
-                                        "暂无摘要".to_string()
-                                    } else {
-                                        format!("识别到 {} 项配料，可查看详情。", result.ingredients.len())
-                                    }
-                                } else {
-                                    result.summary.clone()
-                                }}
-                                warnings={result.warnings.clone()}
-                            />
-                        })
-                }}
-            </Show>
+            <div class="section-padding">
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"配料分析"</h2>
+                    <Show
+                        when=move || !ingredient_items().is_empty()
+                        fallback=move || {
+                            let status = state_for_status
+                                .analysis_result
+                                .get()
+                                .map(|response| response.status);
+                            let message = match status {
+                                Some(AnalysisStatus::OcrPending)
+                                | Some(AnalysisStatus::OcrProcessing) => "正在识别配料表，请稍候…",
+                                Some(AnalysisStatus::OcrCompleted) => "等待确认文本后进行分析。",
+                                Some(AnalysisStatus::LlmPending)
+                                | Some(AnalysisStatus::LlmProcessing) => "正在分析中，请稍候…",
+                                _ => "暂无配料数据",
+                            };
+                            view! { <p class="hint">{message}</p> }
+                        }
+                    >
+                        <div class="analysis-list">
+                            {move || {
+                                ingredient_items()
+                                    .into_iter()
+                                    .map(|item| {
+                                        view! {
+                                            <div class="analysis-item">
+                                                <div class="analysis-header">
+                                                    <span class="analysis-name">{item.name}</span>
+                                                    <RiskBadge level={item.risk_level} />
+                                                </div>
+                                                <p class="analysis-desc">
+                                                    {if item.description.is_empty() {
+                                                        "暂无描述".to_string()
+                                                    } else {
+                                                        item.description
+                                                    }}
+                                                </p>
+                                            </div>
+                                        }
+                                    })
+                                    .collect_view()
+                            }}
+                        </div>
+                    </Show>
+                </div>
 
-            // Section title
-            <h2 class="section-title">"配料详情"</h2>
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"营养成分 (每100ml)"</h2>
+                    <p class="hint">"暂无营养成分数据"</p>
+                </div>
 
-            // Ingredient card list
-            <Show
-                when=move || !table_rows().is_empty()
-                fallback=move || {
-                    let status = state_for_status
-                        .analysis_result
-                        .get()
-                        .map(|response| response.status);
-                    let message = match status {
-                        Some(AnalysisStatus::OcrPending)
-                        | Some(AnalysisStatus::OcrProcessing) => "正在识别配料表，请稍候…",
-                        Some(AnalysisStatus::OcrCompleted) => "等待确认文本后进行分析。",
-                        Some(AnalysisStatus::LlmPending)
-                        | Some(AnalysisStatus::LlmProcessing) => "正在分析中，请稍候…",
-                        _ => "暂无配料数据",
-                    };
-                    view! { <p class="hint">{message}</p> }
-                }
-            >
-                <IngredientCardList items=table_rows() />
-            </Show>
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"健康建议"</h2>
+                    <ul class="advice-list">
+                        {move || {
+                            advice_items()
+                                .into_iter()
+                                .map(|item| view! { <li>{item}</li> })
+                                .collect_view()
+                        }}
+                    </ul>
+                </div>
+            </div>
 
-            <div class="action-area">
-                <a class="primary-button" href="/">
-                    "重新拍照"
-                </a>
+            <div class="result-actions">
+                <button class="secondary-cta" on:click=on_back_home_bottom>
+                    "返回首页"
+                </button>
+                <button class="primary-cta" on:click=on_new_analysis>
+                    "分析新产品"
+                </button>
             </div>
         </section>
     }

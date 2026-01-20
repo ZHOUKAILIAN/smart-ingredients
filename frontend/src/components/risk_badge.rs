@@ -7,9 +7,9 @@ use crate::utils::risk_badge_class;
 pub fn RiskBadge(level: String) -> impl IntoView {
     let badge_class = risk_badge_class(&level);
     let label = match level.as_str() {
-        "low" => "低风险",
-        "medium" => "中风险",
-        "high" => "高风险",
+        "low" => "安全",
+        "medium" => "注意",
+        "high" => "风险",
         _ => "未知",
     };
 

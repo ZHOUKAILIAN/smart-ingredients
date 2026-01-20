@@ -6,6 +6,7 @@ use crate::services;
 use crate::stores::{AppState, LoadingState};
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, Url};
+use web_sys::window;
 
 #[component]
 pub fn CapturePage() -> impl IntoView {
@@ -14,7 +15,24 @@ pub fn CapturePage() -> impl IntoView {
     let selected_file: RwSignal<Option<web_sys::File>, LocalStorage> = RwSignal::new_local(None);
     let preview_url = create_rw_signal(None::<String>);
     let local_error = create_rw_signal(None);
-    let file_input_ref = NodeRef::<leptos::html::Input>::new();
+    let camera_input_ref = NodeRef::<leptos::html::Input>::new();
+    let album_input_ref = NodeRef::<leptos::html::Input>::new();
+    let show_scan = create_rw_signal(false);
+    let initialized = create_rw_signal(false);
+
+    create_effect(move |_| {
+        if initialized.get() {
+            return;
+        }
+        initialized.set(true);
+        if let Some(win) = window() {
+            if let Ok(search) = win.location().search() {
+                if search.contains("view=scan") {
+                    show_scan.set(true);
+                }
+            }
+        }
+    });
 
     let on_file_change = move |ev: leptos::ev::Event| {
         let input = ev
@@ -34,8 +52,14 @@ pub fn CapturePage() -> impl IntoView {
         selected_file.set(file);
     };
 
-    let on_select_image = move |_| {
-        if let Some(input) = file_input_ref.get() {
+    let on_select_camera = move |_| {
+        if let Some(input) = camera_input_ref.get() {
+            input.click();
+        }
+    };
+
+    let on_select_album = move |_| {
+        if let Some(input) = album_input_ref.get() {
             input.click();
         }
     };
@@ -49,7 +73,10 @@ pub fn CapturePage() -> impl IntoView {
         selected_file.set(None);
 
         // Clear file input
-        if let Some(input) = file_input_ref.get() {
+        if let Some(input) = camera_input_ref.get() {
+            input.set_value("");
+        }
+        if let Some(input) = album_input_ref.get() {
             input.set_value("");
         }
     };
@@ -91,93 +118,156 @@ pub fn CapturePage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-capture compact">
-            // Brand section
-            <div class="brand-section-compact">
-                <div class="brand-icon-small">"🥗"</div>
-                <h1 class="brand-name-small">"Smart Ingredients"</h1>
-                <p class="brand-tagline-small">"AI智能配料表分析"</p>
-            </div>
-
-            // Feature card
-            <div class="feature-card-compact">
-                <p>"拍照识别配料表，AI分析健康风险"</p>
-            </div>
-
-            // Steps (always visible)
-            <div class="steps-section">
-                <p class="section-title">"使用步骤"</p>
-                <div class="stepper">
-                    <div class="stepper-line" aria-hidden="true"></div>
-                    <div class="stepper-item">
-                        <span class="stepper-dot">"1"</span>
-                        <span class="stepper-label">"拍摄配料表"</span>
+        <section class="page page-capture figma">
+            <Show when=move || !show_scan.get()>
+                <div class="home-hero">
+                    <div class="brand-mark">
+                        <div class="brand-icon">"SI"</div>
+                        <div class="brand-ai">"AI"</div>
                     </div>
-                    <div class="stepper-item">
-                        <span class="stepper-dot">"2"</span>
-                        <span class="stepper-label">"确认识别文本"</span>
-                    </div>
-                    <div class="stepper-item">
-                        <span class="stepper-dot">"3"</span>
-                        <span class="stepper-label">"查看健康报告"</span>
+                    <h1 class="hero-title">"Smart Ingredients"</h1>
+                    <p class="hero-subtitle">"AI智能配料表分析"</p>
+                    <p class="hero-description">"拍摄识别配料表，AI分析健康风险，让您吃得更安心"</p>
+                </div>
+
+                <div class="surface-card steps-card">
+                    <h2 class="card-title centered">"使用步骤"</h2>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-icon">
+                                <span class="step-number">"1"</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>"拍摄配料表"</h3>
+                                <p>"对准食品包装上的配料表拍照"</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-icon">
+                                <span class="step-number">"2"</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>"确认识别文本"</h3>
+                                <p>"AI自动识别配料信息"</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-icon">
+                                <span class="step-number">"3"</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>"查看健康报告"</h3>
+                                <p>"获取详细的成分分析和建议"</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            // Example images (collapsible)
-            <details class="collapsible-section example-section">
-                <summary class="section-toggle">"查看示例 ▼"</summary>
-                <ExampleImages />
-            </details>
+                <details class="example-section">
+                    <summary class="link-button">"查看示例"</summary>
+                    <ExampleImages />
+                </details>
 
-            // Hidden file input with camera support
-            <input
-                node_ref=file_input_ref
-                class="file-input-hidden"
-                type="file"
-                accept="image/*"
-                capture="environment"
-                on:change=on_file_change
-            />
-
-            // Main action button (only show when no preview)
-            <Show when=move || preview_url.get().is_none()>
-                <div class="main-action-compact">
-                    <button class="btn-start-large" on:click=on_select_image>
-                        <span class="icon">"📷"</span>
-                        <span>"拍照"</span>
+                <div class="home-actions">
+                    <button class="primary-cta" on:click=move |_| show_scan.set(true)>
+                        "开始分析"
                     </button>
                 </div>
             </Show>
 
-            // Image preview (show after selection)
-            <ImagePreview
-                preview_url=preview_url.into()
-                on_remove=on_remove_preview
-            />
-
-            // Upload button (show when preview exists)
-            <Show when=move || preview_url.get().is_some()>
-                <button
-                    class="btn-confirm"
-                    on:click=move |ev| on_upload.with_value(|f| f(ev))
-                    disabled=move || state.loading_state.get() != LoadingState::Idle
-                >
-                    {move || {
-                        if state.loading_state.get() == LoadingState::OcrProcessing {
-                            "上传中..."
-                        } else {
-                            "确认上传"
+            <Show when=move || show_scan.get()>
+                <div class="scan-header">
+                    <button
+                        class="icon-button"
+                        on:click=move |_| {
+                            show_scan.set(false);
+                            on_remove_preview();
+                            local_error.set(None);
                         }
-                    }}
-                </button>
-            </Show>
+                    >
+                        "←"
+                    </button>
+                    <h1>"拍摄配料表"</h1>
+                    <div class="icon-placeholder"></div>
+                </div>
 
-            // Error message
-            <Show when=move || local_error.get().is_some()>
-                <p class="hint error">
-                    {move || local_error.get().unwrap_or_default()}
-                </p>
+                <div class="scan-content">
+                    <input
+                        node_ref=camera_input_ref
+                        class="file-input-hidden"
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        on:change=on_file_change
+                    />
+                    <input
+                        node_ref=album_input_ref
+                        class="file-input-hidden"
+                        type="file"
+                        accept="image/*"
+                        on:change=on_file_change
+                    />
+
+                    <Show when=move || preview_url.get().is_some()>
+                        <div class="surface-card preview-card">
+                            <ImagePreview
+                                preview_url=preview_url.into()
+                                on_remove=on_remove_preview
+                            />
+                            <div class="status-banner">
+                                "图片已上传，点击分析开始识别"
+                            </div>
+                            <button
+                                class="primary-cta"
+                                on:click=move |ev| on_upload.with_value(|f| f(ev))
+                                disabled=move || state.loading_state.get() != LoadingState::Idle
+                            >
+                                {move || {
+                                    if state.loading_state.get() == LoadingState::OcrProcessing {
+                                        "AI 分析中..."
+                                    } else {
+                                        "开始分析"
+                                    }
+                                }}
+                            </button>
+                        </div>
+                    </Show>
+
+                    <Show when=move || preview_url.get().is_none()>
+                        <div class="surface-card upload-card">
+                            <div class="upload-hero">
+                                <div class="upload-icon">"CAM"</div>
+                                <div>
+                                    <h2>"上传配料表照片"</h2>
+                                    <p>"请确保配料表文字清晰可见"</p>
+                                </div>
+                            </div>
+                            <div class="upload-actions">
+                                <button class="primary-cta" on:click=on_select_camera>
+                                    "拍照"
+                                </button>
+                                <button class="secondary-cta" on:click=on_select_album>
+                                    "从相册选择"
+                                </button>
+                            </div>
+                        </div>
+                    </Show>
+
+                    <div class="surface-card tips-card">
+                        <h3>"拍摄小贴士："</h3>
+                        <ul>
+                            <li>"确保配料表文字清晰，光线充足"</li>
+                            <li>"尽量平行拍摄，避免文字倾斜"</li>
+                            <li>"避免反光和阴影遮挡文字"</li>
+                        </ul>
+                    </div>
+
+                    <Show when=move || local_error.get().is_some()>
+                        <p class="hint error">
+                            {move || local_error.get().unwrap_or_default()}
+                        </p>
+                    </Show>
+                </div>
             </Show>
         </section>
     }
