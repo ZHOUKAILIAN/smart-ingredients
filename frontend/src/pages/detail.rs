@@ -61,21 +61,24 @@ pub fn DetailPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-detail">
-            <header class="page-header">
-                <button class="btn-back" on:click=on_back>
-                    "← 返回概要"
-                </button>
-                <h1 class="title">"详细配料列表"</h1>
-            </header>
+        <section class="page page-detail figma">
+            <div class="figma-body">
+                <header class="figma-header">
+                    <button class="icon-button" on:click=on_back aria-label="返回概要">
+                        "←"
+                    </button>
+                    <h1 class="figma-title">"详细配料列表"</h1>
+                    <span class="icon-placeholder"></span>
+                </header>
 
-            // Ingredient card list
-            <Show
-                when=move || !table_rows().is_empty()
-                fallback=move || view! { <p class="hint">"暂无配料数据"</p> }
-            >
-                <IngredientCardList items=table_rows() />
-            </Show>
+                // Ingredient card list
+                <Show
+                    when=move || !table_rows().is_empty()
+                    fallback=move || view! { <p class="hint">"暂无配料数据"</p> }
+                >
+                    <IngredientCardList items=table_rows() />
+                </Show>
+            </div>
         </section>
     }
 }

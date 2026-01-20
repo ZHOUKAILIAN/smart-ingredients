@@ -93,27 +93,30 @@ pub fn OcrPage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-ocr">
-            <div class="loading-card">
-                <div class="progress-bar" aria-hidden="true">
-                    <div class="progress-bar-fill"></div>
+        <section class="page page-ocr figma">
+            <div class="waiting-body">
+                <div class="surface-card status-card">
+                    <div class="status-icon">"OCR"</div>
+                    <div class="progress-bar" aria-hidden="true">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <h2 class="status-title">"正在识别配料表..."</h2>
+                    <p class="status-text">"请稍候，通常需要3-5秒"</p>
                 </div>
-                <p class="loading-text">"正在识别配料表..."</p>
-                <p class="loading-hint">"请稍候，通常需要3-5秒"</p>
             </div>
 
             <Show when=move || {
                 state_for_error.with_value(|state| state.error_message.get().is_some())
             }>
-                <p class="hint error">
+                <p class="hint error section-padding">
                     {move || {
                         state_for_error
                             .with_value(|state| state.error_message.get().unwrap_or_default())
                     }}
                 </p>
-                <div class="action-buttons">
+                <div class="error-actions">
                     <button
-                        class="btn-secondary"
+                        class="secondary-cta"
                         on:click=move |_| {
                             // Clear state and go back to home
                             state.analysis_id.set(None);
@@ -127,7 +130,7 @@ pub fn OcrPage() -> impl IntoView {
                         "返回首页"
                     </button>
                     <button
-                        class="btn-retry"
+                        class="primary-cta"
                         on:click=move |_| {
                             let state = state_for_retry.get_value();
                             let analysis_id = state.analysis_id.get();
