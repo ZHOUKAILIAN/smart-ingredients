@@ -3,7 +3,7 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
 
-use crate::components::{IngredientRow, IngredientCardList};
+use crate::components::{IconArrowLeft, IngredientCardList, IngredientRow};
 use crate::stores::AppState;
 
 fn risk_label(level: &str) -> String {
@@ -65,7 +65,7 @@ pub fn DetailPage() -> impl IntoView {
             <div class="figma-body">
                 <header class="figma-header">
                     <button class="icon-button" on:click=on_back aria-label="返回概要">
-                        "←"
+                        <IconArrowLeft />
                     </button>
                     <h1 class="figma-title">"详细配料列表"</h1>
                     <span class="icon-placeholder"></span>

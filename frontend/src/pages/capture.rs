@@ -1,7 +1,9 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
-use crate::components::{ExampleImages, ImagePreview};
+use crate::components::{
+    ExampleImages, IconArrowLeft, IconCamera, IconChart, IconCheckBadge, ImagePreview,
+};
 use crate::services;
 use crate::stores::{AppState, LoadingState};
 use wasm_bindgen::JsCast;
@@ -136,6 +138,7 @@ pub fn CapturePage() -> impl IntoView {
                         <div class="step-item">
                             <div class="step-icon">
                                 <span class="step-number">"1"</span>
+                                <IconCamera />
                             </div>
                             <div class="step-content">
                                 <h3>"拍摄配料表"</h3>
@@ -145,6 +148,7 @@ pub fn CapturePage() -> impl IntoView {
                         <div class="step-item">
                             <div class="step-icon">
                                 <span class="step-number">"2"</span>
+                                <IconCheckBadge />
                             </div>
                             <div class="step-content">
                                 <h3>"确认识别文本"</h3>
@@ -154,6 +158,7 @@ pub fn CapturePage() -> impl IntoView {
                         <div class="step-item">
                             <div class="step-icon">
                                 <span class="step-number">"3"</span>
+                                <IconChart />
                             </div>
                             <div class="step-content">
                                 <h3>"查看健康报告"</h3>
@@ -185,7 +190,7 @@ pub fn CapturePage() -> impl IntoView {
                             local_error.set(None);
                         }
                     >
-                        "←"
+                        <IconArrowLeft />
                     </button>
                     <h1>"拍摄配料表"</h1>
                     <div class="icon-placeholder"></div>

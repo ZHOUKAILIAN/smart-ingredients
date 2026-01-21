@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use crate::components::{HealthScoreCard, RiskBadge};
+use crate::components::{HealthScoreCard, IconArrowLeft, RiskBadge};
 use leptos::leptos_dom::helpers::set_timeout;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
@@ -190,7 +190,7 @@ pub fn ResultPage() -> impl IntoView {
         <section class="page page-result figma">
             <div class="scan-header">
                 <button class="icon-button" on:click=on_back_home_top>
-                    "←"
+                    <IconArrowLeft />
                 </button>
                 <h1 class="figma-title">"分析报告"</h1>
                 <button class="icon-button" type="button" aria-label="分享" disabled>

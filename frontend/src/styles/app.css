@@ -39,10 +39,21 @@ body {
 }
 
 .app-shell {
-  min-height: 100vh;
+  /* 使用 height 而非 min-height，配合 box-sizing 确保不超出视口 */
+  height: 100vh;
+  width: 100vw;
   display: flex;
   justify-content: center;
-  padding: 24px 16px;
+  /* 使用安全区域 API 适配不同设备 */
+  padding-top: max(32px, env(safe-area-inset-top, 32px));
+  padding-right: env(safe-area-inset-right, 0);
+  padding-bottom: 0;
+  padding-left: env(safe-area-inset-left, 0);
+  /* 确保 padding 包含在 100vh 内 */
+  box-sizing: border-box;
+  /* 防止内容溢出 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .page {
@@ -434,7 +445,7 @@ body {
 .page.page-summary.figma,
 .page.page-detail.figma,
 .page.page-confirm.figma {
-  min-height: 100vh;
+  min-height: 100%;
   background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 45%, #ecfeff 100%);
   box-shadow: none;
   border-radius: 24px;
@@ -464,13 +475,13 @@ body {
 .figma-body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   padding: 24px 20px;
 }
 
 .home-hero {
   text-align: center;
-  padding: 40px 24px 24px;
+  padding: 48px 24px 24px;
 }
 
 .brand-mark {
@@ -542,7 +553,7 @@ body {
 }
 
 .steps-card {
-  margin: 0 20px 12px;
+  margin: 0 20px 20px;
   /* width: auto; */
 }
 
@@ -578,6 +589,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #059669;
 }
 
 .steps-list .step-number {
@@ -597,6 +609,11 @@ body {
   box-shadow: 0 6px 12px rgba(16, 185, 129, 0.35);
 }
 
+.steps-list .step-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
 .steps-list .step-content h3 {
   margin: 0 0 4px 0;
   font-size: 15px;
@@ -612,7 +629,7 @@ body {
 }
 
 .example-section {
-  margin: 0 16px 12px;
+  margin: 0 16px 20px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(16, 185, 129, 0.12);
@@ -641,10 +658,16 @@ body {
 .link-button::after {
   content: "›";
   font-size: 16px;
+  display: inline-block;
+  transition: transform var(--transition-fast);
+}
+
+.example-section[open] .link-button::after {
+  transform: rotate(90deg);
 }
 
 .home-actions {
-  padding: 4px 16px 28px;
+  padding: 12px 16px 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -711,6 +734,9 @@ body {
 }
 
 .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   border-radius: 12px;
@@ -719,6 +745,11 @@ body {
   font-size: 18px;
   cursor: pointer;
   color: #111827;
+}
+
+.icon-button .icon {
+  width: 20px;
+  height: 20px;
 }
 
 .icon-button:disabled {
@@ -894,6 +925,10 @@ body {
   color: #111827;
 }
 
+.score-meta {
+  width: 100%;
+}
+
 .score-meta h2 {
   margin: 0;
   font-size: 16px;
@@ -906,7 +941,7 @@ body {
   margin: 6px 0 0 0;
   font-size: 13px;
   color: #6b7280;
-  text-align: center;
+  text-align: left;
 }
 
 .score-progress {

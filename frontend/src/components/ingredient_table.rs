@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use crate::utils::category_label;
 
 #[derive(Clone)]
 pub struct IngredientRow {
@@ -27,7 +28,7 @@ pub fn IngredientTable(items: Vec<IngredientRow>) -> impl IntoView {
                         view! {
                             <div class="table-row">
                                 <span class="cell name">{item.name}</span>
-                                <span class="cell category">{item.category}</span>
+                                <span class="cell category">{category_label(&item.category)}</span>
                                 <span class="cell function">{item.function}</span>
                                 <span class="cell risk">{item.risk_level}</span>
                                 <span class="cell note">{item.note}</span>
