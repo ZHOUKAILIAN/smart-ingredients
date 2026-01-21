@@ -29,3 +29,14 @@ pub fn risk_badge_class(level: &str) -> &'static str {
         _ => "risk-badge",
     }
 }
+
+/// Translate ingredient category to a user-facing label.
+pub fn category_label(value: &str) -> String {
+    match value.to_lowercase().as_str() {
+        "additive" => "additive/添加剂".to_string(),
+        "allergen" => "allergen/过敏原".to_string(),
+        "nutrition" => "nutrition/营养成分".to_string(),
+        "other" => "other/其他".to_string(),
+        _ => value.to_string(),
+    }
+}

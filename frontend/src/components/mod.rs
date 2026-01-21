@@ -11,6 +11,7 @@ mod usage_tips;
 mod example_images;
 mod loading_spinner;
 mod error_display;
+mod icons;
 
 pub use ingredient_table::{IngredientRow, IngredientTable};
 pub use risk_badge::RiskBadge;
@@ -23,3 +24,4 @@ pub use usage_tips::UsageTips;
 pub use example_images::ExampleImages;
 pub use loading_spinner::LoadingSpinner;
 pub use error_display::ErrorDisplay;
+pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
