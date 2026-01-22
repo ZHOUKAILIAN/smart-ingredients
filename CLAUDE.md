@@ -10,6 +10,8 @@
 - **OCR**: PaddleOCR / Tesseract
 - **LLM**: DeepSeek / 智谱 AI
 
+---
+
 ## Documentation-Driven Development Workflow
 
 ### 🚨 MANDATORY: Documentation First - NO EXCEPTIONS 🚨
@@ -94,6 +96,7 @@ docs/
 │   └── api-reference.md
 ├── standards/            # Coding standards and conventions
 │   ├── coding-standards.md
+│   ├── error-handling-standards.md
 │   ├── project-conventions.md
 │   ├── requirements-template.md
 │   └── technical-design-template.md
@@ -103,6 +106,8 @@ docs/
     ├── backend-startup.md
     └── integration-testing.md
 ```
+
+---
 
 ## Before Writing Code - Mandatory Checklist
 
@@ -159,6 +164,8 @@ Assistant: "I don't see authentication requirements. Let me create the documenta
 
 **Why correct**: Requirements documented first, design decisions made, API contracts defined before any code.
 
+---
+
 ## Project Architecture
 
 ### Monorepo Structure
@@ -184,233 +191,30 @@ smart-ingredients/
 | OCR | PaddleOCR (Python) / Tesseract (Rust) |
 | LLM | DeepSeek / 智谱 AI |
 
+---
+
 ## Coding Standards
 
-**IMPORTANT**: See `docs/standards/coding-standards.md` and `docs/standards/project-conventions.md` for complete details.
+**IMPORTANT**: All implementation details are in `docs/standards/`. You MUST read these before writing code:
 
-### Rust Conventions
+- **`coding-standards.md`** - General Rust coding conventions, formatting, linting
+- **`error-handling-standards.md`** - Error handling rules, patterns, and decision guides
+- **`project-conventions.md`** - Project-specific patterns and conventions
 
-- **Formatting**: Use `cargo fmt` before committing
-- **Linting**: Use `cargo clippy` and fix all warnings
-- **API Guidelines**: Follow [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
-- **Error Handling**: Use `anyhow::Result` in services, `thiserror` for custom errors
-- **Logging**: Use `tracing` macros (`info!`, `warn!`, `error!`, `debug!`)
+### Quick Reference
 
-### Error Handling Patterns
+| Topic | Rule | See Details |
+|-------|------|------------|
+| **Formatting** | Use `cargo fmt` before committing | `coding-standards.md` |
+| **Linting** | Use `cargo clippy` and fix all warnings | `coding-standards.md` |
+| **Error Handling** | Backend: `Result<impl IntoResponse, AppError>`<br>Service: `anyhow::Result<T>`<br>Frontend: `Result<T, ErrorInfo>` | `error-handling-standards.md` |
+| **Logging** | Use `tracing` macros (`error!`, `warn!`, `info!`, `debug!`) | `coding-standards.md` |
+| **Async/Await** | Entry: `#[tokio::main]`<br>Handlers: `async fn handler() -> Result<...>` | `coding-standards.md` |
+| **File Naming** | Frontend components: `kebab-case.rs`<br>Backend modules: `snake_case.rs` | `project-conventions.md` |
+| **Database** | Use SQLx with `query_as!` for type safety<br>Migrations: `YYYYMMDDHHMMSS_description.sql` | `coding-standards.md` |
+| **Shared Types** | Always derive `Serialize` + `Deserialize`<br>Location: `shared/src/` | `project-conventions.md` |
 
-```rust
-// Backend: Custom error types with thiserror
-#[derive(Debug, thiserror::Error)]
-pub enum AppError {
-    #[error("database error: {0}")]
-    Database(#[from] sqlx::Error),
-
-    #[error("validation error: {0}")]
-    Validation(String),
-}
-
-// Services: Use anyhow::Result
-pub async fn process_data(input: &str) -> anyhow::Result<Output> {
-    // ... implementation
-}
-
-// Handlers: Convert to AppError
-pub async fn handler() -> Result<impl IntoResponse, AppError> {
-    let result = service.process().await?;
-    Ok(Json(result))
-}
-
-// Frontend: Use Result<T, String>
-pub async fn fetch_data() -> Result<Data, String> {
-    // ... implementation
-}
-```
-
-### Async/Await Patterns
-
-```rust
-// Entry point
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    // ... setup
-}
-
-// Handlers and services
-pub async fn handler() -> Result<impl IntoResponse, AppError> {
-    // ... implementation
-}
-
-// Trait methods
-#[async_trait]
-pub trait Service {
-    async fn process(&self) -> anyhow::Result<Output>;
-}
-
-// CPU-bound work
-tokio::task::spawn_blocking(move || {
-    // Expensive computation
-}).await?
-```
-
-### Frontend (Leptos)
-
-**Component Structure**:
-```rust
-use leptos::prelude::*;
-
-#[component]
-pub fn MyComponent() -> impl IntoView {
-    // 1. Get context/state
-    let state = use_context::<AppState>()
-        .expect("AppState not found");
-
-    // 2. Create local signals
-    let (count, set_count) = create_signal(0);
-
-    // 3. Define event handlers
-    let on_click = move |_| {
-        set_count.update(|n| *n += 1);
-    };
-
-    // 4. Return view
-    view! {
-        <div>
-            <button on:click=on_click>
-                "Count: " {count}
-            </button>
-        </div>
-    }
-}
-```
-
-**State Management**:
-```rust
-// 1. Define state struct
-#[derive(Clone)]
-pub struct AppState {
-    pub data: RwSignal<Option<Data>>,
-    pub error: RwSignal<Option<String>>,
-}
-
-// 2. Provide at root
-#[component]
-pub fn App() -> impl IntoView {
-    provide_context(AppState {
-        data: create_rw_signal(None),
-        error: create_rw_signal(None),
-    });
-    // ... rest of app
-}
-
-// 3. Consume in components
-let state = use_context::<AppState>()
-    .expect("AppState not found");
-```
-
-**File Naming**: Use `kebab-case.rs` for component files
-
-### Backend (Axum)
-
-**Handler Pattern**:
-```rust
-use axum::{
-    extract::{State, Path, Json},
-    response::{IntoResponse, Response},
-};
-
-pub async fn handler(
-    State(state): State<AppState>,
-    Path(id): Path<Uuid>,
-    Json(payload): Json<CreateRequest>,
-) -> Result<impl IntoResponse, AppError> {
-    // 1. Validate input
-    payload.validate()?;
-
-    // 2. Call service
-    let result = state.service.process(id, payload).await?;
-
-    // 3. Return response
-    Ok(Json(result))
-}
-```
-
-**Router Pattern**:
-```rust
-pub fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/items", get(list_items).post(create_item))
-        .route("/items/:id", get(get_item).put(update_item).delete(delete_item))
-}
-```
-
-**State Pattern**:
-```rust
-#[derive(Clone)]
-pub struct AppState {
-    pub db: PgPool,
-    pub redis: ConnectionManager,
-    pub config: Arc<Config>,
-}
-```
-
-### Database (SQLx)
-
-**Query Pattern**:
-```rust
-// Use FromRow derive
-#[derive(Debug, sqlx::FromRow, Serialize)]
-pub struct User {
-    pub id: Uuid,
-    pub name: String,
-    pub created_at: DateTime<Utc>,
-}
-
-// Raw SQL queries
-let user = sqlx::query_as::<_, User>(
-    "SELECT id, name, created_at FROM users WHERE id = $1"
-)
-.bind(user_id)
-.fetch_one(&pool)
-.await?;
-
-// Transactions
-let mut tx = pool.begin().await?;
-sqlx::query("INSERT INTO ...").execute(&mut *tx).await?;
-sqlx::query("UPDATE ...").execute(&mut *tx).await?;
-tx.commit().await?;
-```
-
-**Migration Naming**: `YYYYMMDDHHMMSS_description.sql`
-
-### Shared Types
-
-**Location**: All shared types in `shared/src/`
-
-**Pattern**:
-```rust
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-/// Request/Response types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateRequest {
-    pub name: String,
-    pub description: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ItemResponse {
-    pub id: Uuid,
-    pub name: String,
-    pub created_at: String,
-}
-```
-
-**Requirements**:
-- Always derive `Serialize` + `Deserialize`
-- Add documentation comments
-- Keep in sync between frontend and backend
-- Use `Option<T>` for nullable fields
+---
 
 ## Development Commands
 
@@ -431,6 +235,8 @@ cargo fmt
 cargo clippy
 ```
 
+---
+
 ## Environment Variables
 
 ```bash
@@ -444,11 +250,17 @@ LLM_API_KEY=...
 VITE_API_URL=http://localhost:3000
 ```
 
+---
+
 ## Testing Strategy
+
+See `docs/standards/coding-standards.md` for detailed testing patterns.
 
 - Unit tests for business logic
 - Integration tests for API endpoints
 - E2E tests for critical user flows
+
+---
 
 ## Deployment
 
@@ -457,9 +269,11 @@ VITE_API_URL=http://localhost:3000
 - **Database**: RDS PostgreSQL
 - **Cache**: Redis Cluster
 
+---
+
 ## Important Notes
 
 - This is a new project - establish patterns early
 - Document decisions as you make them
 - Keep docs in sync with code changes
-- Review TECH-STACK.md for detailed technology choices
+- **ALWAYS read `docs/standards/` before implementing features**
