@@ -45,7 +45,7 @@ pub async fn insert_analysis(pool: &PgPool, image_url: &str) -> sqlx::Result<Uui
     .fetch_one(pool)
     .await?;
 
-    Ok(row.try_get::<Uuid, _>("id")?)
+    row.try_get::<Uuid, _>("id")
 }
 
 pub async fn update_ocr_status(

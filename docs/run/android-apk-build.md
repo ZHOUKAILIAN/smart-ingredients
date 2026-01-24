@@ -29,27 +29,15 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 
 ## 2) Configure backend API address
 
-The frontend currently uses a hardcoded API base:
-
-`frontend/src/services/mod.rs`
-
-Update it to your server before building:
-
-```rust
-const API_BASE: &str = "http://xxxxxx:3000";
-```
-
-If you keep HTTP (not HTTPS), Android 9+ needs cleartext enabled:
+Set the API base at build time using `API_BASE` (do not hardcode it in code or commit it):
 
 ```bash
-cargo tauri android init
+export API_BASE="http://<your-server-host>:3000"
 ```
 
-Then edit:
-
-`frontend/src-tauri/gen/android/app/src/main/AndroidManifest.xml`
-
-Add `android:usesCleartextTraffic="true"` inside `<application ...>`.
+The Android `network_security_config.xml` is generated during build from `API_BASE`,
+so HTTP hosts are allowed automatically. Keep the server out of git by not committing
+the generated `frontend/src-tauri/gen` files.
 
 ## 3) Initialize Android project (first time only)
 
@@ -61,32 +49,36 @@ cargo tauri android init
 
 This generates `frontend/src-tauri/gen/android`.
 
-## 4) Build APK
+## 4) Generate release keystore (first time only)
 
-Debug APK:
+Release builds need a signing key. Generate it after `android init`:
 
 ```bash
-cargo tauri android build --apk
+./scripts/generate-android-keystore.sh
 ```
 
-APK path (debug):
+This writes:
+- `frontend/src-tauri/gen/android/release-key.jks`
+- `frontend/src-tauri/gen/android/keystore.properties`
 
-`frontend/src-tauri/gen/android/app/build/outputs/apk/debug/app-debug.apk`
+Both are already ignored by git.
 
-Release APK:
+## 5) Build APK
+
+Release APK (universal, "big package"):
 
 ```bash
-cargo tauri android build --apk --release
+API_BASE="http://<your-server-host>:3000" cargo tauri android build --apk true
 ```
 
-APK path (release):
+APK path (release, universal):
 
-`frontend/src-tauri/gen/android/app/build/outputs/apk/release/app-release.apk`
+`frontend/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk`
 
-## 5) Install on device
+## 6) Install on device
 
 ```bash
-adb install -r frontend/src-tauri/gen/android/app/build/outputs/apk/debug/app-debug.apk
+adb install -r frontend/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
 ```
 
 ## Troubleshooting
@@ -94,4 +86,3 @@ adb install -r frontend/src-tauri/gen/android/app/build/outputs/apk/debug/app-de
 - If build fails, confirm `ANDROID_HOME`, `NDK_HOME`, `JAVA_HOME` are correct.
 - For HTTP requests blocked, ensure `usesCleartextTraffic="true"` is set.
 - If you change API_BASE, rebuild the APK.
-

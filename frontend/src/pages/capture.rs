@@ -5,7 +5,8 @@ use crate::components::{
     ExampleImages, IconArrowLeft, IconCamera, IconChart, IconCheckBadge, ImagePreview,
 };
 use crate::services;
-use crate::stores::{AppState, LoadingState};
+use crate::stores::{AppState, LoadingState, ToastLevel};
+use crate::utils::emit_toast;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, Url};
 use web_sys::window;
@@ -16,7 +17,6 @@ pub fn CapturePage() -> impl IntoView {
     let navigate = use_navigate();
     let selected_file: RwSignal<Option<web_sys::File>, LocalStorage> = RwSignal::new_local(None);
     let preview_url = create_rw_signal(None::<String>);
-    let local_error = create_rw_signal(None);
     let camera_input_ref = NodeRef::<leptos::html::Input>::new();
     let album_input_ref = NodeRef::<leptos::html::Input>::new();
     let show_scan = create_rw_signal(false);
@@ -87,11 +87,10 @@ pub fn CapturePage() -> impl IntoView {
     let on_upload = store_value(move |_| {
         let file = selected_file.get();
         if file.is_none() {
-            local_error.set(Some("请先选择一张图片".to_string()));
+            emit_toast(ToastLevel::Warning, "需要图片", "请先选择一张图片");
             return;
         }
 
-        local_error.set(None);
         state_for_upload.error_message.set(None);
         let state = state_for_upload.clone();
         let navigate = navigate.clone();
@@ -111,8 +110,7 @@ pub fn CapturePage() -> impl IntoView {
                     navigate("/ocr", Default::default());
                 }
                 Err(err) => {
-                    state.error_message.set(Some(err.clone()));
-                    local_error.set(Some(err));
+                    state.error_message.set(Some(err));
                     state.loading_state.set(LoadingState::Idle);
                 }
             }
@@ -187,7 +185,6 @@ pub fn CapturePage() -> impl IntoView {
                         on:click=move |_| {
                             show_scan.set(false);
                             on_remove_preview();
-                            local_error.set(None);
                         }
                     >
                         <IconArrowLeft />
@@ -267,11 +264,6 @@ pub fn CapturePage() -> impl IntoView {
                         </ul>
                     </div>
 
-                    <Show when=move || local_error.get().is_some()>
-                        <p class="hint error">
-                            {move || local_error.get().unwrap_or_default()}
-                        </p>
-                    </Show>
                 </div>
             </Show>
         </section>

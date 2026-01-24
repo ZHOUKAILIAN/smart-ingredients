@@ -27,6 +27,22 @@ pub struct ErrorInfo {
     pub recoverable: bool,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum ToastLevel {
+    Error,
+    Warning,
+    Success,
+    Info,
+}
+
+#[derive(Clone, Debug)]
+pub struct ToastMessage {
+    pub id: u64,
+    pub level: ToastLevel,
+    pub title: String,
+    pub message: String,
+}
+
 #[derive(Clone)]
 pub struct AppState {
     // Existing fields
@@ -41,4 +57,5 @@ pub struct AppState {
     pub result_page_state: RwSignal<ResultPageState>,
     pub error: RwSignal<Option<ErrorInfo>>,
     pub selected_image_path: RwSignal<Option<String>>,
+    pub toasts: RwSignal<Vec<ToastMessage>>,
 }

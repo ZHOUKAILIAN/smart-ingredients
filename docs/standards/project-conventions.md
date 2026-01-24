@@ -14,38 +14,38 @@ resolver = "2"
 
 ### Member Crates
 
-| Crate | Purpose | Dependencies |
-|-------|---------|--------------|
-| `frontend` | Tauri desktop application | `tauri`, `leptos`, `shared` |
-| `backend` | Axum web server | `axum`, `sqlx`, `shared` |
-| `shared` | Common types and utilities | `serde`, `serde_json` |
+| Crate      | Purpose                    | Dependencies                |
+| ---------- | -------------------------- | --------------------------- |
+| `frontend` | Tauri desktop application  | `tauri`, `leptos`, `shared` |
+| `backend`  | Axum web server            | `axum`, `sqlx`, `shared`    |
+| `shared`   | Common types and utilities | `serde`, `serde_json`       |
 
 ## Naming Conventions
 
 ### File Names
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Rust files | `snake_case.rs` | `image_uploader.rs` |
-| Markdown files | `kebab-case.md` | `api-design.md` |
-| Test files | `<module>_test.rs` or `tests/` | `service_test.rs` |
+| Type           | Convention                     | Example             |
+| -------------- | ------------------------------ | ------------------- |
+| Rust files     | `snake_case.rs`                | `image_uploader.rs` |
+| Markdown files | `kebab-case.md`                | `api-design.md`     |
+| Test files     | `<module>_test.rs` or `tests/` | `service_test.rs`   |
 
 ### Database Names
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Tables | `snake_case` | `analyses`, `ingredients` |
-| Columns | `snake_case` | `health_score`, `created_at` |
-| Indexes | `idx_<table>_<columns>` | `idx_analyses_status` |
-| Foreign keys | `fk_<table>_<reference>` | `fk_favorites_analysis` |
+| Type         | Convention               | Example                      |
+| ------------ | ------------------------ | ---------------------------- |
+| Tables       | `snake_case`             | `analyses`, `ingredients`    |
+| Columns      | `snake_case`             | `health_score`, `created_at` |
+| Indexes      | `idx_<table>_<columns>`  | `idx_analyses_status`        |
+| Foreign keys | `fk_<table>_<reference>` | `fk_favorites_analysis`      |
 
 ### API Endpoints
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Paths | `kebab-case` | `/api/v1/analysis/upload` |
-| Query params | `snake_case` | `?page=1&limit=20` |
-| JSON keys | `snake_case` | `health_score`, `created_at` |
+| Type         | Convention   | Example                      |
+| ------------ | ------------ | ---------------------------- |
+| Paths        | `kebab-case` | `/api/v1/analysis/upload`    |
+| Query params | `snake_case` | `?page=1&limit=20`           |
+| JSON keys    | `snake_case` | `health_score`, `created_at` |
 
 ## Environment Configuration
 
@@ -65,7 +65,7 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=3000
 
 # OCR Service
-OCR_PROVIDER=paddle  # tesseract | paddle
+# OCR is now fixed to use PaddleOCR service
 OCR_PADDLE_URL=http://localhost:8000/ocr
 OCR_TIMEOUT=30
 OCR_LANG=chi_sim+eng
@@ -113,9 +113,9 @@ VITE_MAX_FILE_SIZE=10485760  # 10MB in bytes
 
 ### Main Branches
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production-ready code |
+| Branch    | Purpose                         |
+| --------- | ------------------------------- |
+| `main`    | Production-ready code           |
 | `develop` | Integration branch for features |
 
 ### Feature Branches
@@ -158,18 +158,22 @@ hotfix/security-patch
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation
 
 ## Testing
+
 Describe testing performed
 
 ## Checklist
+
 - [ ] Tests pass
 - [ ] Documentation updated
 - [ ] No clippy warnings
@@ -209,12 +213,12 @@ info!(
 
 ### Log Levels
 
-| Level | Usage | Example |
-|--------|--------|---------|
+| Level   | Usage                      | Example                 |
+| ------- | -------------------------- | ----------------------- |
 | `ERROR` | Errors requiring attention | Failed to process image |
-| `WARN` | Unexpected but recoverable | OCR timeout, retrying |
-| `INFO` | Important events | User uploaded image |
-| `DEBUG` | Detailed info | OCR result details |
+| `WARN`  | Unexpected but recoverable | OCR timeout, retrying   |
+| `INFO`  | Important events           | User uploaded image     |
+| `DEBUG` | Detailed info              | OCR result details      |
 
 ### Request Tracing
 
@@ -326,11 +330,11 @@ docs/api/
 
 ### Environment Tiers
 
-| Tier | Purpose | URL |
-|-------|---------|-----|
-| `dev` | Development | `dev-api.smart-ingredients.com` |
+| Tier      | Purpose        | URL                                 |
+| --------- | -------------- | ----------------------------------- |
+| `dev`     | Development    | `dev-api.smart-ingredients.com`     |
 | `staging` | Pre-production | `staging-api.smart-ingredients.com` |
-| `prod` | Production | `api.smart-ingredients.com` |
+| `prod`    | Production     | `api.smart-ingredients.com`         |
 
 ### Deployment Artifacts
 
@@ -357,9 +361,9 @@ docs/api/
 
 ### Alerting Thresholds
 
-| Metric | Warning | Critical |
-|---------|----------|----------|
-| Error rate | > 1% | > 5% |
-| P95 latency | > 2s | > 5s |
-| OCR failure | > 5% | > 10% |
-| Database connections | > 80% | > 95% |
+| Metric               | Warning | Critical |
+| -------------------- | ------- | -------- |
+| Error rate           | > 1%    | > 5%     |
+| P95 latency          | > 2s    | > 5s     |
+| OCR failure          | > 5%    | > 10%    |
+| Database connections | > 80%   | > 95%    |

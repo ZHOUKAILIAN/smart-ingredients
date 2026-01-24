@@ -4,7 +4,8 @@ use leptos::leptos_dom::helpers::set_timeout;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use crate::services;
-use crate::stores::AppState;
+use crate::stores::{AppState, ToastLevel};
+use crate::utils::emit_toast;
 use shared::AnalysisStatus;
 use std::time::Duration;
 
@@ -48,7 +49,6 @@ pub fn ResultPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = use_navigate();
     let state_for_effect = state.clone();
-    let state_for_error = state.clone();
     let state_for_status = state.clone();
     let fetching = create_rw_signal(false);
     let polling = create_rw_signal(false);
@@ -68,11 +68,14 @@ pub fn ResultPage() -> impl IntoView {
             spawn_local(async move {
                 match services::fetch_analysis(id).await {
                     Ok(response) => {
-                        let api_error = response.error_message.clone();
+                        if let Some(api_error) = response.error_message.clone() {
+                            emit_toast(ToastLevel::Error, "分析失败", &api_error);
+                        }
                         state.analysis_result.set(Some(response));
-                        state.error_message.set(api_error);
                     }
-                    Err(err) => state.error_message.set(Some(err)),
+                    Err(err) => {
+                        emit_toast(ToastLevel::Error, "分析失败", &err);
+                    }
                 }
             });
         }
@@ -104,11 +107,14 @@ pub fn ResultPage() -> impl IntoView {
                         spawn_local(async move {
                             match services::fetch_analysis(id).await {
                                 Ok(response) => {
-                                    let api_error = response.error_message.clone();
+                                    if let Some(api_error) = response.error_message.clone() {
+                                        emit_toast(ToastLevel::Error, "分析失败", &api_error);
+                                    }
                                     state.analysis_result.set(Some(response));
-                                    state.error_message.set(api_error);
                                 }
-                                Err(err) => state.error_message.set(Some(err)),
+                                Err(err) => {
+                                    emit_toast(ToastLevel::Error, "分析失败", &err);
+                                }
                             }
                             polling.set(false);
                         });
@@ -118,15 +124,6 @@ pub fn ResultPage() -> impl IntoView {
             }
         }
     });
-
-    let error_text = move || {
-        state_for_error.error_message.get().or_else(|| {
-            state_for_error
-                .analysis_result
-                .get()
-                .and_then(|response| response.error_message)
-        })
-    };
 
     let ingredient_items = move || {
         state
@@ -197,13 +194,6 @@ pub fn ResultPage() -> impl IntoView {
                     "↗"
                 </button>
             </div>
-
-            // Error message
-            <Show when=move || error_text().is_some()>
-                <p class="hint error section-padding">
-                    {move || error_text().unwrap_or_default()}
-                </p>
-            </Show>
 
             // Health score card
             <Show when=move || {

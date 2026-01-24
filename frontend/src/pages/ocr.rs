@@ -5,7 +5,8 @@ use leptos_router::hooks::use_navigate;
 use std::time::Duration;
 
 use crate::services;
-use crate::stores::AppState;
+use crate::stores::{AppState, ToastLevel};
+use crate::utils::emit_toast;
 use shared::AnalysisStatus;
 
 #[component]
@@ -38,10 +39,16 @@ pub fn OcrPage() -> impl IntoView {
             if let Some(id) = analysis_id {
                 match services::fetch_analysis(id).await {
                     Ok(response) => {
+                        if let Some(api_error) = response.error_message.clone() {
+                            emit_toast(ToastLevel::Error, "识别失败", &api_error);
+                        }
                         state.error_message.set(response.error_message.clone());
                         state.analysis_result.set(Some(response));
                     }
-                    Err(err) => state.error_message.set(Some(err)),
+                    Err(err) => {
+                        emit_toast(ToastLevel::Error, "识别失败", &err);
+                        state.error_message.set(Some(err));
+                    }
                 }
             }
             fetching.set(false);
@@ -76,10 +83,16 @@ pub fn OcrPage() -> impl IntoView {
                             spawn_local(async move {
                                 match services::fetch_analysis(id).await {
                                     Ok(response) => {
+                                        if let Some(api_error) = response.error_message.clone() {
+                                            emit_toast(ToastLevel::Error, "识别失败", &api_error);
+                                        }
                                         state.error_message.set(response.error_message.clone());
                                         state.analysis_result.set(Some(response));
                                     }
-                                    Err(err) => state.error_message.set(Some(err)),
+                                    Err(err) => {
+                                        emit_toast(ToastLevel::Error, "识别失败", &err);
+                                        state.error_message.set(Some(err));
+                                    }
                                 }
                                 polling.set(false);
                             });
@@ -105,15 +118,7 @@ pub fn OcrPage() -> impl IntoView {
                 </div>
             </div>
 
-            <Show when=move || {
-                state_for_error.with_value(|state| state.error_message.get().is_some())
-            }>
-                <p class="hint error section-padding">
-                    {move || {
-                        state_for_error
-                            .with_value(|state| state.error_message.get().unwrap_or_default())
-                    }}
-                </p>
+            <Show when=move || state_for_error.with_value(|state| state.error_message.get().is_some())>
                 <div class="error-actions">
                     <button
                         class="secondary-cta"
@@ -141,7 +146,10 @@ pub fn OcrPage() -> impl IntoView {
                                         Ok(response) => {
                                             state.analysis_result.set(Some(response));
                                         }
-                                        Err(err) => state.error_message.set(Some(err)),
+                                        Err(err) => {
+                                            emit_toast(ToastLevel::Error, "识别失败", &err);
+                                            state.error_message.set(Some(err));
+                                        }
                                     }
                                 });
                             }

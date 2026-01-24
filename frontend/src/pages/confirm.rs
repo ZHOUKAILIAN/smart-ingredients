@@ -3,14 +3,14 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 
 use crate::services;
-use crate::stores::{AppState, LoadingState};
+use crate::stores::{AppState, LoadingState, ToastLevel};
+use crate::utils::emit_toast;
 
 #[component]
 pub fn ConfirmPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = use_navigate();
     let state_for_confirm = state.clone();
-    let state_for_error = state.clone();
     let navigate_for_retake = navigate.clone();
     let navigate_for_confirm = navigate.clone();
 
@@ -42,6 +42,7 @@ pub fn ConfirmPage() -> impl IntoView {
                         navigate("/analyzing", Default::default());
                     }
                     Err(err) => {
+                        emit_toast(ToastLevel::Error, "提交失败", &err);
                         state.error_message.set(Some(err));
                         state.loading_state.set(LoadingState::Idle);
                     }
@@ -80,12 +81,6 @@ pub fn ConfirmPage() -> impl IntoView {
                         "💡 提示：您可以修改识别错误的文字，以提高分析准确性"
                     </p>
                 </div>
-
-                <Show when=move || state_for_error.error_message.get().is_some()>
-                    <p class="hint error">
-                        {move || state_for_error.error_message.get().unwrap_or_default()}
-                    </p>
-                </Show>
 
                 <div class="action-buttons">
                     <button
