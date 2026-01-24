@@ -13,6 +13,7 @@ use leptos::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
+use crate::components::ToastHost;
 use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, OcrPage, ResultPage, SummaryPage};
 use crate::stores::{AppState, LoadingState, ResultPageState};
 
@@ -30,6 +31,7 @@ pub fn App() -> impl IntoView {
     let result_page_state = create_rw_signal(ResultPageState::Summary);
     let error = create_rw_signal(None);
     let selected_image_path = create_rw_signal(None);
+    let toasts = create_rw_signal(Vec::new());
 
     provide_context(AppState {
         analysis_id,
@@ -41,11 +43,13 @@ pub fn App() -> impl IntoView {
         result_page_state,
         error,
         selected_image_path,
+        toasts,
     });
 
     view! {
         <Router>
             <main class="app-shell">
+                <ToastHost />
                 <Routes fallback=|| view! { <p>"Not found"</p> }>
                     <Route path=path!("/") view=CapturePage />
                     <Route path=path!("/ocr") view=OcrPage />

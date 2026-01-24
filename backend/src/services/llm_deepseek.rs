@@ -63,7 +63,7 @@ impl LlmProviderClient for DeepSeekClient {
         })?;
         let content = response
             .choices
-            .get(0)
+            .first()
             .ok_or_else(|| anyhow::anyhow!("DeepSeek response missing choices"))?
             .message
             .content

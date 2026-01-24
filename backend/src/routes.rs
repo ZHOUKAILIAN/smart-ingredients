@@ -1,6 +1,6 @@
 //! Route definitions
 
-use axum::Router;
+use axum::{extract::DefaultBodyLimit, Router};
 use tower_http::{
     cors::CorsLayer,
     limit::RequestBodyLimitLayer,
@@ -16,6 +16,7 @@ pub fn create_routes(state: AppState) -> Router {
         .nest("/api/v1/analysis", analysis::routes())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
+        .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
         .layer(RequestBodyLimitLayer::new(10 * 1024 * 1024))
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
         .route("/health", axum::routing::get(health))

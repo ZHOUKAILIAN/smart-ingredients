@@ -54,7 +54,11 @@ async fn upload_handler(
         })?;
 
         if bytes.len() > MAX_UPLOAD_BYTES {
-            return Err(AppError::PayloadTooLarge("file exceeds 10MB".to_string()));
+            let size_mb = bytes.len() as f64 / (1024.0 * 1024.0);
+            return Err(AppError::PayloadTooLarge(format!(
+                "图片文件过大（当前 {:.1}MB），请选择小于 10MB 的图片",
+                size_mb
+            )));
         }
 
         file_bytes = Some(bytes.to_vec());
@@ -62,15 +66,18 @@ async fn upload_handler(
     }
 
     let file_bytes = file_bytes.ok_or_else(|| {
-        AppError::BadRequest("missing file field".to_string())
+        AppError::BadRequest("缺少文件字段".to_string())
     })?;
 
-    let extension = validate_content_type(content_type.as_deref())?;
+    // Basic validation of Content-Type
+    validate_content_type(content_type.as_deref())?;
+
+    // Store image (will auto-detect format and convert if needed)
     let image_url = storage::store_image(
         &file_bytes,
+        content_type.as_deref(),
         &state.config.upload_dir,
         filename.as_deref(),
-        extension,
     )
     .await
     .map_err(|err| AppError::Storage(err.to_string()))?;
@@ -231,16 +238,15 @@ struct HistoryQuery {
 const MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
 const MAX_TEXT_LENGTH: usize = 5000;
 
-fn validate_content_type(content_type: Option<&str>) -> Result<Option<&'static str>, AppError> {
+fn validate_content_type(content_type: Option<&str>) -> Result<(), AppError> {
+    // Only do basic validation, actual format is auto-detected by image crate
     match content_type {
-        Some("image/jpeg") => Ok(Some("jpg")),
-        Some("image/png") => Ok(Some("png")),
-        Some("image/webp") => Ok(Some("webp")),
+        Some(ct) if ct.starts_with("image/") => Ok(()),
         Some(other) => Err(AppError::UnsupportedMediaType(format!(
-            "unsupported content type: {}",
+            "不支持的文件类型: {}。请上传图片文件（支持 JPEG、PNG、HEIC、HEIF、BMP、WebP、GIF、TIFF、SVG 格式）",
             other
         ))),
-        None => Ok(None),
+        None => Ok(()), // Allow no Content-Type, will be auto-detected
     }
 }
 

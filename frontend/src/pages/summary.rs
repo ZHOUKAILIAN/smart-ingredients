@@ -8,7 +8,8 @@ use std::time::Duration;
 
 use crate::components::{HealthScoreCard, SummaryCard};
 use crate::services;
-use crate::stores::AppState;
+use crate::stores::{AppState, ToastLevel};
+use crate::utils::emit_toast;
 use shared::AnalysisStatus;
 
 #[component]
@@ -16,7 +17,6 @@ pub fn SummaryPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = use_navigate();
     let state_for_effect = state.clone();
-    let state_for_error = state.clone();
     let state_for_polling = state.clone();
     let fetching = RwSignal::new(false);
     let polling = RwSignal::new(false);
@@ -36,11 +36,14 @@ pub fn SummaryPage() -> impl IntoView {
             spawn_local(async move {
                 match services::fetch_analysis(id).await {
                     Ok(response) => {
-                        let api_error = response.error_message.clone();
+                        if let Some(api_error) = response.error_message.clone() {
+                            emit_toast(ToastLevel::Error, "分析失败", &api_error);
+                        }
                         state.analysis_result.set(Some(response));
-                        state.error_message.set(api_error);
                     }
-                    Err(err) => state.error_message.set(Some(err)),
+                    Err(err) => {
+                        emit_toast(ToastLevel::Error, "分析失败", &err);
+                    }
                 }
                 fetching.set(false);
             });
@@ -74,11 +77,14 @@ pub fn SummaryPage() -> impl IntoView {
                         spawn_local(async move {
                             match services::fetch_analysis(id).await {
                                 Ok(response) => {
-                                    let api_error = response.error_message.clone();
+                                    if let Some(api_error) = response.error_message.clone() {
+                                        emit_toast(ToastLevel::Error, "分析失败", &api_error);
+                                    }
                                     state.analysis_result.set(Some(response));
-                                    state.error_message.set(api_error);
                                 }
-                                Err(err) => state.error_message.set(Some(err)),
+                                Err(err) => {
+                                    emit_toast(ToastLevel::Error, "分析失败", &err);
+                                }
                             }
                             polling_signal.set(false);
                         });
@@ -88,15 +94,6 @@ pub fn SummaryPage() -> impl IntoView {
             }
         }
     });
-
-    let error_text = move || {
-        state_for_error.error_message.get().or_else(|| {
-            state_for_error
-                .analysis_result
-                .get()
-                .and_then(|response| response.error_message)
-        })
-    };
 
     let navigate_detail = navigate.clone();
     let on_view_detail = move |_| {
@@ -133,13 +130,6 @@ pub fn SummaryPage() -> impl IntoView {
                     </div>
                     <p class="subtitle">"以下为模型分析概要"</p>
                 </header>
-
-                // Error message
-                <Show when=move || error_text().is_some()>
-                    <p class="summary-text error">
-                        {move || error_text().unwrap_or_default()}
-                    </p>
-                </Show>
 
                 // Health score card
                 <Show when=move || {

@@ -11,6 +11,7 @@ mod usage_tips;
 mod example_images;
 mod loading_spinner;
 mod error_display;
+mod toast;
 mod icons;
 
 pub use ingredient_table::{IngredientRow, IngredientTable};
@@ -24,4 +25,5 @@ pub use usage_tips::UsageTips;
 pub use example_images::ExampleImages;
 pub use loading_spinner::LoadingSpinner;
 pub use error_display::ErrorDisplay;
+pub use toast::ToastHost;
 pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};

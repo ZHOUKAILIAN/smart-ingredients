@@ -7,7 +7,7 @@
 - **Frontend**: Rust + Tauri + Leptos
 - **Backend**: Rust + Axum + SQLx
 - **Database**: PostgreSQL + Redis
-- **OCR**: PaddleOCR / Tesseract
+- **OCR**: PaddleOCR
 - **LLM**: DeepSeek / 智谱 AI
 
 ---
@@ -141,6 +141,7 @@ Before writing ANY code, you MUST verify:
 ### Example: Adding a New Feature
 
 #### ❌ WRONG (do not do this):
+
 ```
 User: "Add user authentication"
 Assistant: "I'll add JWT authentication to the backend..."
@@ -150,6 +151,7 @@ Assistant: "I'll add JWT authentication to the backend..."
 **Why wrong**: No requirements documented, no design decisions made, no API contracts defined.
 
 #### ✅ CORRECT (do this instead):
+
 ```
 User: "Add user authentication"
 Assistant: "I need to document this feature first. Let me check existing docs..."
@@ -182,14 +184,14 @@ smart-ingredients/
 
 ### Tech Stack Details
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend Framework | Tauri 2.x + Leptos 0.7.x |
-| Backend Framework | Axum 0.7.x |
-| Database | PostgreSQL 16.x + SQLx |
-| Cache | Redis 7.x |
-| OCR | PaddleOCR (Python) / Tesseract (Rust) |
-| LLM | DeepSeek / 智谱 AI |
+| Layer              | Technology                 |
+| ------------------ | -------------------------- |
+| Frontend Framework | Tauri 2.x + Leptos 0.7.x   |
+| Backend Framework  | Axum 0.7.x                 |
+| Database           | PostgreSQL 16.x + SQLx     |
+| Cache              | Redis 7.x                  |
+| OCR                | PaddleOCR (Python service) |
+| LLM                | DeepSeek / 智谱 AI         |
 
 ---
 
@@ -203,16 +205,16 @@ smart-ingredients/
 
 ### Quick Reference
 
-| Topic | Rule | See Details |
-|-------|------|------------|
-| **Formatting** | Use `cargo fmt` before committing | `coding-standards.md` |
-| **Linting** | Use `cargo clippy` and fix all warnings | `coding-standards.md` |
+| Topic              | Rule                                                                                                               | See Details                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| **Formatting**     | Use `cargo fmt` before committing                                                                                  | `coding-standards.md`         |
+| **Linting**        | Use `cargo clippy` and fix all warnings                                                                            | `coding-standards.md`         |
 | **Error Handling** | Backend: `Result<impl IntoResponse, AppError>`<br>Service: `anyhow::Result<T>`<br>Frontend: `Result<T, ErrorInfo>` | `error-handling-standards.md` |
-| **Logging** | Use `tracing` macros (`error!`, `warn!`, `info!`, `debug!`) | `coding-standards.md` |
-| **Async/Await** | Entry: `#[tokio::main]`<br>Handlers: `async fn handler() -> Result<...>` | `coding-standards.md` |
-| **File Naming** | Frontend components: `kebab-case.rs`<br>Backend modules: `snake_case.rs` | `project-conventions.md` |
-| **Database** | Use SQLx with `query_as!` for type safety<br>Migrations: `YYYYMMDDHHMMSS_description.sql` | `coding-standards.md` |
-| **Shared Types** | Always derive `Serialize` + `Deserialize`<br>Location: `shared/src/` | `project-conventions.md` |
+| **Logging**        | Use `tracing` macros (`error!`, `warn!`, `info!`, `debug!`)                                                        | `coding-standards.md`         |
+| **Async/Await**    | Entry: `#[tokio::main]`<br>Handlers: `async fn handler() -> Result<...>`                                           | `coding-standards.md`         |
+| **File Naming**    | Frontend components: `kebab-case.rs`<br>Backend modules: `snake_case.rs`                                           | `project-conventions.md`      |
+| **Database**       | Use SQLx with `query_as!` for type safety<br>Migrations: `YYYYMMDDHHMMSS_description.sql`                          | `coding-standards.md`         |
+| **Shared Types**   | Always derive `Serialize` + `Deserialize`<br>Location: `shared/src/`                                               | `project-conventions.md`      |
 
 ---
 

@@ -1,5 +1,12 @@
 //! Utility functions
 
+pub mod error_messages;
+
+use wasm_bindgen::JsValue;
+use web_sys::{CustomEvent, CustomEventInit};
+
+use crate::stores::ToastLevel;
+
 /// Get the color for a health score
 pub fn get_health_score_color(score: i32) -> &'static str {
     match score {
@@ -38,5 +45,32 @@ pub fn category_label(value: &str) -> String {
         "nutrition" => "nutrition/营养成分".to_string(),
         "other" => "other/其他".to_string(),
         _ => value.to_string(),
+    }
+}
+
+pub fn emit_toast(level: ToastLevel, title: &str, message: &str) {
+    let Some(window) = web_sys::window() else { return };
+    let detail = js_sys::Object::new();
+    let _ = js_sys::Reflect::set(&detail, &JsValue::from_str("title"), &JsValue::from_str(title));
+    let _ = js_sys::Reflect::set(
+        &detail,
+        &JsValue::from_str("message"),
+        &JsValue::from_str(message),
+    );
+    let _ = js_sys::Reflect::set(
+        &detail,
+        &JsValue::from_str("level"),
+        &JsValue::from_str(match level {
+            ToastLevel::Error => "error",
+            ToastLevel::Warning => "warning",
+            ToastLevel::Success => "success",
+            ToastLevel::Info => "info",
+        }),
+    );
+
+    let mut init = CustomEventInit::new();
+    init.detail(&detail);
+    if let Ok(event) = CustomEvent::new_with_event_init_dict("global-toast", &init) {
+        let _ = window.dispatch_event(&event);
     }
 }
