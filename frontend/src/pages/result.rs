@@ -1,11 +1,12 @@
 use leptos::prelude::*;
-use crate::components::{HealthScoreCard, IconArrowLeft, RiskBadge};
+use crate::components::{HealthScoreCard, IconArrowLeft, RiskBadge, get_preference_label, get_preference_icon};
 use leptos::leptos_dom::helpers::set_timeout;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
+use crate::utils::preference::load_preference;
 use shared::AnalysisStatus;
 use std::time::Duration;
 
@@ -14,22 +15,40 @@ struct AnalysisItem {
     name: String,
     risk_level: String,
     description: String,
+    is_focus: bool,
+    index: usize,
 }
 
 fn analysis_items(result: &shared::AnalysisResult) -> Vec<AnalysisItem> {
+    let focus_set = result
+        .focus_ingredients
+        .as_ref()
+        .map(|items| {
+            items
+                .iter()
+                .map(|item| item.trim().to_lowercase())
+                .collect::<std::collections::HashSet<_>>()
+        })
+        .unwrap_or_default();
+
     if !result.ingredients.is_empty() {
-        return result
+        let mut items: Vec<AnalysisItem> = result
             .ingredients
             .iter()
             .map(|item| AnalysisItem {
                 name: item.name.clone(),
                 risk_level: item.risk_level.clone(),
                 description: item.description.clone().unwrap_or_default(),
+                is_focus: focus_set.contains(&item.name.trim().to_lowercase()),
+                index: 0,
             })
             .collect();
+        assign_indices(&mut items);
+        sort_items(&mut items);
+        return items;
     }
 
-    result
+    let mut items: Vec<AnalysisItem> = result
         .table
         .iter()
         .map(|row| AnalysisItem {
@@ -40,8 +59,38 @@ fn analysis_items(result: &shared::AnalysisResult) -> Vec<AnalysisItem> {
             } else {
                 row.function.clone()
             },
+            is_focus: focus_set.contains(&row.name.trim().to_lowercase()),
+            index: 0,
         })
-        .collect()
+        .collect();
+    assign_indices(&mut items);
+    sort_items(&mut items);
+    items
+}
+
+fn assign_indices(items: &mut [AnalysisItem]) {
+    for (index, item) in items.iter_mut().enumerate() {
+        item.index = index;
+    }
+}
+
+fn sort_items(items: &mut Vec<AnalysisItem>) {
+    items.sort_by_key(|item| {
+        (
+            risk_rank(&item.risk_level),
+            if item.is_focus { 0 } else { 1 },
+            item.index,
+        )
+    });
+}
+
+fn risk_rank(level: &str) -> i32 {
+    match level.trim().to_lowercase().as_str() {
+        "high" => 0,
+        "medium" => 1,
+        "low" => 2,
+        _ => 3,
+    }
 }
 
 #[component]
@@ -155,12 +204,36 @@ pub fn ResultPage() -> impl IntoView {
             .unwrap_or_default()
     };
 
+    let summary_text = move || {
+        state
+            .analysis_result
+            .get()
+            .and_then(|response| response.result)
+            .map(|result| {
+                result
+                    .focus_summary
+                    .clone()
+                    .filter(|value| !value.trim().is_empty())
+                    .unwrap_or_else(|| result.summary.clone())
+            })
+            .unwrap_or_else(|| "暂无分析总结".to_string())
+    };
+
+    let current_preference = move || {
+        state
+            .analysis_preference
+            .get()
+            .or_else(|| load_preference())
+            .unwrap_or_else(|| "none".to_string())
+    };
+
     let on_back_home_top = {
         let state = state.clone();
         let navigate = navigate.clone();
         move |_| {
             state.analysis_id.set(None);
             state.analysis_result.set(None);
+            state.analysis_preference.set(None);
             navigate("/", Default::default());
         }
     };
@@ -170,6 +243,7 @@ pub fn ResultPage() -> impl IntoView {
         move |_| {
             state.analysis_id.set(None);
             state.analysis_result.set(None);
+            state.analysis_preference.set(None);
             navigate("/", Default::default());
         }
     };
@@ -179,6 +253,7 @@ pub fn ResultPage() -> impl IntoView {
         move |_| {
             state.analysis_id.set(None);
             state.analysis_result.set(None);
+            state.analysis_preference.set(None);
             navigate("/?view=scan", Default::default());
         }
     };
@@ -193,6 +268,15 @@ pub fn ResultPage() -> impl IntoView {
                 <button class="icon-button" type="button" aria-label="分享" disabled>
                     "↗"
                 </button>
+            </div>
+
+            // Preference badge
+            <div class="preference-badge-container">
+                <span class="preference-badge">
+                    {move || get_preference_icon(&current_preference())}
+                    " "
+                    {move || get_preference_label(&current_preference())}
+                </span>
             </div>
 
             // Health score card
@@ -216,6 +300,14 @@ pub fn ResultPage() -> impl IntoView {
             <div class="section-padding">
                 <div class="surface-card result-section">
                     <h2 class="card-title">"配料分析"</h2>
+                    {move || {
+                        let has_focus_items = ingredient_items().iter().any(|item| item.is_focus);
+                        has_focus_items.then(|| view! {
+                            <p class="focus-hint">
+                                "⭐ 带星标的成分是您关注的偏好相关成分"
+                            </p>
+                        })
+                    }}
                     <Show
                         when=move || !ingredient_items().is_empty()
                         fallback=move || {
@@ -239,10 +331,16 @@ pub fn ResultPage() -> impl IntoView {
                                 ingredient_items()
                                     .into_iter()
                                     .map(|item| {
+                                        let is_focus = item.is_focus;
                                         view! {
-                                            <div class="analysis-item">
+                                            <div class="analysis-item" class:focus-item=is_focus>
                                                 <div class="analysis-header">
-                                                    <span class="analysis-name">{item.name}</span>
+                                                    <span class="analysis-name">
+                                                        {item.name}
+                                                        {is_focus.then(|| view! {
+                                                            <span class="focus-indicator" title="偏好关注成分">"⭐"</span>
+                                                        })}
+                                                    </span>
                                                     <RiskBadge level={item.risk_level} />
                                                 </div>
                                                 <p class="analysis-desc">
@@ -276,6 +374,11 @@ pub fn ResultPage() -> impl IntoView {
                                 .collect_view()
                         }}
                     </ul>
+                </div>
+
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"配料表分析"</h2>
+                    <p class="analysis-summary">{summary_text}</p>
                 </div>
             </div>
 

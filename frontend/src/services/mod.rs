@@ -39,8 +39,12 @@ pub async fn upload_image(file: web_sys::File) -> Result<shared::UploadResponse,
 pub async fn confirm_and_analyze(
     id: uuid::Uuid,
     confirmed_text: String,
+    preference: Option<String>,
 ) -> Result<shared::AnalysisResponse, String> {
-    let payload = shared::ConfirmRequest { confirmed_text };
+    let payload = shared::ConfirmRequest {
+        confirmed_text,
+        preference,
+    };
     let body =
         serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
 

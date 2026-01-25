@@ -1,3 +1,11 @@
-# TODO
+# 待开发特性 (Backlog)
 
-- Image upload format support is limited to `image/jpeg`, `image/png`, and `image/webp` (10MB max). Add HEIC/HEIF (and other common formats if needed) via conversion or expanded backend validation, plus frontend validation/user提示.
+## 个性化分析 (Personalization)
+
+- [ ] **复合偏好支持**: 允许用户同时选择多种偏好（如："减脂" + "过敏"）。
+- [ ] **精细化过敏原配置**:
+  - 目前仅提供通用的 "过敏体质" 选项。
+  - 未来需要支持用户具体勾选过敏源（如：花生、牛奶、麸质等），并在 Prompt 中动态生成针对性的警告。
+- [ ] **已选过敏源强提醒**:
+  - 当配料表中明确检测出用户勾选的过敏源时，需在结果页通过显眼的弹窗或红色横幅进行警告（Blocker 级别的提醒）。
+- [ ] **用户偏好持久化增强**: 目前仅前端 LocalStorage，未来考虑同步到用户云端配置。

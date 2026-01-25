@@ -22,6 +22,7 @@ use crate::stores::{AppState, LoadingState, ResultPageState};
 pub fn App() -> impl IntoView {
     let analysis_id = create_rw_signal(None);
     let analysis_result = create_rw_signal(None);
+    let analysis_preference = create_rw_signal(None);
     let error_message = create_rw_signal(None);
     let ocr_text = create_rw_signal(None);
     let confirmed_text = create_rw_signal(None);
@@ -36,6 +37,7 @@ pub fn App() -> impl IntoView {
     provide_context(AppState {
         analysis_id,
         analysis_result,
+        analysis_preference,
         error_message,
         ocr_text,
         confirmed_text,

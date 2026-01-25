@@ -15,7 +15,7 @@ use uuid::Uuid;
 use crate::{
     db,
     errors::AppError,
-    services::{ocr, storage},
+    services::{llm::PreferenceType, ocr, storage},
     state::AppState,
 };
 
@@ -136,10 +136,12 @@ async fn confirm_handler(
     db::update_confirmed_text(&state.pool, id, &confirmed_text, "llm_pending")
         .await?;
 
+    let preference = PreferenceType::from_str(payload.preference.as_deref());
+
     let pool = state.pool.clone();
     let llm = state.llm.clone();
     tokio::spawn(async move {
-        run_llm_task(pool, llm, id, confirmed_text).await;
+        run_llm_task(pool, llm, id, confirmed_text, preference).await;
     });
 
     let updated = db::get_analysis(&state.pool, id)
@@ -190,7 +192,7 @@ async fn retry_llm_handler(
     let pool = state.pool.clone();
     let llm = state.llm.clone();
     tokio::spawn(async move {
-        run_llm_task(pool, llm, id, confirmed_text).await;
+        run_llm_task(pool, llm, id, confirmed_text, PreferenceType::None).await;
     });
 
     let updated = db::get_analysis(&state.pool, id)
@@ -397,6 +399,7 @@ async fn run_llm_task(
     llm: std::sync::Arc<dyn crate::services::llm::LlmProviderClient>,
     analysis_id: Uuid,
     text: String,
+    preference: PreferenceType,
 ) {
     let _ = db::update_llm_status(
         &pool,
@@ -407,7 +410,7 @@ async fn run_llm_task(
     )
     .await;
 
-    let result = match llm.analyze_ingredients(&text).await {
+    let result = match llm.analyze_ingredients(&text, preference).await {
         Ok(result) => result,
         Err(err) => {
             let _ = db::update_llm_status(
@@ -423,6 +426,7 @@ async fn run_llm_task(
     };
 
     let result = ensure_summary_table(result);
+    let result = apply_score_breakdown(result, preference);
     let result_json = match serde_json::to_value(&result) {
         Ok(value) => value,
         Err(err) => {
@@ -447,4 +451,105 @@ async fn run_llm_task(
         None,
     )
     .await;
+}
+
+fn apply_score_breakdown(mut result: AnalysisResult, preference: PreferenceType) -> AnalysisResult {
+    let breakdown = match result.score_breakdown.as_ref() {
+        Some(items) if !items.is_empty() => items,
+        _ => return result,
+    };
+
+    let weights = score_weights(preference);
+    let mut weighted_sum = 0.0;
+    let mut weight_total = 0.0;
+
+    for item in breakdown {
+        if let Some(dimension) = normalize_dimension(&item.dimension) {
+            if let Some(weight) = weights.iter().find(|(key, _)| *key == dimension) {
+                let score = item.score.clamp(0, 100) as f32;
+                weighted_sum += score * weight.1;
+                weight_total += weight.1;
+            }
+        }
+    }
+
+    if weight_total > 0.0 {
+        let computed = (weighted_sum / weight_total).round() as i32;
+        result.health_score = computed.clamp(0, 100);
+    }
+
+    result
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ScoreDimension {
+    AdditivesProcessing,
+    SugarFat,
+    NutritionValue,
+    Sensitive,
+    FormulaComplexity,
+}
+
+fn normalize_dimension(value: &str) -> Option<ScoreDimension> {
+    match value.trim().to_lowercase().as_str() {
+        "additives_processing" | "additives" | "processing" => {
+            Some(ScoreDimension::AdditivesProcessing)
+        }
+        "sugar_fat" | "sugarfat" | "sugar" | "fat" => Some(ScoreDimension::SugarFat),
+        "nutrition_value" | "nutrition" | "nutritionvalue" => {
+            Some(ScoreDimension::NutritionValue)
+        }
+        "sensitive" | "sensitivity" => Some(ScoreDimension::Sensitive),
+        "formula_complexity" | "complexity" | "formula" => {
+            Some(ScoreDimension::FormulaComplexity)
+        }
+        _ => None,
+    }
+}
+
+fn score_weights(preference: PreferenceType) -> [(ScoreDimension, f32); 5] {
+    match preference {
+        PreferenceType::WeightLoss => [
+            (ScoreDimension::SugarFat, 0.45),
+            (ScoreDimension::NutritionValue, 0.20),
+            (ScoreDimension::AdditivesProcessing, 0.20),
+            (ScoreDimension::Sensitive, 0.05),
+            (ScoreDimension::FormulaComplexity, 0.10),
+        ],
+        PreferenceType::Health => [
+            (ScoreDimension::AdditivesProcessing, 0.45),
+            (ScoreDimension::SugarFat, 0.20),
+            (ScoreDimension::NutritionValue, 0.15),
+            (ScoreDimension::Sensitive, 0.05),
+            (ScoreDimension::FormulaComplexity, 0.15),
+        ],
+        PreferenceType::Fitness => [
+            (ScoreDimension::NutritionValue, 0.45),
+            (ScoreDimension::SugarFat, 0.20),
+            (ScoreDimension::AdditivesProcessing, 0.15),
+            (ScoreDimension::Sensitive, 0.05),
+            (ScoreDimension::FormulaComplexity, 0.15),
+        ],
+        PreferenceType::Allergy => [
+            (ScoreDimension::Sensitive, 0.60),
+            (ScoreDimension::AdditivesProcessing, 0.15),
+            (ScoreDimension::SugarFat, 0.10),
+            (ScoreDimension::NutritionValue, 0.05),
+            (ScoreDimension::FormulaComplexity, 0.10),
+        ],
+        PreferenceType::Kids => [
+            (ScoreDimension::AdditivesProcessing, 0.40),
+            (ScoreDimension::SugarFat, 0.30),
+            (ScoreDimension::Sensitive, 0.15),
+            (ScoreDimension::NutritionValue, 0.05),
+            (ScoreDimension::FormulaComplexity, 0.10),
+        ],
+        PreferenceType::None => [
+            (ScoreDimension::AdditivesProcessing, 0.30),
+            (ScoreDimension::SugarFat, 0.30),
+            (ScoreDimension::NutritionValue, 0.20),
+            (ScoreDimension::Sensitive, 0.10),
+            (ScoreDimension::FormulaComplexity, 0.10),
+        ],
+    }
 }

@@ -13,6 +13,7 @@ mod loading_spinner;
 mod error_display;
 mod toast;
 mod icons;
+mod preference_selector;
 
 pub use ingredient_table::{IngredientRow, IngredientTable};
 pub use risk_badge::RiskBadge;
@@ -27,3 +28,4 @@ pub use loading_spinner::LoadingSpinner;
 pub use error_display::ErrorDisplay;
 pub use toast::ToastHost;
 pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
+pub use preference_selector::{PreferenceSelector, PreferenceCard, get_preference_label, get_preference_icon};

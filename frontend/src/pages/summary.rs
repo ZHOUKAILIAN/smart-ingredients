@@ -139,15 +139,15 @@ pub fn SummaryPage() -> impl IntoView {
                 }>
                     {move || {
                         state.analysis_result.get()
-                            .and_then(|r| r.result)
-                            .map(|result| view! {
-                                <HealthScoreCard
-                                    score={result.health_score}
-                                    recommendation={result.recommendation.clone()}
-                                />
-                            })
-                    }}
-                </Show>
+                        .and_then(|r| r.result)
+                        .map(|result| view! {
+                            <HealthScoreCard
+                                score={result.health_score}
+                                recommendation={result.recommendation.clone()}
+                            />
+                        })
+                }}
+            </Show>
 
                 // Summary card
                 <Show when=move || {
