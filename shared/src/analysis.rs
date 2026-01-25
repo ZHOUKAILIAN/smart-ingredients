@@ -29,6 +29,9 @@ pub struct UploadResponse {
 pub struct ConfirmRequest {
     /// User confirmed/edited text
     pub confirmed_text: String,
+    /// Optional analysis preference
+    #[serde(default)]
+    pub preference: Option<String>,
 }
 
 /// Analysis result from LLM
@@ -50,6 +53,18 @@ pub struct AnalysisResult {
     pub warnings: Vec<Warning>,
     /// Overall recommendation
     pub recommendation: String,
+    /// Overall assessment summary
+    #[serde(default)]
+    pub overall_assessment: Option<String>,
+    /// Preference-focused summary
+    #[serde(default)]
+    pub focus_summary: Option<String>,
+    /// Preference-focused ingredients
+    #[serde(default)]
+    pub focus_ingredients: Option<Vec<String>>,
+    /// Scoring breakdown for stable scoring
+    #[serde(default)]
+    pub score_breakdown: Option<Vec<ScoreBreakdown>>,
 }
 
 /// Information about a single ingredient
@@ -93,6 +108,18 @@ pub struct Warning {
     pub ingredients: Vec<String>,
     /// Warning message
     pub message: String,
+}
+
+/// Scoring breakdown item
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScoreBreakdown {
+    /// Dimension key (e.g., additives_processing, sugar_fat)
+    pub dimension: String,
+    /// Dimension score (0-100)
+    pub score: i32,
+    /// Reason for the score
+    #[serde(default)]
+    pub reason: Option<String>,
 }
 
 /// Full analysis response

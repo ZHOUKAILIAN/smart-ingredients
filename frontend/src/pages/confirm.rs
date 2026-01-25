@@ -2,9 +2,11 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 
+use crate::components::PreferenceSelector;
 use crate::services;
 use crate::stores::{AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
+use crate::utils::preference::load_preference;
 
 #[component]
 pub fn ConfirmPage() -> impl IntoView {
@@ -21,9 +23,17 @@ pub fn ConfirmPage() -> impl IntoView {
         .unwrap_or_default();
     let (edited_text, set_edited_text) = create_signal(initial_text);
 
+    let initial_preference = state
+        .analysis_preference
+        .get()
+        .or_else(|| load_preference())
+        .unwrap_or_else(|| "none".to_string());
+    let (preference, set_preference) = create_signal(initial_preference);
+
     let on_confirm = move |_| {
         let text = edited_text.get();
         let analysis_id = state_for_confirm.analysis_id.get();
+        let current_preference = preference.get();
 
         if let Some(id) = analysis_id {
             let state = state_for_confirm.clone();
@@ -31,10 +41,13 @@ pub fn ConfirmPage() -> impl IntoView {
 
             // Set loading state
             state.loading_state.set(LoadingState::LlmAnalyzing);
+            state
+                .analysis_preference
+                .set(Some(current_preference.clone()));
 
             spawn_local(async move {
                 state.error_message.set(None);
-                match services::confirm_and_analyze(id, text).await {
+                match services::confirm_and_analyze(id, text, Some(current_preference)).await {
                     Ok(response) => {
                         state.analysis_result.set(Some(response));
                         state.confirmed_text.set(Some(edited_text.get()));
@@ -51,8 +64,12 @@ pub fn ConfirmPage() -> impl IntoView {
         }
     };
 
-    let on_retake = move |_| {
-        navigate_for_retake("/", Default::default());
+    let on_retake = {
+        let state = state.clone();
+        move |_| {
+            state.analysis_preference.set(None);
+            navigate_for_retake("/", Default::default());
+        }
     };
 
     view! {
@@ -79,6 +96,20 @@ pub fn ConfirmPage() -> impl IntoView {
                     />
                     <p class="edit-tips">
                         "💡 提示：您可以修改识别错误的文字，以提高分析准确性"
+                    </p>
+                </div>
+
+                <div class="preference-container">
+                    <PreferenceSelector
+                        value=Signal::derive(move || preference.get())
+                        on_change=Callback::new(move |value: String| {
+                            set_preference.set(value);
+                        })
+                        label="分析视角"
+                        show_description=true
+                    />
+                    <p class="preference-tips">
+                        "💡 默认来自首页首次选择的偏好，可在此临时修改本次分析视角。"
                     </p>
                 </div>
 

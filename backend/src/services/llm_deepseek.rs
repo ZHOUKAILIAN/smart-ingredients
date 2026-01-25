@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use crate::config::LlmConfig;
-use crate::services::llm::LlmProviderClient;
+use crate::services::llm::{LlmProviderClient, PreferenceType};
 
 #[derive(Clone)]
 pub struct DeepSeekClient {
@@ -24,8 +24,12 @@ impl DeepSeekClient {
 
 #[async_trait]
 impl LlmProviderClient for DeepSeekClient {
-    async fn analyze_ingredients(&self, text: &str) -> anyhow::Result<shared::AnalysisResult> {
-        let prompt = build_analysis_prompt(text);
+    async fn analyze_ingredients(
+        &self,
+        text: &str,
+        preference: PreferenceType,
+    ) -> anyhow::Result<shared::AnalysisResult> {
+        let prompt = build_analysis_prompt(text, preference);
         let request = DeepSeekRequest {
             model: self.config.model.clone(),
             messages: vec![Message {
@@ -81,11 +85,15 @@ impl LlmProviderClient for DeepSeekClient {
     }
 }
 
-fn build_analysis_prompt(text: &str) -> String {
+fn build_analysis_prompt(text: &str, preference: PreferenceType) -> String {
+    let preference_instruction = build_preference_instruction(preference);
     format!(
         r#"你是一个专业的食品配料分析专家。请分析以下配料表，并返回 JSON 格式的健康评估。
 
 配料表：
+{}
+
+分析偏好：{}
 {}
 
 请严格按照以下 JSON 格式返回：
@@ -116,7 +124,17 @@ fn build_analysis_prompt(text: &str) -> String {
       "message": "<警告信息>"
     }}
   ],
-  "recommendation": "<总体建议>"
+  "overall_assessment": "<总体评价>",
+  "recommendation": "<摄入建议或频次建议>",
+  "focus_summary": "<偏好相关总结，可为空>",
+  "focus_ingredients": ["<偏好相关成分1>", "<偏好相关成分2>"],
+  "score_breakdown": [
+    {{
+      "dimension": "<additives_processing|sugar_fat|nutrition_value|sensitive|formula_complexity>",
+      "score": <0-100 的整数>,
+      "reason": "<简短理由>"
+    }}
+  ]
 }}
 
 要求：
@@ -125,9 +143,35 @@ fn build_analysis_prompt(text: &str) -> String {
 3. summary 简要概括配料表特点
 4. table 与配料顺序保持一致，同名可去重并保留风险更高项
 5. 对高风险配料给出明确警告
-6. recommendation 提供实用的食用建议"#,
-        text
+6. overall_assessment 简要给出总体评价或结论
+7. recommendation 必须紧扣分析偏好，给出摄入建议/频次建议；控制在 20-30 字左右
+8. score_breakdown 的 dimension 必须使用指定枚举值
+9. focus_summary 与 focus_ingredients 根据偏好给出重点信息"#,
+        text,
+        preference.as_key(),
+        preference_instruction
     )
+}
+
+fn build_preference_instruction(preference: PreferenceType) -> &'static str {
+    match preference {
+        PreferenceType::WeightLoss => {
+            "请重点关注热量、糖分、脂肪与反式脂肪酸，提示高糖高脂风险；recommendation 给出控糖控脂/热量管理的摄入建议。"
+        }
+        PreferenceType::Health => {
+            "请重点关注添加剂、防腐剂、色素、香精与加工程度；recommendation 强调减少添加剂摄入与选择更天然配方的摄入建议。"
+        }
+        PreferenceType::Fitness => {
+            "请重点关注蛋白质含量与质量、碳水类型、优质脂肪；recommendation 围绕蛋白摄入与碳水质量给出摄入建议。"
+        }
+        PreferenceType::Allergy => {
+            "请重点识别常见过敏原并提高其风险提示；recommendation 给出明确的过敏规避建议。"
+        }
+        PreferenceType::Kids => {
+            "请重点关注色素、香精、防腐剂、糖分与咖啡因等不适合儿童成分；recommendation 强调儿童适宜性与替代选择。"
+        }
+        PreferenceType::None => "按通用健康标准分析即可；recommendation 提供通用的摄入建议。",
+    }
 }
 
 #[derive(Debug, Serialize)]

@@ -36,6 +36,31 @@ fn ingredient_rows(items: &[shared::IngredientInfo]) -> Vec<IngredientRow> {
         .collect()
 }
 
+fn risk_rank(level: &str) -> i32 {
+    let trimmed = level.trim();
+    let lowered = trimmed.to_lowercase();
+    match lowered.as_str() {
+        "high" => 0,
+        "medium" => 1,
+        "low" => 2,
+        "unknown" => 3,
+        _ => match trimmed {
+            "高" => 0,
+            "中" => 1,
+            "低" => 2,
+            "未知" => 3,
+            _ => 3,
+        },
+    }
+}
+
+fn sort_rows_by_risk(rows: Vec<IngredientRow>) -> Vec<IngredientRow> {
+    let mut indexed_rows: Vec<(usize, IngredientRow)> =
+        rows.into_iter().enumerate().collect();
+    indexed_rows.sort_by_key(|(index, row)| (risk_rank(&row.risk_level), *index));
+    indexed_rows.into_iter().map(|(_, row)| row).collect()
+}
+
 #[component]
 pub fn DetailPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
@@ -52,9 +77,9 @@ pub fn DetailPage() -> impl IntoView {
             .and_then(|response| response.result)
             .map(|result| {
                 if result.table.is_empty() {
-                    ingredient_rows(&result.ingredients)
+                    sort_rows_by_risk(ingredient_rows(&result.ingredients))
                 } else {
-                    to_rows(&result.table)
+                    sort_rows_by_risk(to_rows(&result.table))
                 }
             })
             .unwrap_or_default()

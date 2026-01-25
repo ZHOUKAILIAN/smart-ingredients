@@ -1,6 +1,7 @@
 //! Utility functions
 
 pub mod error_messages;
+pub mod preference;
 
 use wasm_bindgen::JsValue;
 use web_sys::{CustomEvent, CustomEventInit};

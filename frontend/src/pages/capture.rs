@@ -3,10 +3,12 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use crate::components::{
     ExampleImages, IconArrowLeft, IconCamera, IconChart, IconCheckBadge, ImagePreview,
+    PreferenceCard,
 };
 use crate::services;
 use crate::stores::{AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
+use crate::utils::preference::{load_preference, save_preference};
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, Url};
 use web_sys::window;
@@ -21,6 +23,13 @@ pub fn CapturePage() -> impl IntoView {
     let album_input_ref = NodeRef::<leptos::html::Input>::new();
     let show_scan = create_rw_signal(false);
     let initialized = create_rw_signal(false);
+    let stored_preference = load_preference();
+    let initial_preference = stored_preference
+        .clone()
+        .unwrap_or_else(|| "none".to_string());
+    let (preference, set_preference) = create_signal(initial_preference);
+    let (show_preference_guide, set_show_preference_guide) =
+        create_signal(stored_preference.is_none());
 
     create_effect(move |_| {
         if initialized.get() {
@@ -119,6 +128,48 @@ pub fn CapturePage() -> impl IntoView {
 
     view! {
         <section class="page page-capture figma">
+            <Show when=move || show_preference_guide.get()>
+                <div class="preference-guide-overlay">
+                    <div class="surface-card preference-guide-card">
+                        <h2 class="preference-guide-title">"选择分析偏好"</h2>
+                        <p class="preference-guide-subtitle">
+                            "告诉我们您更关注哪些点，我们会提供更符合需求的分析结果。"
+                        </p>
+                        <PreferenceCard
+                            value=Signal::derive(move || preference.get())
+                            on_change=Callback::new(move |value: String| {
+                                save_preference(&value);
+                                set_preference.set(value.clone());
+                                state.analysis_preference.set(Some(value));
+                            })
+                        />
+                        <div class="preference-guide-actions">
+                            <button
+                                class="secondary-cta"
+                                on:click=move |_| {
+                                    save_preference("none");
+                                    set_preference.set("none".to_string());
+                                    state.analysis_preference.set(Some("none".to_string()));
+                                    set_show_preference_guide.set(false);
+                                }
+                            >
+                                "暂不选择"
+                            </button>
+                            <button
+                                class="primary-cta"
+                                on:click=move |_| {
+                                    let value = preference.get();
+                                    save_preference(&value);
+                                    state.analysis_preference.set(Some(value));
+                                    set_show_preference_guide.set(false);
+                                }
+                            >
+                                "保存偏好"
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Show>
             <Show when=move || !show_scan.get()>
                 <div class="home-hero">
                     <div class="brand-mark">
