@@ -6,12 +6,16 @@
 use serde::{Deserialize, Serialize};
 
 mod analysis;
+mod auth;
 mod error;
 mod ingredient;
+mod user;
 
 pub use analysis::*;
+pub use auth::*;
 pub use error::*;
 pub use ingredient::*;
+pub use user::*;
 
 /// OCR status tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -6,6 +6,7 @@ use web_sys::{FormData, Headers, Request, RequestInit, RequestMode, Response};
 
 use crate::stores::ToastLevel;
 use crate::utils::emit_toast;
+use crate::utils::auth_storage;
 use crate::utils::error_messages::{map_api_error, map_client_error};
 
 const DEFAULT_API_BASE: &str = "http://127.0.0.1:3000";
@@ -23,6 +24,9 @@ pub async fn upload_image(file: web_sys::File) -> Result<shared::UploadResponse,
     opts.set_method("POST");
     opts.set_mode(web_sys::RequestMode::Cors);
     opts.set_body(&form);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    opts.set_headers(&headers);
     // 不要手动设置 Content-Type！让浏览器自动设置 multipart/form-data 的 boundary
 
     let request = web_sys::Request::new_with_str_and_init(
@@ -56,6 +60,7 @@ pub async fn confirm_and_analyze(
     headers
         .set("Content-Type", "application/json")
         .map_err(|_| map_client_error("content_type"))?;
+    apply_auth_header(&headers)?;
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
@@ -74,6 +79,9 @@ pub async fn retry_ocr(id: uuid::Uuid) -> Result<shared::AnalysisResponse, Strin
     let mut init = RequestInit::new();
     init.set_method("POST");
     init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
 
     let request = Request::new_with_str_and_init(
         &format!("{}/api/v1/analysis/{}/retry-ocr", API_BASE, id),
@@ -90,6 +98,9 @@ pub async fn retry_llm(id: uuid::Uuid) -> Result<shared::AnalysisResponse, Strin
     let mut init = RequestInit::new();
     init.set_method("POST");
     init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
 
     let request = Request::new_with_str_and_init(
         &format!("{}/api/v1/analysis/{}/retry-llm", API_BASE, id),
@@ -106,6 +117,9 @@ pub async fn fetch_analysis(id: uuid::Uuid) -> Result<shared::AnalysisResponse, 
     let mut init = RequestInit::new();
     init.set_method("GET");
     init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
 
     let request = Request::new_with_str_and_init(
         &format!("{}/api/v1/analysis/{}", API_BASE, id),
@@ -145,6 +159,293 @@ async fn send_request(request: Request) -> Result<Response, String> {
     Ok(response)
 }
 
+pub async fn send_sms(phone: String) -> Result<shared::SendSmsResponse, String> {
+    let payload = shared::SendSmsRequest { phone };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/auth/sms/send", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn verify_sms(phone: String, code: String) -> Result<shared::AuthResponse, String> {
+    let payload = shared::VerifySmsRequest { phone, code };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/auth/sms/verify", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    let auth: shared::AuthResponse =
+        serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))?;
+    auth_storage::save_tokens(&auth.access_token, &auth.refresh_token);
+    Ok(auth)
+}
+
+pub async fn refresh_session() -> Result<shared::AuthResponse, String> {
+    let Some(refresh_token) = auth_storage::load_refresh_token() else {
+        return Err(map_client_error("missing_refresh_token"));
+    };
+    let payload = shared::RefreshRequest { refresh_token };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/auth/refresh", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    let auth: shared::AuthResponse =
+        serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))?;
+    auth_storage::save_tokens(&auth.access_token, &auth.refresh_token);
+    Ok(auth)
+}
+
+pub async fn ensure_session() -> Result<Option<shared::UserProfile>, String> {
+    if auth_storage::load_access_token().is_some() {
+        if let Ok(profile) = fetch_profile().await {
+            return Ok(Some(profile));
+        }
+    }
+
+    if auth_storage::load_refresh_token().is_some() {
+        if let Ok(auth) = refresh_session().await {
+            return Ok(Some(auth.user));
+        }
+    }
+
+    Ok(None)
+}
+
+pub async fn logout() -> Result<(), String> {
+    if let Some(refresh_token) = auth_storage::load_refresh_token() {
+        let payload = shared::LogoutRequest { refresh_token };
+        let body =
+            serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+        let mut init = RequestInit::new();
+        init.set_method("POST");
+        init.set_mode(RequestMode::Cors);
+        let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+        headers
+            .set("Content-Type", "application/json")
+            .map_err(|_| map_client_error("content_type"))?;
+        init.set_headers(&headers);
+        init.set_body(&JsValue::from_str(&body));
+        let request = Request::new_with_str_and_init(
+            &format!("{}/api/v1/auth/logout", API_BASE),
+            &init,
+        )
+        .map_err(|_| map_client_error("build_request"))?;
+        let _ = send_request(request).await?;
+    }
+    auth_storage::clear_tokens();
+    Ok(())
+}
+
+pub async fn fetch_profile() -> Result<shared::UserProfile, String> {
+    let mut init = RequestInit::new();
+    init.set_method("GET");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/me", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn delete_account() -> Result<(), String> {
+    let mut init = RequestInit::new();
+    init.set_method("DELETE");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/me", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let _ = send_request(request).await?;
+    auth_storage::clear_tokens();
+    Ok(())
+}
+
+pub async fn fetch_preferences() -> Result<shared::UserPreferences, String> {
+    let mut init = RequestInit::new();
+    init.set_method("GET");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/preferences", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn update_preferences(
+    preferences: serde_json::Value,
+) -> Result<shared::UserPreferences, String> {
+    let payload = shared::UpdatePreferencesRequest { preferences };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("PUT");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/preferences", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn fetch_user_history(
+    page: i64,
+    limit: i64,
+) -> Result<shared::HistoryResponse, String> {
+    let mut init = RequestInit::new();
+    init.set_method("GET");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!(
+            "{}/api/v1/users/history?page={}&limit={}",
+            API_BASE, page, limit
+        ),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn delete_history(id: uuid::Uuid) -> Result<(), String> {
+    let mut init = RequestInit::new();
+    init.set_method("DELETE");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/history/{}", API_BASE, id),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let _ = send_request(request).await?;
+    Ok(())
+}
+
+pub async fn delete_history_batch(ids: Vec<uuid::Uuid>) -> Result<(), String> {
+    let payload = shared::BatchDeleteRequest { ids };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("DELETE");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/history", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let _ = send_request(request).await?;
+    Ok(())
+}
+
 async fn read_response_text(response: &Response) -> Result<String, String> {
     let text_promise = response
         .text()
@@ -155,4 +456,13 @@ async fn read_response_text(response: &Response) -> Result<String, String> {
     text_value
         .as_string()
         .ok_or_else(|| map_client_error("invalid_response"))
+}
+
+fn apply_auth_header(headers: &Headers) -> Result<(), String> {
+    if let Some(token) = auth_storage::load_access_token() {
+        headers
+            .set("Authorization", &format!("Bearer {}", token))
+            .map_err(|_| map_client_error("build_headers"))?;
+    }
+    Ok(())
 }

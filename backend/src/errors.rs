@@ -34,6 +34,27 @@ pub enum AppError {
 
     #[error("Storage error: {0}")]
     Storage(String),
+
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
+
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
+
+    #[error("Rate limit exceeded: {0}")]
+    RateLimited(String),
+
+    #[error("SMS code invalid: {0}")]
+    SmsCodeInvalid(String),
+
+    #[error("SMS code expired: {0}")]
+    SmsCodeExpired(String),
+
+    #[error("SMS locked: {0}")]
+    SmsLocked(String),
+
+    #[error("SMS cooldown: {0}")]
+    SmsCooldown(String),
 }
 
 impl IntoResponse for AppError {
@@ -55,6 +76,13 @@ impl IntoResponse for AppError {
             AppError::Llm(msg) => (StatusCode::SERVICE_UNAVAILABLE, "LLM_ERROR", msg),
             AppError::Storage(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "STORAGE_ERROR", msg),
             AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", msg),
+            AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, "UNAUTHORIZED", msg),
+            AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, "FORBIDDEN", msg),
+            AppError::RateLimited(msg) => (StatusCode::TOO_MANY_REQUESTS, "RATE_LIMIT_EXCEEDED", msg),
+            AppError::SmsCodeInvalid(msg) => (StatusCode::BAD_REQUEST, "SMS_CODE_INVALID", msg),
+            AppError::SmsCodeExpired(msg) => (StatusCode::BAD_REQUEST, "SMS_CODE_EXPIRED", msg),
+            AppError::SmsLocked(msg) => (StatusCode::TOO_MANY_REQUESTS, "SMS_LOCKED", msg),
+            AppError::SmsCooldown(msg) => (StatusCode::TOO_MANY_REQUESTS, "SMS_COOLDOWN", msg),
         };
 
         error!("App error: {}", self);

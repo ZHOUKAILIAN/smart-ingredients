@@ -8,6 +8,7 @@ pub struct AppConfig {
     pub upload_dir: String,
     pub llm: LlmConfig,
     pub ocr: OcrConfig,
+    pub auth: AuthConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -29,6 +30,28 @@ pub struct LlmConfig {
     pub api_url: String,
     pub model: String,
     pub timeout: Duration,
+}
+
+#[derive(Debug, Clone)]
+pub enum SmsProvider {
+    Mock,
+}
+
+#[derive(Debug, Clone)]
+pub struct AuthConfig {
+    pub redis_url: String,
+    pub jwt_secret: String,
+    pub jwt_issuer: String,
+    pub access_ttl_days: i64,
+    pub refresh_ttl_days: i64,
+    pub phone_enc_key: String,
+    pub phone_hash_key: String,
+    pub sms_provider: SmsProvider,
+    pub sms_mock_return: bool,
+    pub sms_code_ttl_seconds: u64,
+    pub sms_cooldown_seconds: u64,
+    pub sms_max_attempts: u32,
+    pub sms_lock_seconds: u64,
 }
 
 impl AppConfig {
@@ -72,11 +95,58 @@ impl AppConfig {
                 .unwrap_or_else(|_| "http://ocr:8000/ocr".to_string()),
         };
 
+        let sms_provider = parse_sms_provider(
+            env::var("SMS_PROVIDER").unwrap_or_else(|_| "mock".to_string()),
+        )?;
+
+        let auth = AuthConfig {
+            redis_url: env::var("REDIS_URL")
+                .unwrap_or_else(|_| "redis://redis:6379".to_string()),
+            jwt_secret: env::var("JWT_SECRET")
+                .map_err(|_| anyhow::anyhow!("JWT_SECRET is required"))?,
+            jwt_issuer: env::var("JWT_ISSUER")
+                .unwrap_or_else(|_| "smart-ingredients".to_string()),
+            access_ttl_days: env::var("JWT_ACCESS_TTL_DAYS")
+                .ok()
+                .and_then(|value| value.parse::<i64>().ok())
+                .unwrap_or(30),
+            refresh_ttl_days: env::var("JWT_REFRESH_TTL_DAYS")
+                .ok()
+                .and_then(|value| value.parse::<i64>().ok())
+                .unwrap_or(60),
+            phone_enc_key: env::var("PHONE_ENC_KEY")
+                .map_err(|_| anyhow::anyhow!("PHONE_ENC_KEY is required"))?,
+            phone_hash_key: env::var("PHONE_HASH_KEY")
+                .map_err(|_| anyhow::anyhow!("PHONE_HASH_KEY is required"))?,
+            sms_provider,
+            sms_mock_return: env::var("SMS_MOCK_RETURN_CODE")
+                .ok()
+                .and_then(|value| value.parse::<bool>().ok())
+                .unwrap_or(true),
+            sms_code_ttl_seconds: env::var("SMS_CODE_TTL_SECONDS")
+                .ok()
+                .and_then(|value| value.parse::<u64>().ok())
+                .unwrap_or(300),
+            sms_cooldown_seconds: env::var("SMS_COOLDOWN_SECONDS")
+                .ok()
+                .and_then(|value| value.parse::<u64>().ok())
+                .unwrap_or(60),
+            sms_max_attempts: env::var("SMS_MAX_ATTEMPTS")
+                .ok()
+                .and_then(|value| value.parse::<u32>().ok())
+                .unwrap_or(5),
+            sms_lock_seconds: env::var("SMS_LOCK_SECONDS")
+                .ok()
+                .and_then(|value| value.parse::<u64>().ok())
+                .unwrap_or(900),
+        };
+
         Ok(Self {
             database_url,
             upload_dir,
             llm,
             ocr,
+            auth,
         })
     }
 }
@@ -88,4 +158,10 @@ fn parse_llm_provider(value: String) -> anyhow::Result<LlmProvider> {
     }
 }
 
+fn parse_sms_provider(value: String) -> anyhow::Result<SmsProvider> {
+    match value.trim().to_lowercase().as_str() {
+        "mock" => Ok(SmsProvider::Mock),
+        other => Err(anyhow::anyhow!("unsupported SMS_PROVIDER: {}", other)),
+    }
+}
 

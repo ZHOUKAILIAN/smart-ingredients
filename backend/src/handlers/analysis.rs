@@ -16,6 +16,7 @@ use crate::{
     db,
     errors::AppError,
     services::{llm::PreferenceType, ocr, storage},
+    middleware::OptionalAuthUser,
     state::AppState,
 };
 
@@ -33,6 +34,7 @@ pub fn routes() -> Router<AppState> {
 /// Upload image for analysis
 async fn upload_handler(
     State(state): State<AppState>,
+    OptionalAuthUser { user_id: auth_user }: OptionalAuthUser,
     mut multipart: Multipart,
 ) -> Result<Json<UploadResponse>, AppError> {
     let mut file_bytes = None;
@@ -82,7 +84,7 @@ async fn upload_handler(
     .await
     .map_err(|err| AppError::Storage(err.to_string()))?;
 
-    let id = db::insert_analysis(&state.pool, &image_url).await?;
+    let id = db::insert_analysis(&state.pool, &image_url, auth_user).await?;
 
     let pool = state.pool.clone();
     let config = state.config.clone();
@@ -114,11 +116,16 @@ async fn get_handler(
 async fn confirm_handler(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
+    OptionalAuthUser { user_id: auth_user }: OptionalAuthUser,
     Json(payload): Json<ConfirmRequest>,
 ) -> Result<Json<AnalysisResponse>, AppError> {
     let row = db::get_analysis(&state.pool, id)
         .await?
         .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
+
+    if let Some(user_id) = auth_user {
+        db::attach_user_to_analysis(&state.pool, id, user_id).await?;
+    }
 
     if row.ocr_status != "completed" {
         return Err(AppError::BadRequest(

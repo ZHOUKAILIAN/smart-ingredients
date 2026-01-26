@@ -364,7 +364,7 @@ pub fn ResultPage() -> impl IntoView {
                     <p class="hint">"暂无营养成分数据"</p>
                 </div>
 
-                <div class="surface-card result-section">
+                <div class="surface-card result-section recommendation-card">
                     <h2 class="card-title">"健康建议"</h2>
                     <ul class="advice-list">
                         {move || {

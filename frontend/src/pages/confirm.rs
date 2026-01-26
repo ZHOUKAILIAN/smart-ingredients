@@ -6,7 +6,7 @@ use crate::components::PreferenceSelector;
 use crate::services;
 use crate::stores::{AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
-use crate::utils::preference::load_preference;
+use crate::utils::preference::{load_preference, save_preference};
 
 #[component]
 pub fn ConfirmPage() -> impl IntoView {
@@ -44,6 +44,9 @@ pub fn ConfirmPage() -> impl IntoView {
             state
                 .analysis_preference
                 .set(Some(current_preference.clone()));
+            if state.auth_user.get().is_none() {
+                save_preference(&current_preference);
+            }
 
             spawn_local(async move {
                 state.error_message.set(None);

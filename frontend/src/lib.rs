@@ -10,12 +10,14 @@ mod types;
 mod utils;
 
 use leptos::prelude::*;
+use leptos::task::spawn_local;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
-use crate::components::ToastHost;
-use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, OcrPage, ResultPage, SummaryPage};
-use crate::stores::{AppState, LoadingState, ResultPageState};
+use crate::components::{ToastHost, MainLayout};
+use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage, ProfilePage, ResultPage, SummaryPage};
+use crate::stores::{AppState, LoadingState, ResultPageState, TabRoute};
+use crate::utils::preference::save_preference;
 
 /// Main App component
 #[component]
@@ -33,6 +35,10 @@ pub fn App() -> impl IntoView {
     let error = create_rw_signal(None);
     let selected_image_path = create_rw_signal(None);
     let toasts = create_rw_signal(Vec::new());
+    let auth_user = create_rw_signal(None);
+    let auth_loading = create_rw_signal(true);
+
+    let current_tab = create_rw_signal(TabRoute::Home);
 
     provide_context(AppState {
         analysis_id,
@@ -46,6 +52,31 @@ pub fn App() -> impl IntoView {
         error,
         selected_image_path,
         toasts,
+        auth_user,
+        auth_loading,
+        current_tab,
+    });
+
+    let auth_state = use_context::<AppState>().expect("AppState not found");
+    spawn_local(async move {
+        auth_state.auth_loading.set(true);
+        match services::ensure_session().await {
+            Ok(user) => {
+                auth_state.auth_user.set(user.clone());
+                if user.is_some() {
+                    if let Ok(prefs) = services::fetch_preferences().await {
+                        if let Some(value) = prefs.preferences.get("selection").and_then(|v| v.as_str()) {
+                            save_preference(value);
+                            auth_state.analysis_preference.set(Some(value.to_string()));
+                        }
+                    }
+                }
+            }
+            Err(_) => {
+                auth_state.auth_user.set(None);
+            }
+        }
+        auth_state.auth_loading.set(false);
     });
 
     view! {
@@ -53,13 +84,53 @@ pub fn App() -> impl IntoView {
             <main class="app-shell">
                 <ToastHost />
                 <Routes fallback=|| view! { <p>"Not found"</p> }>
-                    <Route path=path!("/") view=CapturePage />
-                    <Route path=path!("/ocr") view=OcrPage />
-                    <Route path=path!("/confirm") view=ConfirmPage />
-                    <Route path=path!("/analyzing") view=AnalyzingPage />
-                    <Route path=path!("/result") view=ResultPage />
-                    <Route path=path!("/summary") view=SummaryPage />
-                    <Route path=path!("/detail") view=DetailPage />
+                    <Route path=path!("/login") view=LoginPage />
+                    
+                    <Route path=path!("/") view=move || view! { 
+                        <MainLayout>
+                            <CapturePage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/history") view=move || view! { 
+                        <MainLayout>
+                            <HistoryPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/profile") view=move || view! { 
+                        <MainLayout>
+                            <ProfilePage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/ocr") view=move || view! {
+                        <MainLayout>
+                            <OcrPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/confirm") view=move || view! {
+                        <MainLayout>
+                            <ConfirmPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/analyzing") view=move || view! {
+                        <MainLayout>
+                            <AnalyzingPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/result") view=move || view! {
+                        <MainLayout>
+                            <ResultPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/summary") view=move || view! {
+                        <MainLayout>
+                            <SummaryPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/detail") view=move || view! {
+                        <MainLayout>
+                            <DetailPage />
+                        </MainLayout>
+                    } />
                 </Routes>
             </main>
         </Router>

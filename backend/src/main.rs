@@ -30,11 +30,15 @@ async fn main() -> Result<()> {
     let config = config::AppConfig::from_env()?;
     let pool = db::create_pool(&config.database_url).await?;
     db::run_migrations(&pool).await?;
+    let redis = redis::Client::open(config.auth.redis_url.as_str())?
+        .get_tokio_connection_manager()
+        .await?;
 
     let http = reqwest::Client::new();
     let llm = services::llm::build_llm_client(&config.llm, http.clone());
     let state = state::AppState {
         pool,
+        redis,
         config,
         llm: std::sync::Arc::from(llm),
     };

@@ -33,19 +33,44 @@ pub struct AnalysisRow {
     pub updated_at: DateTime<Utc>,
 }
 
-pub async fn insert_analysis(pool: &PgPool, image_url: &str) -> sqlx::Result<Uuid> {
+pub async fn insert_analysis(
+    pool: &PgPool,
+    image_url: &str,
+    user_id: Option<Uuid>,
+) -> sqlx::Result<Uuid> {
     let row = sqlx::query(
         r#"
-        INSERT INTO analyses (image_url, status, ocr_status, llm_status)
-        VALUES ($1, 'ocr_pending', 'pending', 'pending')
+        INSERT INTO analyses (image_url, status, ocr_status, llm_status, user_id)
+        VALUES ($1, 'ocr_pending', 'pending', 'pending', $2)
         RETURNING id
         "#,
     )
     .bind(image_url)
+    .bind(user_id)
     .fetch_one(pool)
     .await?;
 
     row.try_get::<Uuid, _>("id")
+}
+
+pub async fn attach_user_to_analysis(
+    pool: &PgPool,
+    id: Uuid,
+    user_id: Uuid,
+) -> sqlx::Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE analyses
+        SET user_id = COALESCE(user_id, $2),
+            updated_at = NOW()
+        WHERE id = $1
+        "#,
+    )
+    .bind(id)
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(())
 }
 
 pub async fn update_ocr_status(
@@ -251,4 +276,271 @@ pub async fn list_history(
     .await?;
 
     Ok((total, rows))
+}
+
+pub async fn list_user_history(
+    pool: &PgPool,
+    user_id: Uuid,
+    limit: i64,
+    offset: i64,
+) -> sqlx::Result<(i64, Vec<AnalysisRow>)> {
+    let total: i64 = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*) as count
+        FROM analyses
+        WHERE user_id = $1
+        "#,
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+
+    let rows = sqlx::query_as::<_, AnalysisRow>(
+        r#"
+        SELECT id,
+               image_url,
+               ocr_text,
+               confirmed_text,
+               ocr_status,
+               llm_status,
+               ocr_completed_at,
+               health_score,
+               result,
+               status,
+               error_message,
+               created_at,
+               updated_at
+        FROM analyses
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+        "#,
+    )
+    .bind(user_id)
+    .bind(limit)
+    .bind(offset)
+    .fetch_all(pool)
+    .await?;
+
+    Ok((total, rows))
+}
+
+pub async fn delete_user_history(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+) -> sqlx::Result<u64> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM analyses
+        WHERE id = $1 AND user_id = $2
+        "#,
+    )
+    .bind(id)
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+pub async fn delete_user_histories(
+    pool: &PgPool,
+    user_id: Uuid,
+    ids: &[Uuid],
+) -> sqlx::Result<u64> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM analyses
+        WHERE user_id = $1 AND id = ANY($2)
+        "#,
+    )
+    .bind(user_id)
+    .bind(ids)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct UserRow {
+    pub id: Uuid,
+    pub phone_encrypted: String,
+    pub phone_hash: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub last_login_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct UserPreferencesRow {
+    pub preferences: Value,
+    pub updated_at: DateTime<Utc>,
+}
+
+pub async fn get_user_preferences(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> sqlx::Result<Option<UserPreferencesRow>> {
+    let row = sqlx::query_as::<_, UserPreferencesRow>(
+        r#"
+        SELECT preferences,
+               updated_at
+        FROM user_preferences
+        WHERE user_id = $1
+        "#,
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn upsert_user_preferences(
+    pool: &PgPool,
+    user_id: Uuid,
+    preferences: &Value,
+) -> sqlx::Result<UserPreferencesRow> {
+    let row = sqlx::query_as::<_, UserPreferencesRow>(
+        r#"
+        INSERT INTO user_preferences (user_id, preferences)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id)
+        DO UPDATE SET preferences = $2, updated_at = NOW()
+        RETURNING preferences, updated_at
+        "#,
+    )
+    .bind(user_id)
+    .bind(preferences)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn get_user_by_phone_hash(
+    pool: &PgPool,
+    phone_hash: &str,
+) -> sqlx::Result<Option<UserRow>> {
+    let row = sqlx::query_as::<_, UserRow>(
+        r#"
+        SELECT id,
+               phone_encrypted,
+               phone_hash,
+               created_at,
+               updated_at,
+               last_login_at
+        FROM users
+        WHERE phone_hash = $1
+        "#,
+    )
+    .bind(phone_hash)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn get_user_by_id(pool: &PgPool, user_id: Uuid) -> sqlx::Result<Option<UserRow>> {
+    let row = sqlx::query_as::<_, UserRow>(
+        r#"
+        SELECT id,
+               phone_encrypted,
+               phone_hash,
+               created_at,
+               updated_at,
+               last_login_at
+        FROM users
+        WHERE id = $1
+        "#,
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn create_user(
+    pool: &PgPool,
+    phone_encrypted: &str,
+    phone_hash: &str,
+) -> sqlx::Result<UserRow> {
+    let row = sqlx::query_as::<_, UserRow>(
+        r#"
+        INSERT INTO users (phone_encrypted, phone_hash, last_login_at)
+        VALUES ($1, $2, NOW())
+        RETURNING id,
+                  phone_encrypted,
+                  phone_hash,
+                  created_at,
+                  updated_at,
+                  last_login_at
+        "#,
+    )
+    .bind(phone_encrypted)
+    .bind(phone_hash)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn update_user_last_login(pool: &PgPool, user_id: Uuid) -> sqlx::Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE users
+        SET last_login_at = NOW(),
+            updated_at = NOW()
+        WHERE id = $1
+        "#,
+    )
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn count_user_analyses(pool: &PgPool, user_id: Uuid) -> sqlx::Result<i64> {
+    let total = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*) as count
+        FROM analyses
+        WHERE user_id = $1
+        "#,
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(total)
+}
+
+pub async fn ensure_user_preferences(pool: &PgPool, user_id: Uuid) -> sqlx::Result<()> {
+    sqlx::query(
+        r#"
+        INSERT INTO user_preferences (user_id, preferences)
+        VALUES ($1, '{}'::jsonb)
+        ON CONFLICT (user_id) DO NOTHING
+        "#,
+    )
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn delete_user(pool: &PgPool, user_id: Uuid) -> sqlx::Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM users
+        WHERE id = $1
+        "#,
+    )
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(())
 }

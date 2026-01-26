@@ -7,13 +7,15 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-use crate::{handlers::analysis, middleware};
+use crate::{handlers::{analysis, auth, users}, middleware};
 use crate::state::AppState;
 
 /// Create all application routes
 pub fn create_routes(state: AppState) -> Router {
     Router::new()
         .nest("/api/v1/analysis", analysis::routes())
+        .nest("/api/v1/auth", auth::routes())
+        .nest("/api/v1/users", users::routes())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024))

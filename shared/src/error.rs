@@ -24,6 +24,10 @@ pub mod error_codes {
     pub const PAYLOAD_TOO_LARGE: &str = "PAYLOAD_TOO_LARGE";
     pub const UNSUPPORTED_MEDIA_TYPE: &str = "UNSUPPORTED_MEDIA_TYPE";
     pub const RATE_LIMIT_EXCEEDED: &str = "RATE_LIMIT_EXCEEDED";
+    pub const SMS_COOLDOWN: &str = "SMS_COOLDOWN";
+    pub const SMS_CODE_INVALID: &str = "SMS_CODE_INVALID";
+    pub const SMS_CODE_EXPIRED: &str = "SMS_CODE_EXPIRED";
+    pub const SMS_LOCKED: &str = "SMS_LOCKED";
     pub const INTERNAL_ERROR: &str = "INTERNAL_ERROR";
     pub const SERVICE_UNAVAILABLE: &str = "SERVICE_UNAVAILABLE";
     pub const OCR_ERROR: &str = "OCR_ERROR";
@@ -31,6 +35,7 @@ pub mod error_codes {
     pub const LLM_ERROR: &str = "LLM_ERROR";
     pub const LLM_TIMEOUT: &str = "LLM_TIMEOUT";
     pub const STORAGE_ERROR: &str = "STORAGE_ERROR";
+    pub const FORBIDDEN: &str = "FORBIDDEN";
 }
 
 impl ApiError {
