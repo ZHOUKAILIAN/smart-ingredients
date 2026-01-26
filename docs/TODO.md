@@ -1,5 +1,14 @@
 # 待开发特性 (Backlog)
 
+## 用户系统 (User System)
+
+- [ ] **SWS 集成**: 集成 SWS (Smart Web Service) 相关功能，尚未完成。
+- [ ] **短信服务对接**: 当前使用 Mock SMS Provider，需要对接真实的短信服务商。
+
+## UI 优化 (UI Improvements)
+
+- [ ] **分析详情页 UI 优化**: 分析结果页面的"查看详情列表"UI 需要重新设计和优化，提升用户体验。
+
 ## 个性化分析 (Personalization)
 
 - [ ] **复合偏好支持**: 允许用户同时选择多种偏好（如："减脂" + "过敏"）。

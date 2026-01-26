@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 
 use crate::{config::AppConfig, services::llm::LlmProviderClient};
@@ -9,6 +10,7 @@ use crate::{config::AppConfig, services::llm::LlmProviderClient};
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
+    pub redis: ConnectionManager,
     pub config: AppConfig,
     pub llm: Arc<dyn LlmProviderClient>,
 }

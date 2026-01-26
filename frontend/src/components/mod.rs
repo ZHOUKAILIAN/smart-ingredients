@@ -29,3 +29,8 @@ pub use error_display::ErrorDisplay;
 pub use toast::ToastHost;
 pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
 pub use preference_selector::{PreferenceSelector, PreferenceCard, get_preference_label, get_preference_icon};
+
+mod bottom_nav;
+mod main_layout;
+pub use bottom_nav::BottomNav;
+pub use main_layout::MainLayout;

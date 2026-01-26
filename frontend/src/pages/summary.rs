@@ -100,16 +100,6 @@ pub fn SummaryPage() -> impl IntoView {
         navigate_detail("/detail", Default::default());
     };
 
-    let on_back_home = move |_| {
-        // Clear state and go back to home
-        state.analysis_id.set(None);
-        state.analysis_result.set(None);
-        state.ocr_text.set(None);
-        state.confirmed_text.set(None);
-        state.error_message.set(None);
-        navigate("/", Default::default());
-    };
-
     let ingredient_count = move || {
         state
             .analysis_result
@@ -177,9 +167,6 @@ pub fn SummaryPage() -> impl IntoView {
                         <span class="btn-icon">"📋"</span>
                         <span class="btn-title">"查看详细配料表"</span>
                         <span class="btn-arrow">"→"</span>
-                    </button>
-                    <button class="btn-back-home-summary" on:click=on_back_home>
-                        "🏠 返回首页"
                     </button>
                 </div>
             </div>
