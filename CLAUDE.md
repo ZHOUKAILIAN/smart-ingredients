@@ -91,6 +91,7 @@ docs/
 ├── design/               # Technical design documents
 │   ├── technical-design.md
 │   ├── ui-design.md
+│   ├── figma-design-system.md
 │   └── XXX-feature-technical-plan.md
 ├── api/                  # API documentation
 │   └── api-reference.md
@@ -202,6 +203,30 @@ smart-ingredients/
 - **`coding-standards.md`** - General Rust coding conventions, formatting, linting
 - **`error-handling-standards.md`** - Error handling rules, patterns, and decision guides
 - **`project-conventions.md`** - Project-specific patterns and conventions
+
+---
+
+## UI Design & Figma Integration
+
+**IMPORTANT**: When implementing UI designs from Figma, you MUST refer to:
+
+- **`docs/design/figma-design-system.md`** - Complete design system rules for Figma integration
+
+This document provides:
+- Design token definitions (colors, shadows, transitions)
+- Component library architecture and patterns
+- CSS methodology and naming conventions
+- Icon system and asset management
+- Step-by-step Figma-to-code workflow
+- Best practices and common UI patterns
+
+**When to use:**
+- Implementing new UI components from Figma designs
+- Creating new pages or screens
+- Adding icons or updating visual styles
+- Ensuring design consistency across the app
+
+---
 
 ### Quick Reference
 

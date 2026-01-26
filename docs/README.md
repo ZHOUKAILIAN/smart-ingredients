@@ -14,6 +14,7 @@ docs/
 ├── design/                       # Technical design documents
 │   ├── technical-design.md       # Overall system design
 │   ├── ui-design.md             # UI/UX design decisions
+│   ├── figma-design-system.md   # Figma design system rules
 │   └── XXX-feature-technical-plan.md # Technical plans
 ├── api/                          # API documentation
 │   └── api-reference.md         # API endpoint reference
@@ -181,6 +182,28 @@ Examples:
    - API docs (if contracts change)
    - Coding standards (if patterns change)
 
+### For UI/Figma Implementation
+
+1. **Read the design system guide**
+   - See [Figma Design System](./design/figma-design-system.md)
+   - Understand design tokens and component patterns
+
+2. **Extract design tokens**
+   - Map Figma colors to CSS custom properties
+   - Identify spacing, shadows, transitions
+   - Check if tokens already exist
+
+3. **Follow component patterns**
+   - Use Leptos component architecture
+   - Follow CSS naming conventions (BEM-inspired)
+   - Reuse existing components when possible
+
+4. **Implement step-by-step**
+   - Create Rust component with typed props
+   - Write scoped CSS with design tokens
+   - Add to component exports
+   - Test with different states
+
 ## Document Templates
 
 ### Requirements Template
@@ -330,6 +353,7 @@ When documentation becomes obsolete:
 - [Project Conventions](./standards/project-conventions.md)
 - [API Reference](./api/api-reference.md)
 - [Technical Design](./design/technical-design.md)
+- [Figma Design System](./design/figma-design-system.md) - UI design implementation guide
 
 ### External Resources
 
