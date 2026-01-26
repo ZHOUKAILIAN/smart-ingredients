@@ -26,9 +26,11 @@ pub enum AppError {
     #[error("Internal error: {0}")]
     Internal(String),
 
+    #[allow(dead_code)]
     #[error("OCR error: {0}")]
     Ocr(String),
 
+    #[allow(dead_code)]
     #[error("LLM error: {0}")]
     Llm(String),
 
@@ -38,9 +40,11 @@ pub enum AppError {
     #[error("Unauthorized: {0}")]
     Unauthorized(String),
 
+    #[allow(dead_code)]
     #[error("Forbidden: {0}")]
     Forbidden(String),
 
+    #[allow(dead_code)]
     #[error("Rate limit exceeded: {0}")]
     RateLimited(String),
 
