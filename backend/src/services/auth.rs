@@ -2,11 +2,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use aes_gcm::{
-    aead::{Aead, KeyInit},
-    Aes256Gcm,
-    Nonce,
-};
+use aes_gcm::{aead::{Aead, KeyInit}, Aes256Gcm, Nonce};
 use base64::{engine::general_purpose, Engine as _};
 use hmac::{Hmac, Mac};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
@@ -42,7 +38,8 @@ pub fn generate_sms_code() -> String {
 }
 
 pub fn hash_phone(phone: &str, key: &str) -> Result<String, anyhow::Error> {
-    let mut mac = HmacSha256::new_from_slice(key.as_bytes())?;
+    let mut mac = <HmacSha256 as hmac::digest::KeyInit>::new_from_slice(key.as_bytes())
+        .map_err(|err| anyhow::anyhow!(err))?;
     mac.update(phone.as_bytes());
     let result = mac.finalize().into_bytes();
     Ok(hex::encode(result))
@@ -53,11 +50,14 @@ pub fn encrypt_phone(phone: &str, key_b64: &str) -> Result<String, anyhow::Error
     if key_bytes.len() != 32 {
         anyhow::bail!("PHONE_ENC_KEY must be 32 bytes base64");
     }
-    let cipher = Aes256Gcm::new_from_slice(&key_bytes)?;
+    let cipher = Aes256Gcm::new_from_slice(&key_bytes)
+        .map_err(|_| anyhow::anyhow!("invalid encryption key length"))?;
     let mut nonce_bytes = [0u8; 12];
     OsRng.fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
-    let ciphertext = cipher.encrypt(nonce, phone.as_bytes())?;
+    let ciphertext = cipher
+        .encrypt(nonce, phone.as_bytes())
+        .map_err(|_| anyhow::anyhow!("failed to encrypt phone"))?;
     let mut blob = Vec::with_capacity(12 + ciphertext.len());
     blob.extend_from_slice(&nonce_bytes);
     blob.extend_from_slice(&ciphertext);
@@ -74,9 +74,12 @@ pub fn decrypt_phone(blob_b64: &str, key_b64: &str) -> Result<String, anyhow::Er
         anyhow::bail!("encrypted phone blob too short");
     }
     let (nonce_bytes, ciphertext) = blob.split_at(12);
-    let cipher = Aes256Gcm::new_from_slice(&key_bytes)?;
+    let cipher = Aes256Gcm::new_from_slice(&key_bytes)
+        .map_err(|_| anyhow::anyhow!("invalid encryption key length"))?;
     let nonce = Nonce::from_slice(nonce_bytes);
-    let plaintext = cipher.decrypt(nonce, ciphertext)?;
+    let plaintext = cipher
+        .decrypt(nonce, ciphertext)
+        .map_err(|_| anyhow::anyhow!("failed to decrypt phone"))?;
     Ok(String::from_utf8(plaintext)?)
 }
 

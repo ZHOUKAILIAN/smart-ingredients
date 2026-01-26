@@ -446,6 +446,62 @@ pub async fn delete_history_batch(ids: Vec<uuid::Uuid>) -> Result<(), String> {
     Ok(())
 }
 
+pub async fn migrate_local_history(
+    ids: Vec<uuid::Uuid>,
+) -> Result<shared::LocalHistoryMigrateResponse, String> {
+    let payload = shared::LocalHistoryMigrateRequest { ids };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/history/batch", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn prune_history(delete_count: i64) -> Result<shared::HistoryPruneResponse, String> {
+    let payload = shared::HistoryPruneRequest { delete_count };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("POST");
+    init.set_mode(RequestMode::Cors);
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/users/history/prune", API_BASE),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
 async fn read_response_text(response: &Response) -> Result<String, String> {
     let text_promise = response
         .text()

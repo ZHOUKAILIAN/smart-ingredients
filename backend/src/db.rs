@@ -363,6 +363,58 @@ pub async fn delete_user_histories(
     Ok(result.rows_affected())
 }
 
+pub async fn migrate_user_histories(
+    pool: &PgPool,
+    user_id: Uuid,
+    ids: &[Uuid],
+) -> sqlx::Result<u64> {
+    let result = sqlx::query(
+        r#"
+        UPDATE analyses
+        SET user_id = $1,
+            updated_at = NOW()
+        WHERE user_id IS NULL
+          AND id = ANY($2)
+        "#,
+    )
+    .bind(user_id)
+    .bind(ids)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+pub async fn prune_user_history(
+    pool: &PgPool,
+    user_id: Uuid,
+    delete_count: i64,
+) -> sqlx::Result<u64> {
+    if delete_count <= 0 {
+        return Ok(0);
+    }
+
+    let result = sqlx::query(
+        r#"
+        DELETE FROM analyses
+        WHERE id IN (
+            SELECT id
+            FROM analyses
+            WHERE user_id = $1
+            ORDER BY created_at ASC
+            LIMIT $2
+        )
+        "#,
+    )
+    .bind(user_id)
+    .bind(delete_count)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+#[allow(dead_code)]
 #[derive(Debug, Clone, FromRow)]
 pub struct UserRow {
     pub id: Uuid,

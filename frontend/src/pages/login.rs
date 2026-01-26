@@ -6,8 +6,9 @@ use serde_json::json;
 use crate::components::IconArrowLeft;
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
-use crate::utils::emit_toast;
+use crate::utils::{emit_toast, local_history};
 use crate::utils::preference::load_preference;
+use uuid::Uuid;
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
@@ -21,10 +22,30 @@ pub fn LoginPage() -> impl IntoView {
     let verifying = create_rw_signal(false);
     let debug_code = create_rw_signal(None::<String>);
 
+    // 验证中国手机号格式
+    let validate_phone = |phone: &str| -> bool {
+        // 中国手机号：1开头，第二位是3-9，总共11位数字
+        if phone.len() != 11 {
+            return false;
+        }
+        let chars: Vec<char> = phone.chars().collect();
+        if chars[0] != '1' {
+            return false;
+        }
+        if !('3'..='9').contains(&chars[1]) {
+            return false;
+        }
+        phone.chars().all(|c| c.is_ascii_digit())
+    };
+
     let on_send = move |_| {
         let phone_value = phone.get().trim().to_string();
         if phone_value.is_empty() {
             emit_toast(ToastLevel::Warning, "请输入手机号", "手机号不能为空");
+            return;
+        }
+        if !validate_phone(&phone_value) {
+            emit_toast(ToastLevel::Warning, "手机号格式错误", "请输入正确的中国大陆手机号");
             return;
         }
         if sending.get() {
@@ -56,6 +77,10 @@ pub fn LoginPage() -> impl IntoView {
                 emit_toast(ToastLevel::Warning, "请输入完整信息", "手机号与验证码不能为空");
                 return;
             }
+            if !validate_phone(&phone_value) {
+                emit_toast(ToastLevel::Warning, "手机号格式错误", "请输入正确的中国大陆手机号");
+                return;
+            }
             if verifying.get() {
                 return;
             }
@@ -67,6 +92,67 @@ pub fn LoginPage() -> impl IntoView {
                     Ok(auth) => {
                         state.auth_user.set(Some(auth.user));
                         emit_toast(ToastLevel::Success, "登录成功", "欢迎回来");
+                        let local_items = local_history::load_local_history();
+                        if !local_items.is_empty() {
+                            let should_migrate = web_sys::window()
+                                .and_then(|w| {
+                                    w.confirm_with_message(&format!(
+                                        "检测到 {} 条本地记录，是否迁移到云端？",
+                                        local_items.len()
+                                    ))
+                                    .ok()
+                                })
+                                .unwrap_or(false);
+                            if should_migrate {
+                                let ids: Vec<Uuid> = local_items
+                                    .iter()
+                                    .filter_map(|item| Uuid::parse_str(&item.id).ok())
+                                    .collect();
+                                if !ids.is_empty() {
+                                    match services::migrate_local_history(ids).await {
+                                        Ok(resp) => {
+                                            if let Err(err) = local_history::clear_local_history() {
+                                                emit_toast(ToastLevel::Warning, "清理本地记录失败", &err);
+                                            }
+                                            if resp.total_after > 500 {
+                                                let delete_count = resp.total_after - 500;
+                                                let should_prune = web_sys::window()
+                                                    .and_then(|w| {
+                                                        w.confirm_with_message(&format!(
+                                                            "云端历史记录已超过上限，将删除最旧的 {} 条，是否继续？",
+                                                            delete_count
+                                                        ))
+                                                        .ok()
+                                                    })
+                                                    .unwrap_or(false);
+                                                if should_prune {
+                                                    match services::prune_history(delete_count).await {
+                                                        Ok(pruned) => {
+                                                            emit_toast(
+                                                                ToastLevel::Success,
+                                                                "历史记录已清理",
+                                                                &format!("已删除 {} 条旧记录", pruned.deleted),
+                                                            );
+                                                        }
+                                                        Err(err) => {
+                                                            emit_toast(ToastLevel::Error, "清理失败", &err);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            emit_toast(
+                                                ToastLevel::Success,
+                                                "迁移完成",
+                                                &format!("成功迁移 {} 条记录", resp.migrated),
+                                            );
+                                        }
+                                        Err(err) => {
+                                            emit_toast(ToastLevel::Error, "迁移失败", &err);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if let Some(pref) = load_preference() {
                             let _ = services::update_preferences(json!({ "selection": pref })).await;
                             navigate("/", Default::default());
@@ -85,18 +171,6 @@ pub fn LoginPage() -> impl IntoView {
 
     view! {
         <section class="page page-login figma">
-            <div class="page-topbar login-topbar">
-                <button
-                    class="icon-button login-back"
-                    on:click=move |_| navigate_for_back("/", Default::default())
-                    aria-label="返回首页"
-                >
-                    <IconArrowLeft />
-                </button>
-                <h1 class="page-topbar-title">"欢迎回来"</h1>
-                <div class="icon-placeholder"></div>
-            </div>
-
             <div class="login-hero">
                 <div class="brand-mark">
                     <div class="brand-icon">"SI"</div>

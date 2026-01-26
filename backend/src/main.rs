@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
     let pool = db::create_pool(&config.database_url).await?;
     db::run_migrations(&pool).await?;
     let redis = redis::Client::open(config.auth.redis_url.as_str())?
-        .get_tokio_connection_manager()
+        .get_connection_manager()
         .await?;
 
     let http = reqwest::Client::new();

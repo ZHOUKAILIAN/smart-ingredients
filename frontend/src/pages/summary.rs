@@ -9,7 +9,7 @@ use std::time::Duration;
 use crate::components::{HealthScoreCard, SummaryCard};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
-use crate::utils::emit_toast;
+use crate::utils::{emit_toast, local_history};
 use shared::AnalysisStatus;
 
 #[component]
@@ -20,6 +20,7 @@ pub fn SummaryPage() -> impl IntoView {
     let state_for_polling = state.clone();
     let fetching = RwSignal::new(false);
     let polling = RwSignal::new(false);
+    let last_saved = create_rw_signal(None::<uuid::Uuid>);
 
     // Fetch analysis result if not present
     create_effect(move |_| {
@@ -93,6 +94,42 @@ pub fn SummaryPage() -> impl IntoView {
                 );
             }
         }
+    });
+
+    create_effect(move |_| {
+        if state.auth_user.get().is_some() {
+            return;
+        }
+        let Some(response) = state.analysis_result.get() else {
+            return;
+        };
+        if response.status != AnalysisStatus::Completed {
+            return;
+        }
+        let Some(result) = response.result.clone() else {
+            return;
+        };
+        if last_saved.get() == Some(response.id) {
+            return;
+        }
+
+        let summary = if result.summary.trim().is_empty() {
+            format!("识别到 {} 项配料", result.ingredients.len())
+        } else {
+            result.summary.clone()
+        };
+        let item = local_history::LocalHistoryItem {
+            id: response.id.to_string(),
+            timestamp: js_sys::Date::now() as i64,
+            health_score: result.health_score,
+            summary,
+            result,
+        };
+
+        if let Err(err) = local_history::add_local_history(item) {
+            emit_toast(ToastLevel::Warning, "本地记录保存失败", &err);
+        }
+        last_saved.set(Some(response.id));
     });
 
     let navigate_detail = navigate.clone();

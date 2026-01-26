@@ -46,10 +46,10 @@ async fn send_sms(
 
     let mut pipe = redis::pipe();
     pipe.atomic()
-        .set_ex(&code_key, &code, state.config.auth.sms_code_ttl_seconds as usize)
-        .set_ex(&cooldown_key, 1, state.config.auth.sms_cooldown_seconds as usize)
-        .set_ex(&attempts_key, 0, state.config.auth.sms_lock_seconds as usize);
-    pipe.query_async(&mut redis).await?;
+        .set_ex(&code_key, &code, state.config.auth.sms_code_ttl_seconds)
+        .set_ex(&cooldown_key, 1, state.config.auth.sms_cooldown_seconds)
+        .set_ex(&attempts_key, 0, state.config.auth.sms_lock_seconds);
+    pipe.query_async::<()>(&mut redis).await?;
 
     match state.config.auth.sms_provider {
         SmsProvider::Mock => {
@@ -93,8 +93,10 @@ async fn verify_sms(
     if payload.code.trim() != stored_code {
         let attempts: i64 = redis.incr(&attempts_key, 1).await?;
         if attempts >= state.config.auth.sms_max_attempts as i64 {
-            redis.set_ex(&lock_key, 1, state.config.auth.sms_lock_seconds as usize).await?;
-            redis.del(&code_key).await?;
+            redis
+                .set_ex::<_, _, ()>(&lock_key, 1, state.config.auth.sms_lock_seconds)
+                .await?;
+            redis.del::<_, ()>(&code_key).await?;
             return Err(AppError::SmsLocked("验证码错误次数过多，请稍后再试".to_string()));
         }
         return Err(AppError::SmsCodeInvalid("验证码错误".to_string()));
@@ -121,19 +123,14 @@ async fn verify_sms(
     let refresh_key = format!("auth:refresh:{}", tokens.refresh_token);
     let user_tokens_key = format!("auth:user:{}:tokens", user.id);
     let mut redis = state.redis.clone();
+    let refresh_ttl_seconds = (state.config.auth.refresh_ttl_days * 24 * 3600) as u64;
+    let refresh_ttl_seconds_i64 = refresh_ttl_seconds as i64;
     redis
-        .set_ex(
-            refresh_key,
-            user.id.to_string(),
-            (state.config.auth.refresh_ttl_days * 24 * 3600) as usize,
-        )
+        .set_ex::<_, _, ()>(refresh_key, user.id.to_string(), refresh_ttl_seconds)
         .await?;
     let _: i64 = redis.sadd(&user_tokens_key, &tokens.refresh_token).await?;
     let _: () = redis
-        .expire(
-            &user_tokens_key,
-            (state.config.auth.refresh_ttl_days * 24 * 3600) as usize,
-        )
+        .expire::<_, ()>(&user_tokens_key, refresh_ttl_seconds_i64)
         .await?;
 
     Ok(Json(AuthResponse {
@@ -174,19 +171,14 @@ async fn refresh_token(
     let user_tokens_key = format!("auth:user:{}:tokens", user.id);
     let _: i64 = redis.del(&refresh_key).await?;
     let _: i64 = redis.srem(&user_tokens_key, &payload.refresh_token).await?;
+    let refresh_ttl_seconds = (state.config.auth.refresh_ttl_days * 24 * 3600) as u64;
+    let refresh_ttl_seconds_i64 = refresh_ttl_seconds as i64;
     redis
-        .set_ex(
-            new_refresh_key,
-            user.id.to_string(),
-            (state.config.auth.refresh_ttl_days * 24 * 3600) as usize,
-        )
+        .set_ex::<_, _, ()>(new_refresh_key, user.id.to_string(), refresh_ttl_seconds)
         .await?;
     let _: i64 = redis.sadd(&user_tokens_key, &tokens.refresh_token).await?;
     let _: () = redis
-        .expire(
-            &user_tokens_key,
-            (state.config.auth.refresh_ttl_days * 24 * 3600) as usize,
-        )
+        .expire::<_, ()>(&user_tokens_key, refresh_ttl_seconds_i64)
         .await?;
     let phone = auth::decrypt_phone(&user.phone_encrypted, &state.config.auth.phone_enc_key)
         .unwrap_or_else(|_| "".to_string());

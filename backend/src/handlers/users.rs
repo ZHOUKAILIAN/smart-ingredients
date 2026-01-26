@@ -6,7 +6,11 @@ use axum::{
 };
 use serde::Deserialize;
 use redis::AsyncCommands;
-use shared::{BatchDeleteRequest, HistoryItem, HistoryResponse, UpdatePreferencesRequest, UserPreferences, UserProfile};
+use shared::{
+    BatchDeleteRequest, HistoryItem, HistoryPruneRequest, HistoryPruneResponse, HistoryResponse,
+    LocalHistoryMigrateRequest, LocalHistoryMigrateResponse, UpdatePreferencesRequest,
+    UserPreferences, UserProfile,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -24,6 +28,8 @@ pub fn routes() -> Router<AppState> {
         .route("/preferences", axum::routing::put(update_preferences))
         .route("/history", axum::routing::get(list_history))
         .route("/history", axum::routing::delete(delete_history_batch))
+        .route("/history/batch", axum::routing::post(migrate_history_batch))
+        .route("/history/prune", axum::routing::post(prune_history))
         .route("/history/:id", axum::routing::delete(delete_history))
 }
 
@@ -152,6 +158,44 @@ async fn delete_history_batch(
     }
     db::delete_user_histories(&state.pool, user_id, &payload.ids).await?;
     Ok(Json(serde_json::json!({ "success": true })))
+}
+
+async fn migrate_history_batch(
+    State(state): State<AppState>,
+    AuthUser { user_id }: AuthUser,
+    Json(payload): Json<LocalHistoryMigrateRequest>,
+) -> Result<Json<LocalHistoryMigrateResponse>, AppError> {
+    if payload.ids.is_empty() {
+        return Err(AppError::BadRequest("ids cannot be empty".to_string()));
+    }
+
+    let migrated = db::migrate_user_histories(&state.pool, user_id, &payload.ids).await?;
+    let total_after = db::count_user_analyses(&state.pool, user_id).await?;
+    let skipped = payload.ids.len() as i64 - migrated as i64;
+
+    Ok(Json(LocalHistoryMigrateResponse {
+        migrated: migrated as i64,
+        skipped,
+        total_after,
+    }))
+}
+
+async fn prune_history(
+    State(state): State<AppState>,
+    AuthUser { user_id }: AuthUser,
+    Json(payload): Json<HistoryPruneRequest>,
+) -> Result<Json<HistoryPruneResponse>, AppError> {
+    if payload.delete_count <= 0 {
+        return Err(AppError::BadRequest("delete_count must be positive".to_string()));
+    }
+
+    let deleted = db::prune_user_history(&state.pool, user_id, payload.delete_count).await?;
+    let total_after = db::count_user_analyses(&state.pool, user_id).await?;
+
+    Ok(Json(HistoryPruneResponse {
+        deleted: deleted as i64,
+        total_after,
+    }))
 }
 
 #[derive(Debug, Deserialize)]
