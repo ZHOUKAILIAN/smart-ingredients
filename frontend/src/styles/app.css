@@ -1563,6 +1563,35 @@ body {
   display: block;
 }
 
+.image-preview-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.image-preview.loading .image-preview-loading {
+  opacity: 1;
+}
+
+.image-preview.loading img {
+  opacity: 0.6;
+}
+
+.image-preview-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  animation: spin 0.9s linear infinite;
+}
+
 .image-preview-remove {
   position: absolute;
   top: 12px;
