@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use crate::components::{HealthScoreCard, SummaryCard};
 use crate::services;
-use crate::stores::{AppState, ToastLevel};
+use crate::stores::{AnalysisSource, AppState, ToastLevel};
 use crate::utils::{emit_toast, local_history};
 use shared::AnalysisStatus;
 
@@ -106,10 +106,28 @@ pub fn SummaryPage() -> impl IntoView {
         if response.status != AnalysisStatus::Completed {
             return;
         }
+        if state.analysis_source.get() == AnalysisSource::History {
+            return;
+        }
         let Some(result) = response.result.clone() else {
             return;
         };
         if last_saved.get() == Some(response.id) {
+            return;
+        }
+        let response_id = response.id;
+        let response_id_str = response_id.to_string();
+        let exists = local_history::load_local_history().into_iter().any(|item| {
+            if item.id == response_id_str {
+                return true;
+            }
+            matches!(
+                uuid::Uuid::parse_str(&item.id),
+                Ok(existing) if existing == response_id
+            )
+        });
+        if exists {
+            last_saved.set(Some(response_id));
             return;
         }
 
@@ -130,7 +148,7 @@ pub fn SummaryPage() -> impl IntoView {
         if let Err(err) = local_history::add_local_history(item) {
             emit_toast(ToastLevel::Warning, "本地记录保存失败", &err);
         }
-        last_saved.set(Some(response.id));
+        last_saved.set(Some(response_id));
     });
 
     let navigate_detail = navigate.clone();

@@ -19,6 +19,12 @@ pub enum ResultPageState {
     Detail,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum AnalysisSource {
+    NewAnalysis,
+    History,
+}
+
 /// Error information
 #[derive(Clone, Debug)]
 pub struct ErrorInfo {
@@ -94,6 +100,7 @@ pub struct AppState {
     pub toasts: RwSignal<Vec<ToastMessage>>,
     pub auth_user: RwSignal<Option<UserProfile>>,
     pub auth_loading: RwSignal<bool>,
+    pub analysis_source: RwSignal<AnalysisSource>,
     
     // New fields for navigation
     pub current_tab: RwSignal<TabRoute>,

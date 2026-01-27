@@ -16,7 +16,7 @@ use leptos_router::path;
 
 use crate::components::{ToastHost, MainLayout};
 use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage, ProfilePage, ResultPage, SummaryPage};
-use crate::stores::{AppState, LoadingState, ResultPageState, TabRoute};
+use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute};
 use crate::utils::preference::save_preference;
 
 /// Main App component
@@ -37,6 +37,7 @@ pub fn App() -> impl IntoView {
     let toasts = create_rw_signal(Vec::new());
     let auth_user = create_rw_signal(None);
     let auth_loading = create_rw_signal(true);
+    let analysis_source = create_rw_signal(AnalysisSource::NewAnalysis);
 
     let current_tab = create_rw_signal(TabRoute::Home);
 
@@ -54,6 +55,7 @@ pub fn App() -> impl IntoView {
         toasts,
         auth_user,
         auth_loading,
+        analysis_source,
         current_tab,
     });
 
