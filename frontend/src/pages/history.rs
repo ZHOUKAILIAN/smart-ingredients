@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{JsCast, JsValue};
 
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
@@ -149,8 +149,36 @@ pub fn HistoryPage() -> impl IntoView {
                                     let score = item.health_score;
                                     let timestamp = format_timestamp(item.timestamp);
                                     let item_clone = item.clone();
+                                    let image_path = StoredValue::new(item.image_path.clone());
+                                    let image_url = image_path
+                                        .get_value()
+                                        .map(|path| services::resolve_media_url(&path));
+                                    let has_image = image_url
+                                        .as_ref()
+                                        .map(|url| !url.is_empty())
+                                        .unwrap_or(false);
                                     view! {
                                         <li class="history-item">
+                                            <div class="history-item-thumbnail">
+                                                <Show when=move || has_image fallback=move || view! {
+                                                    <div class="history-thumbnail-placeholder">
+                                                        "📷"
+                                                    </div>
+                                                }>
+                                                    <img
+                                                        src={image_url.clone().unwrap_or_default()}
+                                                        alt="缩略图"
+                                                        class="history-thumbnail"
+                                                        on:error=move |ev| {
+                                                            if let Some(target) = ev.target() {
+                                                                if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
+                                                                    img.set_attribute("data-error", "true").ok();
+                                                                }
+                                                            }
+                                                        }
+                                                    />
+                                                </Show>
+                                            </div>
                                             <div class="history-item-main">
                                                 <div class="history-item-meta">
                                                     <span class="history-label">"本地记录"</span>
@@ -189,8 +217,31 @@ pub fn HistoryPage() -> impl IntoView {
                         <ul class="history-list">
                             {move || items.get().into_iter().map(|item| {
                                 let id = item.id;
+                                let image_url = StoredValue::new(item.image_url.clone());
+                                let resolved_image_url =
+                                    StoredValue::new(services::resolve_media_url(&image_url.get_value()));
                                 view! {
                                     <li class="history-item">
+                                        <div class="history-item-thumbnail">
+                                            <Show when=move || !resolved_image_url.get_value().is_empty() fallback=move || view! {
+                                                <div class="history-thumbnail-placeholder">
+                                                    "📷"
+                                                </div>
+                                            }>
+                                                <img
+                                                    src={resolved_image_url.get_value()}
+                                                    alt="缩略图"
+                                                    class="history-thumbnail"
+                                                    on:error=move |ev| {
+                                                        if let Some(target) = ev.target() {
+                                                            if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
+                                                                img.set_attribute("data-error", "true").ok();
+                                                            }
+                                                        }
+                                                    }
+                                                />
+                                            </Show>
+                                        </div>
                                         <div class="history-item-main">
                                             <div class="history-item-meta">
                                                 <span class="history-label">"云端记录"</span>

@@ -12,6 +12,8 @@ pub struct LocalHistoryItem {
     pub health_score: i32,
     pub summary: String,
     pub result: AnalysisResult,
+    #[serde(default)]
+    pub image_path: Option<String>,
 }
 
 pub fn load_local_history() -> Vec<LocalHistoryItem> {

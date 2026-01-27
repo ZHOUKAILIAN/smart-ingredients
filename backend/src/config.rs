@@ -58,7 +58,10 @@ impl AppConfig {
     pub fn from_env() -> anyhow::Result<Self> {
         let database_url = env::var("DATABASE_URL")
             .map_err(|_| anyhow::anyhow!("DATABASE_URL is required"))?;
-        let upload_dir = env::var("UPLOAD_DIR").unwrap_or_else(|_| "uploads".to_string());
+        let upload_dir = env::var("UPLOAD_DIR").unwrap_or_else(|_| {
+            let base_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("uploads");
+            base_dir.to_string_lossy().to_string()
+        });
 
         let provider = parse_llm_provider(
             env::var("LLM_PROVIDER").unwrap_or_else(|_| "deepseek".to_string()),
@@ -164,4 +167,3 @@ fn parse_sms_provider(value: String) -> anyhow::Result<SmsProvider> {
         other => Err(anyhow::anyhow!("unsupported SMS_PROVIDER: {}", other)),
     }
 }
-

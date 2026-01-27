@@ -48,7 +48,7 @@ shared = { path = "../shared" }
 
 # Additional dependencies
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "trace", "limit"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "limit", "fs"] }
 dotenvy = "0.15"
 
 [dev-dependencies]
