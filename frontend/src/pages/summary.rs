@@ -124,6 +124,7 @@ pub fn SummaryPage() -> impl IntoView {
             health_score: result.health_score,
             summary,
             result,
+            image_path: state.selected_image_path.get(),
         };
 
         if let Err(err) = local_history::add_local_history(item) {

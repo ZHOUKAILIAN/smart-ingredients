@@ -15,6 +15,19 @@ const API_BASE: &str = match option_env!("API_BASE") {
     _ => DEFAULT_API_BASE,
 };
 
+pub fn resolve_media_url(value: &str) -> String {
+    if value.trim().is_empty() {
+        return String::new();
+    }
+    if value.starts_with("http://") || value.starts_with("https://") {
+        return value.to_string();
+    }
+    if value.starts_with('/') {
+        return format!("{API_BASE}{value}");
+    }
+    format!("{API_BASE}/{value}")
+}
+
 pub async fn upload_image(file: web_sys::File) -> Result<shared::UploadResponse, String> {
     let form = FormData::new().map_err(|_| map_client_error("form_data"))?;
     form.append_with_blob_and_filename("file", &file, &file.name())

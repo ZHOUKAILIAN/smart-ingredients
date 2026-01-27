@@ -125,6 +125,7 @@ pub fn CapturePage() -> impl IntoView {
                     state.error_message.set(None);
                     state.ocr_text.set(None);
                     state.confirmed_text.set(None);
+                    state.selected_image_path.set(Some(response.image_url));
                     state.loading_state.set(LoadingState::Idle);
                     navigate("/ocr", Default::default());
                 }
