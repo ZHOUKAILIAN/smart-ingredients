@@ -4,7 +4,7 @@ use leptos_router::hooks::use_navigate;
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::services;
-use crate::stores::{AppState, ToastLevel};
+use crate::stores::{AnalysisSource, AppState, ToastLevel};
 use crate::utils::{emit_toast, local_history};
 use shared::{AnalysisResponse, AnalysisStatus, LlmStatus, OcrStatus};
 
@@ -116,6 +116,7 @@ pub fn HistoryPage() -> impl IntoView {
             if let Some(response) = local_to_response(&item) {
                 state.analysis_id.set(Some(response.id));
                 state.analysis_result.set(Some(response));
+                state.analysis_source.set(AnalysisSource::History);
                 let navigate = navigate.get_value();
                 navigate("/summary", Default::default());
             } else {
@@ -158,43 +159,71 @@ pub fn HistoryPage() -> impl IntoView {
                                         .map(|url| !url.is_empty())
                                         .unwrap_or(false);
                                     view! {
-                                        <li class="history-item">
-                                            <div class="history-item-thumbnail">
-                                                <Show when=move || has_image fallback=move || view! {
-                                                    <div class="history-thumbnail-placeholder">
-                                                        "📷"
-                                                    </div>
-                                                }>
-                                                    <img
-                                                        src={image_url.clone().unwrap_or_default()}
-                                                        alt="缩略图"
-                                                        class="history-thumbnail"
-                                                        on:error=move |ev| {
-                                                            if let Some(target) = ev.target() {
-                                                                if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
-                                                                    img.set_attribute("data-error", "true").ok();
+                                        <li class="history-item-card">
+                                            // Delete Button (Absolute Top Right)
+                                            <button class="history-delete-btn" on:click=move |_| on_delete_local(id.clone())>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                </svg>
+                                            </button>
+
+                                            <div class="history-card-main">
+                                                <div class="history-thumb-wrapper">
+                                                    <Show when=move || has_image fallback=move || view! {
+                                                        <div class="history-thumb-img">"📷"</div>
+                                                    }>
+                                                        <img
+                                                            src={image_url.clone().unwrap_or_default()}
+                                                            alt="缩略图"
+                                                            class="history-thumb-img"
+                                                            on:error=move |ev| {
+                                                                if let Some(target) = ev.target() {
+                                                                    if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
+                                                                        img.set_attribute("data-error", "true").ok();
+                                                                    }
                                                                 }
                                                             }
-                                                        }
-                                                    />
-                                                </Show>
-                                            </div>
-                                            <div class="history-item-main">
-                                                <div class="history-item-meta">
-                                                    <span class="history-label">"本地记录"</span>
-                                                    <span class="history-time">{timestamp}</span>
+                                                        />
+                                                    </Show>
                                                 </div>
-                                                <p class="history-summary">{summary}</p>
-                                                <p class="history-score">{format!("健康评分: {}", score)}</p>
+
+                                                <div class="history-card-content">
+                                                    <div class="history-badges">
+                                                        <span class="history-badge local">"本地记录"</span>
+                                                    </div>
+                                                    
+                                                    <div class="history-meta-row">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <circle cx="12" cy="12" r="10"></circle>
+                                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                                        </svg>
+                                                        <span>{timestamp}</span>
+                                                    </div>
+
+                                                    <div class="history-score-display">
+                                                        "健康评分" 
+                                                        <span class={format!("history-score-value {}", 
+                                                            if score >= 80 { "score-high" } 
+                                                            else if score >= 60 { "score-medium" } 
+                                                            else { "score-low" }
+                                                        )}>
+                                                            {score}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="history-item-actions">
-                                                <button class="secondary-cta" on:click=move |_| on_view_local(item_clone.clone())>
-                                                    "查看"
-                                                </button>
-                                                <button class="secondary-cta" on:click=move |_| on_delete_local(id.clone())>
-                                                    "删除"
-                                                </button>
-                                            </div>
+
+                                            <p class="history-description">{summary}</p>
+
+                                            <button class="history-view-btn" on:click=move |_| on_view_local(item_clone.clone())>
+                                                "查看详情"
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                                </svg>
+                                            </button>
                                         </li>
                                     }
                                 }).collect_view()}
@@ -220,43 +249,70 @@ pub fn HistoryPage() -> impl IntoView {
                                 let image_url = StoredValue::new(item.image_url.clone());
                                 let resolved_image_url =
                                     StoredValue::new(services::resolve_media_url(&image_url.get_value()));
-                                view! {
-                                    <li class="history-item">
-                                        <div class="history-item-thumbnail">
-                                            <Show when=move || !resolved_image_url.get_value().is_empty() fallback=move || view! {
-                                                <div class="history-thumbnail-placeholder">
-                                                    "📷"
-                                                </div>
-                                            }>
-                                                <img
-                                                    src={resolved_image_url.get_value()}
-                                                    alt="缩略图"
-                                                    class="history-thumbnail"
-                                                    on:error=move |ev| {
-                                                        if let Some(target) = ev.target() {
-                                                            if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
-                                                                img.set_attribute("data-error", "true").ok();
-                                                            }
-                                                        }
-                                                    }
-                                                />
-                                            </Show>
-                                        </div>
-                                        <div class="history-item-main">
-                                            <div class="history-item-meta">
-                                                <span class="history-label">"云端记录"</span>
-                                                <span class="history-time">{item.created_at.clone()}</span>
-                                            </div>
-                                            <p class="history-score">{format!("健康评分: {}", item.health_score.unwrap_or(0))}</p>
-                                        </div>
-                                        <div class="history-item-actions">
-                                            <button class="secondary-cta" on:click=move |_| on_delete(id)>
-                                                "删除"
+                                    view! {
+                                        <li class="history-item-card">
+                                            <button class="history-delete-btn" on:click=move |_| on_delete(id)>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                </svg>
                                             </button>
-                                        </div>
-                                    </li>
-                                }
-                            }).collect_view()}
+
+                                            <div class="history-card-main">
+                                                <div class="history-thumb-wrapper">
+                                                    <Show when=move || !resolved_image_url.get_value().is_empty() fallback=move || view! {
+                                                        <div class="history-thumb-img">"📷"</div>
+                                                    }>
+                                                        <img
+                                                            src={resolved_image_url.get_value()}
+                                                            alt="缩略图"
+                                                            class="history-thumb-img"
+                                                            on:error=move |ev| {
+                                                                if let Some(target) = ev.target() {
+                                                                    if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
+                                                                        img.set_attribute("data-error", "true").ok();
+                                                                    }
+                                                                }
+                                                            }
+                                                        />
+                                                    </Show>
+                                                </div>
+
+                                                <div class="history-card-content">
+                                                    <div class="history-badges">
+                                                        <span class="history-badge cloud">"云端记录"</span>
+                                                    </div>
+
+                                                    <div class="history-meta-row">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <circle cx="12" cy="12" r="10"></circle>
+                                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                                        </svg>
+                                                        <span>{item.created_at.clone()}</span>
+                                                    </div>
+
+                                                    <div class="history-score-display">
+                                                        "健康评分" 
+                                                        <span class={format!("history-score-value {}", 
+                                                            if item.health_score.unwrap_or(0) >= 80 { "score-high" } 
+                                                            else if item.health_score.unwrap_or(0) >= 60 { "score-medium" } 
+                                                            else { "score-low" }
+                                                        )}>
+                                                            {item.health_score.unwrap_or(0)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            // Note: Summary not available in cloud history item struct currently
+                                            
+                                            // Cloud items existing logic didn't support View detail effectively without extra fetch
+                                            // Leaving action button area empty or adding fetch logic later if supported
+                                            <div style="height: 12px;"></div> 
+                                        </li>
+                                    }                          }).collect_view()}
                         </ul>
                     </Show>
                     <div class="history-pagination">

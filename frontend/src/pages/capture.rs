@@ -6,7 +6,7 @@ use crate::components::{
     PreferenceCard,
 };
 use crate::services;
-use crate::stores::{AppState, LoadingState, ToastLevel};
+use crate::stores::{AnalysisSource, AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
 use crate::utils::preference::{load_preference, save_preference};
 
@@ -126,6 +126,7 @@ pub fn CapturePage() -> impl IntoView {
                     state.ocr_text.set(None);
                     state.confirmed_text.set(None);
                     state.selected_image_path.set(Some(response.image_url));
+                    state.analysis_source.set(AnalysisSource::NewAnalysis);
                     state.loading_state.set(LoadingState::Idle);
                     navigate("/ocr", Default::default());
                 }

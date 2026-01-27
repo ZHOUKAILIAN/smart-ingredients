@@ -86,6 +86,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .page-header .subtitle {
@@ -805,7 +808,9 @@ body {
   font-size: 18px;
   cursor: pointer;
   color: #111827;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .icon-button .icon {
@@ -936,7 +941,11 @@ body {
 }
 
 .status-banner {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(20, 184, 166, 0.12));
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.12),
+    rgba(20, 184, 166, 0.12)
+  );
   color: #065f46;
   padding: 12px 14px;
   border-radius: 14px;
@@ -1004,7 +1013,11 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(236, 253, 245, 0.4));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(236, 253, 245, 0.4)
+  );
 }
 
 .score-circle {
@@ -2470,8 +2483,11 @@ body {
 .history-login-cta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+  margin-top: 16px;
+  padding-bottom: 24px;
 }
 
 .history-pagination {
@@ -2672,4 +2688,165 @@ body {
   background: #d1d5db;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+/* History Card Styling */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-delete-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 2;
+  color: #6b7280;
+}
+
+.history-delete-btn:hover {
+  background: #fce7f3;
+  color: #ec4899;
+}
+
+.history-card-main {
+  display: flex;
+  gap: 12px;
+}
+
+.history-thumb-wrapper {
+  flex-shrink: 0;
+}
+
+.history-thumb-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 24px;
+}
+
+.history-card-content {
+  flex: 1;
+  min-width: 0;
+  padding-right: 24px; /* Space for delete button if needed, though button is absolute */
+}
+
+.history-badges {
+  margin-bottom: 8px;
+}
+
+.history-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  font-size: 11px;
+  padding: 2px 8px;
+  color: white;
+  font-weight: 500;
+}
+
+.history-badge.local {
+  background-color: #10b981;
+}
+
+.history-badge.cloud {
+  background-color: #3b82f6;
+}
+
+.history-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.history-score-display {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.history-score-value {
+  font-weight: 700;
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+.score-high {
+  color: #059669;
+}
+.score-medium {
+  color: #d97706;
+}
+.score-low {
+  color: #dc2626;
+}
+
+.history-description {
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+  padding-left: 4px;
+
+  /* Truncation */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.history-view-btn {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #059669;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.history-view-btn:hover {
+  background: #ecfdf5;
 }
