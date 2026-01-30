@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-api_base="${API_BASE:-http://127.0.0.1:3000}"
+api_base="${API_BASE:-https://api.smartingredients.my}"
 api_base="$(printf "%s" "$api_base" | tr -d '\r\n')"
 host="${api_base#http://}"
 host="${host#https://}"

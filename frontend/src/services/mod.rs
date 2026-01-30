@@ -9,7 +9,7 @@ use crate::utils::emit_toast;
 use crate::utils::auth_storage;
 use crate::utils::error_messages::{map_api_error, map_client_error};
 
-const DEFAULT_API_BASE: &str = "http://127.0.0.1:3000";
+const DEFAULT_API_BASE: &str = "https://api.smartingredients.my";
 const API_BASE: &str = match option_env!("API_BASE") {
     Some(value) if !value.is_empty() => value,
     _ => DEFAULT_API_BASE,
