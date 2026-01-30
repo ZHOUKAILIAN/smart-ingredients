@@ -22,6 +22,7 @@ frontend/dist_tmp/
 .env
 .env.local
 .env.*.local
+.env.sls
 
 # Logs
 *.log

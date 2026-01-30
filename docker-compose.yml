@@ -28,6 +28,9 @@ services:
       UPLOAD_DIR: /app/uploads
       LLM_PROVIDER: deepseek
       OCR_PADDLE_URL: http://ocr:8000/ocr
+      SERVICE_NAME: ${SERVICE_NAME:-backend}
+      DEPLOY_ENV: ${DEPLOY_ENV:-local}
+      RUST_LOG: ${RUST_LOG:-info}
     env_file:
       - .env
     ports:

@@ -1,0 +1,22 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: backend-stdout
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: smart-ingredients
+          container: smart-ingredients-backend
+          service: backend
+          # Update this path if the backend container ID changes.
+          __path__: /var/lib/docker/containers/8e79d0ca308dec8a50155438eda9563035e1cbbfd6e6438b7e35b74acca4f174/8e79d0ca308dec8a50155438eda9563035e1cbbfd6e6438b7e35b74acca4f174-json.log
+    pipeline_stages:
+      - docker: {}

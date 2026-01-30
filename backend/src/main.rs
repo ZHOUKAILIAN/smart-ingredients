@@ -15,13 +15,20 @@ use anyhow::Result;
 use std::net::SocketAddr;
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::fmt::time::UtcTime;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize tracing
     let filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| "info".parse().unwrap());
-    fmt().with_env_filter(filter).init();
+    fmt()
+        .with_env_filter(filter)
+        .json()
+        .with_timer(UtcTime::rfc_3339())
+        .with_current_span(false)
+        .with_span_list(false)
+        .init();
 
     info!("Starting Smart Ingredients Backend");
 
