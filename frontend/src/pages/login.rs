@@ -16,11 +16,11 @@ pub fn LoginPage() -> impl IntoView {
     let navigate = use_navigate();
     let navigate_for_back = navigate.clone();
     let navigate_for_skip = navigate.clone();
-    let phone = create_rw_signal(String::new());
-    let code = create_rw_signal(String::new());
-    let sending = create_rw_signal(false);
-    let verifying = create_rw_signal(false);
-    let debug_code = create_rw_signal(None::<String>);
+    let phone = RwSignal::new(String::new());
+    let code = RwSignal::new(String::new());
+    let sending = RwSignal::new(false);
+    let verifying = RwSignal::new(false);
+    let debug_code = RwSignal::new(None::<String>);
 
     // 验证中国手机号格式
     let validate_phone = |phone: &str| -> bool {

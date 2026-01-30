@@ -20,18 +20,18 @@ pub fn CapturePage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = StoredValue::new(use_navigate());
     let selected_file: RwSignal<Option<web_sys::File>, LocalStorage> = RwSignal::new_local(None);
-    let preview_url = create_rw_signal(None::<String>);
+    let preview_url = RwSignal::new(None::<String>);
     let camera_input_ref = NodeRef::<leptos::html::Input>::new();
     let album_input_ref = NodeRef::<leptos::html::Input>::new();
-    let show_scan = create_rw_signal(false);
-    let show_preference_modal = create_rw_signal(false);
+    let show_scan = RwSignal::new(false);
+    let show_preference_modal = RwSignal::new(false);
     let initial_preference = state
         .analysis_preference
         .get()
         .or_else(|| load_preference())
         .unwrap_or_else(|| "none".to_string());
-    let preference = create_rw_signal(initial_preference);
-    let initialized = create_rw_signal(false);
+    let preference = RwSignal::new(initial_preference);
+    let initialized = RwSignal::new(false);
 
     create_effect(move |_| {
         if initialized.get() {

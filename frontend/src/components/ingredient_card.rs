@@ -13,9 +13,9 @@ pub fn IngredientCard(
     note: String,
 ) -> impl IntoView {
     let is_valid = |value: &str| !value.is_empty() && value != "未知" && value != "暂无";
-    let category_value = create_rw_signal(category_label(&category));
-    let function_value = create_rw_signal(function);
-    let note_value = create_rw_signal(note);
+    let category_value = RwSignal::new(category_label(&category));
+    let function_value = RwSignal::new(function);
+    let note_value = RwSignal::new(note);
     let show_category = is_valid(&category_value.get_untracked());
     let show_function = is_valid(&function_value.get_untracked());
     let show_note = is_valid(&note_value.get_untracked());

@@ -22,24 +22,24 @@ use crate::utils::preference::save_preference;
 /// Main App component
 #[component]
 pub fn App() -> impl IntoView {
-    let analysis_id = create_rw_signal(None);
-    let analysis_result = create_rw_signal(None);
-    let analysis_preference = create_rw_signal(None);
-    let error_message = create_rw_signal(None);
-    let ocr_text = create_rw_signal(None);
-    let confirmed_text = create_rw_signal(None);
+    let analysis_id = RwSignal::new(None);
+    let analysis_result = RwSignal::new(None);
+    let analysis_preference = RwSignal::new(None);
+    let error_message = RwSignal::new(None);
+    let ocr_text = RwSignal::new(None);
+    let confirmed_text = RwSignal::new(None);
 
     // New state for interaction optimization
-    let loading_state = create_rw_signal(LoadingState::Idle);
-    let result_page_state = create_rw_signal(ResultPageState::Summary);
-    let error = create_rw_signal(None);
-    let selected_image_path = create_rw_signal(None);
-    let toasts = create_rw_signal(Vec::new());
-    let auth_user = create_rw_signal(None);
-    let auth_loading = create_rw_signal(true);
-    let analysis_source = create_rw_signal(AnalysisSource::NewAnalysis);
+    let loading_state = RwSignal::new(LoadingState::Idle);
+    let result_page_state = RwSignal::new(ResultPageState::Summary);
+    let error = RwSignal::new(None);
+    let selected_image_path = RwSignal::new(None);
+    let toasts = RwSignal::new(Vec::new());
+    let auth_user = RwSignal::new(None);
+    let auth_loading = RwSignal::new(true);
+    let analysis_source = RwSignal::new(AnalysisSource::NewAnalysis);
 
-    let current_tab = create_rw_signal(TabRoute::Home);
+    let current_tab = RwSignal::new(TabRoute::Home);
 
     provide_context(AppState {
         analysis_id,

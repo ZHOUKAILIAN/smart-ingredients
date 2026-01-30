@@ -37,11 +37,11 @@ fn local_to_response(item: &local_history::LocalHistoryItem) -> Option<AnalysisR
 pub fn HistoryPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = StoredValue::new(use_navigate());
-    let loading = create_rw_signal(false);
-    let page = create_rw_signal(1_i64);
-    let total = create_rw_signal(0_i64);
-    let items = create_rw_signal(Vec::<shared::HistoryItem>::new());
-    let local_items = create_rw_signal(Vec::<local_history::LocalHistoryItem>::new());
+    let loading = RwSignal::new(false);
+    let page = RwSignal::new(1_i64);
+    let total = RwSignal::new(0_i64);
+    let items = RwSignal::new(Vec::<shared::HistoryItem>::new());
+    let local_items = RwSignal::new(Vec::<local_history::LocalHistoryItem>::new());
 
     let load_page = Callback::new(move |page_number: i64| {
         if loading.get() {
