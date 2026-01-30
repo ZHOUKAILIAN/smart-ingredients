@@ -13,8 +13,8 @@ use shared::AnalysisStatus;
 pub fn OcrPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = use_navigate();
-    let fetching = create_rw_signal(false);
-    let polling = create_rw_signal(false);
+    let fetching = RwSignal::new(false);
+    let polling = RwSignal::new(false);
     let state_for_fetch = state.clone();
     let state_for_poll = state.clone();
     let state_for_retry = StoredValue::new(state.clone());

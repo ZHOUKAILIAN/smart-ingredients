@@ -20,7 +20,7 @@ pub fn SummaryPage() -> impl IntoView {
     let state_for_polling = state.clone();
     let fetching = RwSignal::new(false);
     let polling = RwSignal::new(false);
-    let last_saved = create_rw_signal(None::<uuid::Uuid>);
+    let last_saved = RwSignal::new(None::<uuid::Uuid>);
 
     // Fetch analysis result if not present
     create_effect(move |_| {

@@ -99,8 +99,8 @@ pub fn ResultPage() -> impl IntoView {
     let navigate = use_navigate();
     let state_for_effect = state.clone();
     let state_for_status = state.clone();
-    let fetching = create_rw_signal(false);
-    let polling = create_rw_signal(false);
+    let fetching = RwSignal::new(false);
+    let polling = RwSignal::new(false);
     let state_for_polling = state.clone();
 
     create_effect(move |_| {

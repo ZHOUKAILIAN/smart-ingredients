@@ -80,6 +80,7 @@
       },
       "fieldConfig": {
         "defaults": {
+          "decimals": 0,
           "unit": "short"
         },
         "overrides": []
@@ -96,7 +97,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, sum by (fields_route) (count_over_time({job=\"smart-ingredients\",service=\"backend\"} | json | fields_message=\"request\" | fields_success=\"false\" [5m])))",
+          "expr": "topk(10, sum by (fields_route) (count_over_time({job=\"smart-ingredients\",service=\"backend\"} | json | fields_message=\"request\" | fields_success=\"false\" [$__range])))",
           "instant": true,
           "refId": "A"
         }
@@ -111,6 +112,7 @@
       },
       "fieldConfig": {
         "defaults": {
+          "decimals": 0,
           "unit": "short"
         },
         "overrides": []
@@ -127,7 +129,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, sum by (fields_error_code) (count_over_time({job=\"smart-ingredients\",service=\"backend\"} | json | fields_error_code=~\".+\" [5m])))",
+          "expr": "topk(10, sum by (fields_error_code) (count_over_time({job=\"smart-ingredients\",service=\"backend\"} | json | fields_error_code=~\".+\" [$__range])))",
           "instant": true,
           "refId": "A"
         }
@@ -155,15 +157,15 @@
       },
       "targets": [
         {
-          "expr": "{job=\"smart-ingredients\",service=\"backend\"} | json | level=\"ERROR\"",
+          "expr": "{job=\"smart-ingredients\",service=\"backend\"} | json | fields_message=\"request\" | fields_success=\"false\"",
           "refId": "A"
         }
       ],
-      "title": "错误日志",
+      "title": "失败请求日志",
       "type": "logs"
     }
   ],
-  "refresh": "10s",
+  "refresh": "5m",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -174,7 +176,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},

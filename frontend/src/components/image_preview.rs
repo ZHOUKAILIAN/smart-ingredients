@@ -10,7 +10,7 @@ pub fn ImagePreview<F>(
 where
     F: Fn() + Copy + Send + Sync + 'static,
 {
-    let is_loading = create_rw_signal(false);
+    let is_loading = RwSignal::new(false);
     create_effect(move |_| {
         if preview_url.get().is_some() {
             is_loading.set(true);

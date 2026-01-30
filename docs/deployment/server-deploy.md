@@ -8,10 +8,13 @@ It does **not** include any secrets. Do **not** paste passwords in chats or comm
 - Ubuntu 20.04+ (or compatible Linux)
 - Docker + Docker Compose installed
 - A domain or server IP with ports open:
+  - `80` / `443` (Nginx + HTTPS)
   - `3000` (backend API)
+  - `3001` (Grafana, if exposed directly)
+  - `3100` (Loki, if exposed directly)
   - `5432` (Postgres, optional if you need remote access)
   - `6379` (Redis, optional if you need remote access)
-  - `8001` (OCR service)
+  - `8000` (OCR service, optional if you need remote access)
 
 ## 1) Install Docker (if not installed)
 
@@ -142,6 +145,96 @@ sudo certbot --nginx -d example.com
 curl https://example.com/health
 ```
 
+## 8) Ops notes (domain + HTTPS + monitoring)
+
+This section captures a production-friendly setup that proxies domains to local services
+and adds simple health checks at the Nginx layer.
+
+### 8.1 DNS + Cloudflare
+
+Create A records that point to your server IP:
+
+- `smartingredients.my` → `<SERVER_IP>`
+- `api.smartingredients.my` → `<SERVER_IP>`
+- `grafana.smartingredients.my` → `<SERVER_IP>`
+- `loki.smartingredients.my` → `<SERVER_IP>`
+
+If you enable the Cloudflare orange cloud proxy, set **SSL/TLS mode** to **Full (strict)**.
+
+Current production domains (as of 2026-01-30):
+
+- `https://smartingredients.my`
+- `https://api.smartingredients.my`
+- `https://grafana.smartingredients.my`
+- `https://loki.smartingredients.my`
+
+Domain-specific runbooks:
+
+- `docs/deployment/domains/smartingredients.my.md`
+- `docs/deployment/domains/api.smartingredients.my.md`
+- `docs/deployment/domains/grafana.smartingredients.my.md`
+- `docs/deployment/domains/loki.smartingredients.my.md`
+
+### 8.2 Nginx reverse proxy layout (example)
+
+Recommended mapping:
+
+- `smartingredients.my` → `127.0.0.1:3000`
+- `api.smartingredients.my` → `127.0.0.1:3000`
+- `grafana.smartingredients.my` → `127.0.0.1:3001`
+- `loki.smartingredients.my` → `127.0.0.1:3100`
+
+Each site can expose a lightweight health endpoint at `/health`:
+
+```nginx
+location = /health {
+  default_type text/plain;
+  return 200 "ok";
+}
+```
+
+Useful commands:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 8.3 Health checks
+
+- Backend (Nginx): `https://api.<domain>/health`
+- Backend (direct): `http://127.0.0.1:3000/health`
+- Grafana: `https://grafana.<domain>/health`
+- Loki: `https://loki.<domain>/health`
+- Loki status: `https://loki.<domain>/loki/api/v1/status/buildinfo`
+
+### 8.4 Monitoring stack (Grafana + Loki + Promtail)
+
+Start the monitoring stack:
+
+```bash
+docker compose -f docs/deployment/monitoring/docker-compose.monitoring.yml up -d
+```
+
+Defaults:
+
+- Grafana: `http://<SERVER_IP>:3001` (or `https://grafana.<domain>`)
+- Loki: `http://<SERVER_IP>:3100` (or `https://loki.<domain>`)
+
+### 8.5 Certbot renewal
+
+```bash
+sudo certbot renew --dry-run
+```
+
+### 8.6 Frontend API domain (build time)
+
+For Android builds, set API base at build time:
+
+```bash
+API_BASE="https://api.<domain>" cargo tauri android build --apk true
+```
+
 ## Troubleshooting
 
 - View logs:
@@ -153,4 +246,3 @@ curl https://example.com/health
   ```bash
   docker compose up -d --build backend ocr
   ```
-
