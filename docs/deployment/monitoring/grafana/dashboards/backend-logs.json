@@ -25,13 +25,128 @@
         "type": "loki",
         "uid": "loki"
       },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 16,
-        "w": 24,
+        "h": 6,
+        "w": 8,
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate({job=\"smart-ingredients\",service=\"backend\"} | json | fields_message=\"request\" [5m]))",
+          "hide": true,
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate({job=\"smart-ingredients\",service=\"backend\"} | json | fields_message=\"request\" | fields_success=\"false\" [5m]))",
+          "hide": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "100 * $B / $A",
+          "refId": "C",
+          "type": "math"
+        }
+      ],
+      "title": "失败率 (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (fields_route) (count_over_time({job=\"smart-ingredients\",service=\"backend\"} | json | fields_message=\"request\" | fields_success=\"false\" [5m])))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "错误接口 Top 10",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (fields_error_code) (count_over_time({job=\"smart-ingredients\",service=\"backend\"} | json | fields_error_code=~\".+\" [5m])))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "错误信息 Top 10",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 5,
       "options": {
         "showLabels": true,
         "showTime": true,
@@ -40,11 +155,11 @@
       },
       "targets": [
         {
-          "expr": "{job=\"smart-ingredients\"}",
+          "expr": "{job=\"smart-ingredients\",service=\"backend\"} | json | level=\"ERROR\"",
           "refId": "A"
         }
       ],
-      "title": "Backend Logs",
+      "title": "错误日志",
       "type": "logs"
     }
   ],
@@ -52,7 +167,8 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
-    "logs"
+    "logs",
+    "observability"
   ],
   "templating": {
     "list": []
@@ -63,7 +179,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Smart Ingredients Logs",
+  "title": "Smart Ingredients Observability",
   "uid": "smart-ingredients-logs",
-  "version": 1
+  "version": 2
 }
