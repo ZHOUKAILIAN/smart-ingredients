@@ -6,10 +6,10 @@
 | -------- | ------------------------------------------ |
 | 文档编号 | 016-server-stability-observability         |
 | 标题     | 服务端稳定性与可观测性技术方案             |
-| 版本     | 1.0                                        |
+| 版本     | 1.2                                        |
 | 状态     | 草稿                                       |
 | 创建日期 | 2026-01-28                                 |
-| 更新日期 | 2026-01-28                                 |
+| 更新日期 | 2026-01-29                                 |
 | 作者     | Codex                                      |
 | 关联需求 | 016-server-stability-observability         |
 
@@ -17,26 +17,26 @@
 
 ### 目的
 
-为服务端建立结构化日志、失败率指标与告警能力，并接入阿里云日志服务（SLS），让异常可见、可追踪、可统计。
+为服务端建立结构化日志、失败率指标与可视化能力，并通过自建 Grafana + Loki 实现异常可见、可追踪、可统计（前期不配置告警）。
 
 ### 范围
 
 - 后端日志结构化输出（JSON）
 - 关键请求与依赖调用埋点
-- 接入 SLS 采集、检索、看板与告警
-- 失败率（接口级与端到端）统计口径
+- Promtail 采集日志 → Loki 存储检索 → Grafana 展示
+- 失败率（接口级）统计口径（基于日志）
 
 ### 假设
 
-- 服务以 Docker 方式部署，可在宿主机安装 Logtail。
+- 服务以 Docker 方式单机部署，使用 Docker Compose 管理。
 - 后端已使用 `tracing`，可扩展为 JSON 日志。
-- 日志通过 stdout 输出，便于容器采集。
+- 日志优先输出到 stdout，由 Promtail 从 Docker 日志文件采集。
 
 ## 架构设计
 
 ### 高层架构
 
-应用日志（stdout JSON） → Docker 日志文件 → Logtail 采集 → SLS Logstore → 可视化/告警
+应用日志（JSON） → Promtail 采集 → Loki → Grafana 可视化
 
 ### 组件图
 
@@ -44,9 +44,10 @@
   - 请求追踪与结构化日志（`tracing`）
   - 错误日志与依赖调用日志
 - 采集
-  - Logtail（宿主机代理）
+  - Promtail（宿主机或容器）
 - 平台
-  - SLS Logstore（索引、检索、可视化、告警）
+  - Loki（索引、检索）
+  - Grafana（看板）
 
 ## 日志规范
 
@@ -66,6 +67,8 @@
 | `success` | 请求是否成功 | 是 |
 | `error_code` | 业务错误码（如 `OCR_ERROR`） | 否 |
 | `error_type` | 错误类型（internal/validation/dependency） | 否 |
+| `error_message` | 错误摘要信息 | 否 |
+| `stacktrace` | 错误堆栈摘要 | 否 |
 | `dependency` | 依赖名称（ocr/llm/redis/db） | 否 |
 | `user_id_hash` | 仅保存哈希或脱敏用户标识 | 否 |
 
@@ -83,6 +86,27 @@
   "status": 200,
   "latency_ms": 842,
   "success": true
+}
+```
+
+### 错误日志示例
+
+```json
+{
+  "timestamp": "2026-01-29T09:21:17Z",
+  "level": "ERROR",
+  "service": "backend",
+  "env": "prod",
+  "request_id": "9c2f8d4e-3d7a-4a2f-9a55-1cf2f6e6bcb2",
+  "route": "/api/v1/analysis",
+  "method": "POST",
+  "status": 500,
+  "latency_ms": 1874,
+  "success": false,
+  "error_code": "LLM_TIMEOUT",
+  "error_type": "dependency",
+  "error_message": "LLM request timeout after 1500ms",
+  "stacktrace": "services/llm.rs:132 -> AppError::timeout"
 }
 ```
 
@@ -117,43 +141,80 @@
 
 定义：一次请求中，只要发生依赖失败（OCR/LLM/DB/Redis）或最终状态为失败，则计为端到端失败。
 
-## SLS 接入方案
+## Grafana + Loki + Promtail 接入方案（自建）
 
-### 方案选择
+### 1. 部署方式
 
-- **推荐**：非阿里云主机采用 **LoongCollector 容器采集 Docker stdout**（Docker 29+ 需 3.2.4+）
-- 备选：宿主机手动安装 Logtail（需匹配支持的 Linux 版本）
+- 单机 Docker Compose 部署 Grafana、Loki、Promtail
+- Loki/Grafana 数据目录挂载到宿主机，防止重装丢失
 
-### 1. 创建资源
+### 1.1 简要部署步骤（单机）
 
-- 创建 SLS Project 与 Logstore
-- 设置日志保留时间与索引字段
+- 准备 `docker-compose.yml`、`loki-config.yml`、`promtail-config.yml`（见 `docs/deployment/monitoring/` 示例）
+- Promtail 采集路径指向 Docker 日志文件（如 `/var/lib/docker/containers/*/*-json.log`）
+- Promtail 容器需只读挂载 `/var/lib/docker/containers` 与 `/var/run/docker.sock`
+- 执行 `docker compose -f docs/deployment/monitoring/docker-compose.monitoring.yml up -d`
+- 访问 `http://<server_ip>:3001`，在 Grafana 添加 Loki 数据源（避免与后端 3000 端口冲突）
 
-### 2. 采集配置
+### 2. Promtail 采集配置
 
-- 方案 A：LoongCollector 容器（推荐）
-  - 拉取 LoongCollector 镜像（按 SLS 区域选择 `${region_id}`）
-  - 启动 LoongCollector 容器并绑定 Machine Group
-  - 选择模板 “Docker Stdout and Stderr - New Version”
-- 方案 B：宿主机 Logtail
-  - 手动安装 Logtail（Linux x86-64 版本匹配）
-  - 采集 Docker stdout（默认日志路径 `/var/lib/docker/containers/<id>/<id>-json.log`）
+**stdout 采集（当前示例）**：
+- 直接使用容器日志路径（由 `docker inspect` 获取）
+- 容器重建后需要更新 `__path__`
 
-**注意**：Logtail 只采集新增日志，配置下发前的旧日志不会被采集
+**示例（当前配置）**：
+```yaml
+scrape_configs:
+  - job_name: backend-stdout
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: smart-ingredients
+          container: smart-ingredients-backend
+          service: backend
+          __path__: /var/lib/docker/containers/<container_id>/<container_id>-json.log
+    pipeline_stages:
+      - docker: {}
+```
 
-### 3. 索引与查询
+> 说明：`__path__` 需要和实际容器的日志路径一致。
 
-- 建议索引字段：`service`、`env`、`route`、`method`、`status`、`success`、`latency_ms`、`error_code`
-- 用于看板与告警的核心查询：
-  - 接口失败率（按 route 分组）
-  - 端到端失败率（按时间聚合）
-  - P50/P95/P99 延迟趋势
+**可选：自动发现容器（进阶）**：
+```yaml
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        regex: /smart-ingredients-backend
+        action: keep
+      - source_labels: [__meta_docker_container_log_path]
+        target_label: __path__
+      - source_labels: [__meta_docker_container_name]
+        target_label: container
+    pipeline_stages:
+      - docker: {}
+```
 
-### 4. 告警配置
+### 3. Loki 索引与查询
 
-- 失败率 > 阈值（如 1%）触发
-- 5xx 错误数量激增触发
-- 依赖服务失败率异常触发
+- 建议索引字段：`service`、`env`、`route`、`method`、`status`、`success`、`error_code`
+- 核心查询：
+- 错误数统计：`sum(count_over_time({container="smart-ingredients-backend"} |= "ERROR" [5m]))`
+- 5xx 统计：`sum(count_over_time({container="smart-ingredients-backend"} |~ "status=5.." [5m]))`
+- 接口错误 TopN：`topk(10, sum by (route) (count_over_time({container="smart-ingredients-backend"} |= "ERROR" [1h])))`
+
+### 4. Grafana 面板（前期）
+
+- 面板：错误数趋势、5xx 趋势、接口错误 TopN
+- 前期不配置告警规则与通知通道
+
+### 4.1 快速查询示例
+
+- 仅查看错误日志：`{container="smart-ingredients-backend"} |= "ERROR"`
+- 统计 5xx 次数：`sum(count_over_time({container="smart-ingredients-backend"} |~ "status=5.." [5m]))`
 
 ## 安全与合规
 
@@ -164,13 +225,13 @@
 
 ### 本地验证
 
-- 请求触发后确认 stdout 输出 JSON 日志
+- 请求触发后确认 Docker 日志输出 JSON 日志
 - 故意触发错误验证 `error_code` 与 `success=false`
 
 ### 线上验证
 
-- SLS 能检索到日志字段
-- 看板与告警触发符合预期
+- Grafana 可检索到日志字段
+- 看板展示符合预期
 
 ## 部署
 
@@ -181,7 +242,7 @@
 
 ### 回滚方案
 
-- 禁用 Logtail 采集或恢复到文本日志格式
+- 禁用 Promtail 采集或恢复到文本日志格式
 - 保留现有业务功能不受影响
 
 ## 实施阶段
@@ -197,8 +258,8 @@
 - [ ] OCR/LLM/DB/Redis 调用日志补齐
 - [ ] 明确成功/失败字段与端到端口径
 
-### 阶段 3：SLS 接入与看板告警
+### 阶段 3：自建接入与看板
 
-- [ ] 创建 Project/Logstore/索引
-- [ ] 安装 Logtail 并采集 Docker 日志
-- [ ] 配置看板与告警规则
+- [ ] 部署 Grafana/Loki/Promtail
+- [ ] 配置采集路径与标签
+- [ ] 配置看板

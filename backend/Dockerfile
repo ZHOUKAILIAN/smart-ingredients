@@ -15,6 +15,10 @@ COPY Cargo.toml Cargo.lock ./
 COPY backend/Cargo.toml backend/Cargo.toml
 COPY shared/Cargo.toml shared/Cargo.toml
 
+# Reduce network flakiness when fetching crates
+ENV CARGO_NET_RETRY=10
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+
 # Workspace placeholders
 RUN mkdir -p frontend/src frontend/src-tauri/src backend/src shared/src \
     && printf '[package]\nname = "frontend-placeholder"\nversion = "0.1.0"\nedition = "2021"\n\n[lib]\npath = "src/lib.rs"\n' > frontend/Cargo.toml \
@@ -24,14 +28,18 @@ RUN mkdir -p frontend/src frontend/src-tauri/src backend/src shared/src \
     && printf 'fn main() {}\n' > backend/src/main.rs \
     && printf 'pub fn placeholder() {}\n' > shared/src/lib.rs
 
-RUN cargo fetch
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cargo fetch
 
 # Copy actual source code
 COPY backend ./backend
 COPY shared ./shared
 
 # Build release binary
-RUN cargo build --release -p backend
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cargo build --release -p backend
 
 # Runtime stage
 FROM docker.io/library/debian:bookworm-slim

@@ -8,6 +8,12 @@ use axum::{
 use thiserror::Error;
 use tracing::error;
 
+#[derive(Debug, Clone)]
+pub struct ErrorMeta {
+    pub code: &'static str,
+    pub error_type: &'static str,
+}
+
 /// Application error type
 #[derive(Error, Debug)]
 pub enum AppError {
@@ -63,37 +69,53 @@ pub enum AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, code, message) = match &self {
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "BAD_REQUEST", msg),
+        let (status, code, error_type, message) = match &self {
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "BAD_REQUEST", "validation", msg),
             AppError::UnsupportedMediaType(msg) => (
                 StatusCode::UNSUPPORTED_MEDIA_TYPE,
                 "UNSUPPORTED_MEDIA_TYPE",
+                "validation",
                 msg,
             ),
             AppError::PayloadTooLarge(msg) => (
                 StatusCode::PAYLOAD_TOO_LARGE,
                 "PAYLOAD_TOO_LARGE",
+                "validation",
                 msg,
             ),
-            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, "NOT_FOUND", msg),
-            AppError::Ocr(msg) => (StatusCode::SERVICE_UNAVAILABLE, "OCR_ERROR", msg),
-            AppError::Llm(msg) => (StatusCode::SERVICE_UNAVAILABLE, "LLM_ERROR", msg),
-            AppError::Storage(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "STORAGE_ERROR", msg),
-            AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", msg),
-            AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, "UNAUTHORIZED", msg),
-            AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, "FORBIDDEN", msg),
-            AppError::RateLimited(msg) => (StatusCode::TOO_MANY_REQUESTS, "RATE_LIMIT_EXCEEDED", msg),
-            AppError::SmsCodeInvalid(msg) => (StatusCode::BAD_REQUEST, "SMS_CODE_INVALID", msg),
-            AppError::SmsCodeExpired(msg) => (StatusCode::BAD_REQUEST, "SMS_CODE_EXPIRED", msg),
-            AppError::SmsLocked(msg) => (StatusCode::TOO_MANY_REQUESTS, "SMS_LOCKED", msg),
-            AppError::SmsCooldown(msg) => (StatusCode::TOO_MANY_REQUESTS, "SMS_COOLDOWN", msg),
+            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, "NOT_FOUND", "validation", msg),
+            AppError::Ocr(msg) => (StatusCode::SERVICE_UNAVAILABLE, "OCR_ERROR", "dependency", msg),
+            AppError::Llm(msg) => (StatusCode::SERVICE_UNAVAILABLE, "LLM_ERROR", "dependency", msg),
+            AppError::Storage(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "STORAGE_ERROR", "dependency", msg),
+            AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "internal", msg),
+            AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, "UNAUTHORIZED", "auth", msg),
+            AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, "FORBIDDEN", "auth", msg),
+            AppError::RateLimited(msg) => (
+                StatusCode::TOO_MANY_REQUESTS,
+                "RATE_LIMIT_EXCEEDED",
+                "rate_limit",
+                msg,
+            ),
+            AppError::SmsCodeInvalid(msg) => (StatusCode::BAD_REQUEST, "SMS_CODE_INVALID", "validation", msg),
+            AppError::SmsCodeExpired(msg) => (StatusCode::BAD_REQUEST, "SMS_CODE_EXPIRED", "validation", msg),
+            AppError::SmsLocked(msg) => (StatusCode::TOO_MANY_REQUESTS, "SMS_LOCKED", "rate_limit", msg),
+            AppError::SmsCooldown(msg) => (StatusCode::TOO_MANY_REQUESTS, "SMS_COOLDOWN", "rate_limit", msg),
         };
 
-        error!("App error: {}", self);
+        error!(
+            error_code = code,
+            error_type,
+            "App error: {}",
+            self
+        );
 
         let body = shared::ApiError::new(code, message);
 
-        (status, Json(body)).into_response()
+        let mut response = (status, Json(body)).into_response();
+        response
+            .extensions_mut()
+            .insert(ErrorMeta { code, error_type });
+        response
     }
 }
 

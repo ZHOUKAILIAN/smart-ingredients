@@ -21,7 +21,7 @@ thiserror = "1"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "time"] }
 
 # UUID
 uuid = { version = "1", features = ["v4", "serde", "js"] }
