@@ -23,7 +23,9 @@ pub fn CapturePage() -> impl IntoView {
     let preview_url = RwSignal::new(None::<String>);
     let camera_input_ref = NodeRef::<leptos::html::Input>::new();
     let album_input_ref = NodeRef::<leptos::html::Input>::new();
-    let show_scan = RwSignal::new(false);
+
+    // 使用 LocalStorage 持久化 show_scan 状态
+    let show_scan: RwSignal<bool, LocalStorage> = RwSignal::new_local(false);
     let show_preference_modal = RwSignal::new(false);
     let initial_preference = state
         .analysis_preference
@@ -128,6 +130,8 @@ pub fn CapturePage() -> impl IntoView {
                     state.selected_image_path.set(Some(response.image_url));
                     state.analysis_source.set(AnalysisSource::NewAnalysis);
                     state.loading_state.set(LoadingState::Idle);
+                    // 清除 show_scan 状态
+                    show_scan.set(false);
                     navigate("/ocr", Default::default());
                 }
                 Err(err) => {
@@ -163,6 +167,7 @@ pub fn CapturePage() -> impl IntoView {
 
     view! {
         <section class="page page-capture figma">
+            {/* Modal 在外层,不受滚动影响 */}
             <Show when=move || show_preference_modal.get()>
                 <div class="preference-guide-overlay">
                     <div class="surface-card preference-guide-card">
@@ -193,7 +198,9 @@ pub fn CapturePage() -> impl IntoView {
                 </div>
             </Show>
 
-            <Show when=move || !show_scan.get()>
+            {/* 可滚动内容区域 */}
+            <div class="page-scrollable-content">
+                <Show when=move || !show_scan.get()>
                 <div class="home-hero">
                     <div class="brand-mark">
                         <div class="brand-icon brand-icon-float">"SI"</div>
@@ -209,34 +216,42 @@ pub fn CapturePage() -> impl IntoView {
                 <div class="surface-card steps-card">
                     <h2 class="card-title centered">"使用步骤"</h2>
                     <div class="steps-list">
-                        <div class="step-item">
-                            <div class="step-icon">
-                                <IconCamera />
-                                <span class="step-number">"1"</span>
+                        <div class="step-item-wrapper">
+                            <div class="step-item">
+                                <div class="step-icon">
+                                    <IconCamera />
+                                    <span class="step-number">"1"</span>
+                                </div>
+                                <div class="step-content">
+                                    <h3>"拍摄配料表"</h3>
+                                    <p>"对准食品包装上的配料表拍照"</p>
+                                </div>
                             </div>
-                            <div class="step-content">
-                                <h3>"拍摄配料表"</h3>
-                                <p>"对准食品包装上的配料表拍照"</p>
-                            </div>
+                            <div class="step-connector"></div>
                         </div>
-                        <div class="step-item">
-                            <div class="step-icon">
-                                <IconCheckBadge />
-                                <span class="step-number">"2"</span>
+                        <div class="step-item-wrapper">
+                            <div class="step-item">
+                                <div class="step-icon">
+                                    <IconCheckBadge />
+                                    <span class="step-number">"2"</span>
+                                </div>
+                                <div class="step-content">
+                                    <h3>"确认识别文本"</h3>
+                                    <p>"AI自动识别配料信息"</p>
+                                </div>
                             </div>
-                            <div class="step-content">
-                                <h3>"确认识别文本"</h3>
-                                <p>"AI自动识别配料信息"</p>
-                            </div>
+                            <div class="step-connector"></div>
                         </div>
-                        <div class="step-item">
-                            <div class="step-icon">
-                                <IconChart />
-                                <span class="step-number">"3"</span>
-                            </div>
-                            <div class="step-content">
-                                <h3>"查看健康报告"</h3>
-                                <p>"获取详细的成分分析和建议"</p>
+                        <div class="step-item-wrapper">
+                            <div class="step-item">
+                                <div class="step-icon">
+                                    <IconChart />
+                                    <span class="step-number">"3"</span>
+                                </div>
+                                <div class="step-content">
+                                    <h3>"查看健康报告"</h3>
+                                    <p>"获取详细的成分分析和建议"</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -249,25 +264,26 @@ pub fn CapturePage() -> impl IntoView {
                 </Show>
 
                 <div class="home-actions">
-                    <button class="primary-cta" on:click=move |_| show_scan.set(true)>
+                    <button class="primary-cta" on:click=move |_| {
+                        show_scan.set(true);
+                    }>
                         "开始分析"
                     </button>
                 </div>
             </Show>
 
             <Show when=move || show_scan.get()>
-                <div class="page-topbar scan-header">
+                <div class="scan-header">
                     <button
                         class="icon-button"
                         on:click=move |_| {
                             show_scan.set(false);
                             on_remove_preview();
                         }
+                        aria-label="返回"
                     >
                         <IconArrowLeft />
                     </button>
-                    <h1 class="page-topbar-title">"拍摄配料表"</h1>
-                    <div class="icon-placeholder"></div>
                 </div>
 
                 <div class="scan-content">
@@ -303,7 +319,7 @@ pub fn CapturePage() -> impl IntoView {
                             >
                                 {move || {
                                     if state.loading_state.get() == LoadingState::OcrProcessing {
-                                        "AI 分析中..."
+                                        "上传图片中..."
                                     } else {
                                         "开始分析"
                                     }
@@ -343,6 +359,7 @@ pub fn CapturePage() -> impl IntoView {
 
                 </div>
             </Show>
+            </div>
         </section>
     }
 }

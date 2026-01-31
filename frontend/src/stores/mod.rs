@@ -104,4 +104,7 @@ pub struct AppState {
     
     // New fields for navigation
     pub current_tab: RwSignal<TabRoute>,
+    pub last_home_path: RwSignal<String>,
+    pub last_history_path: RwSignal<String>,
+    pub last_profile_path: RwSignal<String>,
 }

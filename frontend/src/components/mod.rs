@@ -14,6 +14,8 @@ mod error_display;
 mod toast;
 mod icons;
 mod preference_selector;
+mod confirm_modal;
+mod tab_icons;
 
 pub use ingredient_table::{IngredientRow, IngredientTable};
 pub use risk_badge::RiskBadge;
@@ -29,6 +31,8 @@ pub use error_display::ErrorDisplay;
 pub use toast::ToastHost;
 pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
 pub use preference_selector::{PreferenceSelector, PreferenceCard, get_preference_label, get_preference_icon};
+pub use confirm_modal::ConfirmModal;
+pub use tab_icons::{IconHome, IconHistory, IconUser};
 
 mod bottom_nav;
 mod main_layout;

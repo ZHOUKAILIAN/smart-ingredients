@@ -2,7 +2,7 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 
-use crate::components::PreferenceSelector;
+use crate::components::get_preference_label;
 use crate::services;
 use crate::stores::{AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
@@ -28,7 +28,7 @@ pub fn ConfirmPage() -> impl IntoView {
         .get()
         .or_else(|| load_preference())
         .unwrap_or_else(|| "none".to_string());
-    let (preference, set_preference) = create_signal(initial_preference);
+    let preference = create_signal(initial_preference).0;
 
     let on_confirm = move |_| {
         let text = edited_text.get();
@@ -77,17 +77,9 @@ pub fn ConfirmPage() -> impl IntoView {
 
     view! {
         <section class="page page-confirm figma">
-            <div class="figma-body">
-                <header class="page-header">
-                    <div class="figma-header">
-                        <span class="icon-placeholder"></span>
-                        <h1 class="figma-title">"识别结果确认"</h1>
-                        <span class="icon-placeholder"></span>
-                    </div>
-                    <p class="subtitle">"请确认识别文本是否正确，可以编辑修改"</p>
-                </header>
-
+            <div class="page-scrollable-content">
                 <div class="text-editor-container">
+                    <h3 class="section-label">"识别结果"</h3>
                     <textarea
                         class="text-editor"
                         rows="10"
@@ -103,16 +95,8 @@ pub fn ConfirmPage() -> impl IntoView {
                 </div>
 
                 <div class="preference-container">
-                    <PreferenceSelector
-                        value=Signal::derive(move || preference.get())
-                        on_change=Callback::new(move |value: String| {
-                            set_preference.set(value);
-                        })
-                        label="分析视角"
-                        show_description=true
-                    />
                     <p class="preference-tips">
-                        "💡 默认来自首页首次选择的偏好，可在此临时修改本次分析视角。"
+                        {move || format!("💡 当前分析视角：{}", get_preference_label(&preference.get()))}
                     </p>
                 </div>
 

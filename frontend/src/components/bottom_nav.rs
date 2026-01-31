@@ -1,7 +1,22 @@
 use leptos::prelude::*;
 use leptos_router::hooks::{use_location, use_navigate};
+use crate::components::{IconHome, IconHistory, IconUser};
 use crate::stores::{AppState, TabRoute};
 use crate::utils::local_storage;
+
+fn tab_for_path(path: &str) -> TabRoute {
+    if path == "/history" || path.starts_with("/history/") {
+        TabRoute::History
+    } else if path == "/profile"
+        || path.starts_with("/profile/")
+        || path == "/preference"
+        || path.starts_with("/preference/")
+    {
+        TabRoute::Profile
+    } else {
+        TabRoute::Home
+    }
+}
 
 #[component]
 pub fn BottomNav() -> impl IntoView {
@@ -12,18 +27,34 @@ pub fn BottomNav() -> impl IntoView {
     // 根据当前路径判断激活的 Tab
     let current_tab = create_memo(move |_| {
         let path = location.pathname.get();
-        match path.as_str() {
-            "/" => TabRoute::Home,
-            "/history" => TabRoute::History,
-            "/profile" => TabRoute::Profile,
-            _ => TabRoute::Home,
+        tab_for_path(path.as_str())
+    });
+
+    create_effect(move |_| {
+        let path = location.pathname.get();
+        let search = location.search.get();
+        let full_path = if search.is_empty() {
+            path.clone()
+        } else {
+            format!("{}{}", path, search)
+        };
+        match tab_for_path(path.as_str()) {
+            TabRoute::Home => state.last_home_path.set(full_path),
+            TabRoute::History => state.last_history_path.set(full_path),
+            TabRoute::Profile => state.last_profile_path.set(full_path),
         }
     });
 
     let on_tab_click = move |tab: TabRoute| {
         local_storage::set_last_tab(tab.path());
         state.current_tab.set(tab);
-        navigate(tab.path(), Default::default());
+        let target = match tab {
+            TabRoute::Home => state.last_home_path.get(),
+            TabRoute::History => state.last_history_path.get(),
+            TabRoute::Profile => state.last_profile_path.get(),
+        };
+        let target = if target.is_empty() { tab.path().to_string() } else { target };
+        navigate(&target, Default::default());
     };
 
     view! {
@@ -44,7 +75,13 @@ pub fn BottomNav() -> impl IntoView {
                             aria-label=tab.label()
                             aria-current=move || if is_active() { "page" } else { "" }
                         >
-                            <span class="tab-icon">{tab.icon()}</span>
+                            <span class="tab-icon">
+                                {match tab {
+                                    TabRoute::Home => view! { <IconHome /> }.into_any(),
+                                    TabRoute::History => view! { <IconHistory /> }.into_any(),
+                                    TabRoute::Profile => view! { <IconUser /> }.into_any(),
+                                }}
+                            </span>
                             <span class="tab-label">{tab.label()}</span>
                         </button>
                     }

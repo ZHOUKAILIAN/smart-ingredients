@@ -92,8 +92,12 @@ JWT_EXPIRATION=7d
 #### Frontend
 
 ```bash
-# API
-VITE_API_URL=http://localhost:3000/api
+# API (build-time)
+# Required. Set per environment:
+# - Debug: http://localhost:3000
+# - Release: https://api.smartingredients.my
+# Source order: $API_BASE env var > repo root `.env` > `frontend/.env`
+API_BASE=http://localhost:3000
 
 # OCR
 VITE_OCR_TIMEOUT=30000

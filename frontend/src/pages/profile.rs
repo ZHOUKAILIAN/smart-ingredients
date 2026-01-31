@@ -6,6 +6,14 @@ use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
 
+fn mask_phone(phone: &str) -> String {
+    if phone.len() >= 11 {
+        format!("{}****{}", &phone[..3], &phone[7..])
+    } else {
+        phone.to_string()
+    }
+}
+
 #[component]
 pub fn ProfilePage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
@@ -49,78 +57,84 @@ pub fn ProfilePage() -> impl IntoView {
 
     view! {
         <section class="page page-profile">
-            <div class="page-header">
-                <div>
-                    <h2>"个人中心"</h2>
-                    <p class="subtitle">"管理个人信息"</p>
-                </div>
-            </div>
-            <Show when=move || state.auth_user.get().is_some() fallback=move || {
+            <div class="page-scrollable-content">
+                <Show when=move || state.auth_user.get().is_some() fallback=move || {
                 view! {
-                    <div class="unauth-card">
-                        <div class="unauth-header">
-                            <h3 class="unauth-title">"登录使用更多功能"</h3>
-                            <p class="unauth-subtitle">"注册账号，体验完整服务"</p>
-                        </div>
-                        <div class="benefit-list">
-                            <div class="benefit-item-card">
-                                <div class="benefit-check">"✓"</div>
-                                <div class="benefit-text">"查看分析统计"</div>
+                    // 未登录状态
+                    <div class="profile-container">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <span class="avatar-icon">"👤"</span>
                             </div>
-                            <div class="benefit-item-card">
-                                <div class="benefit-check">"✓"</div>
-                                <div class="benefit-text">"管理偏好设置"</div>
-                            </div>
-                            <div class="benefit-item-card">
-                                <div class="benefit-check">"✓"</div>
-                                <div class="benefit-text">"同步跨设备数据"</div>
-                            </div>
-                        </div>
-                        <button class="primary-button" style="width:100%" on:click=move |_| {
-                            let navigate = navigate.get_value();
-                            navigate("/login", Default::default());
-                        }>"登录 / 注册"</button>
-                        
-                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
-                            <button class="link-button" on:click=move |_| {
+                            <div class="profile-name">"未登录"</div>
+                            <button class="profile-login-btn" on:click=move |_| {
                                 let navigate = navigate.get_value();
-                                navigate("/?modal=preference", Default::default());
-                            }>"偏好设置"</button>
+                                navigate("/login", Default::default());
+                            }>"登录 / 注册"</button>
+                        </div>
+
+                        <div class="profile-menu">
+                            <button class="menu-item" on:click=move |_| {
+                                let navigate = navigate.get_value();
+                                navigate("/preference", Default::default());
+                            }>
+                                <span class="menu-icon">"⚙️"</span>
+                                <span class="menu-label">"偏好设置"</span>
+                                <span class="menu-arrow">"›"</span>
+                            </button>
                         </div>
                     </div>
                 }
             }>
-                <div class="surface-card">
-                    <Show
-                        when=move || state.auth_user.get().is_some()
-                        fallback=move || view! { <p>"加载中..."</p> }
-                    >
-                        {move || {
-                            state.auth_user.get().map(|user| {
-                                view! {
-                                    <div class="profile-info">
-                                        <p>{format!("手机号: {}", user.phone_masked)}</p>
-                                        <p>{format!("注册时间: {}", user.created_at)}</p>
-                                        <p>{format!("分析次数: {}", user.analysis_count)}</p>
+                // 已登录状态
+                {move || {
+                    state.auth_user.get().map(|user| {
+                        let phone_display = mask_phone(&user.phone_masked);
+                        view! {
+                            <div class="profile-container">
+                                <div class="profile-header">
+                                    <div class="profile-avatar">
+                                        <span class="avatar-icon">"👤"</span>
                                     </div>
-                                }
-                            })
-                        }}
-                    </Show>
-                    <div class="profile-actions">
-                        <button class="secondary-cta" on:click=move |_| {
-                            let navigate = navigate.get_value();
-                            navigate("/?modal=preference", Default::default());
-                        }>"偏好设置"</button>
-                        <button class="secondary-cta" on:click=move |_| on_logout.run(())>
-                            "退出登录"
-                        </button>
-                        <button class="primary-cta" on:click=move |_| on_delete.run(())>
-                            "注销账号"
-                        </button>
-                    </div>
-                </div>
+                                    <div class="profile-name">{phone_display}</div>
+                                    <div class="profile-stats">
+                                        <span class="stat-item">
+                                            <span class="stat-label">"分析次数"</span>
+                                            <span class="stat-value">{user.analysis_count}</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="profile-menu">
+                                    <button class="menu-item" on:click=move |_| {
+                                        let navigate = navigate.get_value();
+                                        navigate("/preference", Default::default());
+                                    }>
+                                        <span class="menu-icon">"⚙️"</span>
+                                        <span class="menu-label">"偏好设置"</span>
+                                        <span class="menu-arrow">"›"</span>
+                                    </button>
+
+                                    <div class="menu-divider"></div>
+
+                                    <button class="menu-item" on:click=move |_| on_logout.run(())>
+                                        <span class="menu-icon">"🚪"</span>
+                                        <span class="menu-label">"退出登录"</span>
+                                        <span class="menu-arrow">"›"</span>
+                                    </button>
+
+                                    <button class="menu-item danger" on:click=move |_| on_delete.run(())>
+                                        <span class="menu-icon">"⚠️"</span>
+                                        <span class="menu-label">"注销账号"</span>
+                                        <span class="menu-arrow">"›"</span>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    })
+                }}
             </Show>
+            </div>
         </section>
     }
 }

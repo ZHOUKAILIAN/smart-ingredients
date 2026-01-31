@@ -10,6 +10,7 @@ mod detail;
 mod login;
 mod history;
 mod profile;
+mod preference;
 
 pub use analyzing::AnalyzingPage;
 pub use capture::CapturePage;
@@ -21,3 +22,4 @@ pub use detail::DetailPage;
 pub use login::LoginPage;
 pub use history::HistoryPage;
 pub use profile::ProfilePage;
+pub use preference::PreferencePage;
