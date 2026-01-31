@@ -167,16 +167,7 @@ pub fn SummaryPage() -> impl IntoView {
 
     view! {
         <section class="page page-summary figma">
-            <div class="figma-body">
-                <header class="page-header">
-                    <div class="figma-header">
-                        <span class="icon-placeholder"></span>
-                        <h1 class="figma-title">"分析结果概要"</h1>
-                        <span class="icon-placeholder"></span>
-                    </div>
-                    <p class="subtitle">"以下为模型分析概要"</p>
-                </header>
-
+            <div class="page-scrollable-content">
                 // Health score card
                 <Show when=move || {
                     state.analysis_result.get()

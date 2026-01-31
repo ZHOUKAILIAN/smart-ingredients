@@ -107,7 +107,7 @@ pub fn OcrPage() -> impl IntoView {
 
     view! {
         <section class="page page-ocr figma">
-            <div class="waiting-body">
+            <div class="page-scrollable-content">
                 <div class="surface-card status-card">
                     <div class="status-icon">"OCR"</div>
                     <div class="progress-bar" aria-hidden="true">
@@ -116,10 +116,9 @@ pub fn OcrPage() -> impl IntoView {
                     <h2 class="status-title">"正在识别配料表..."</h2>
                     <p class="status-text">"请稍候，通常需要3-5秒"</p>
                 </div>
-            </div>
 
-            <Show when=move || state_for_error.with_value(|state| state.error_message.get().is_some())>
-                <div class="error-actions">
+                <Show when=move || state_for_error.with_value(|state| state.error_message.get().is_some())>
+                    <div class="error-actions">
                     <button
                         class="secondary-cta"
                         on:click=move |_| {
@@ -159,6 +158,7 @@ pub fn OcrPage() -> impl IntoView {
                     </button>
                 </div>
             </Show>
+            </div>
         </section>
     }
 }

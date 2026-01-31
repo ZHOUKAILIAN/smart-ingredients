@@ -15,7 +15,7 @@ use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
 use crate::components::{ToastHost, MainLayout};
-use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage, ProfilePage, ResultPage, SummaryPage};
+use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage, PreferencePage, ProfilePage, ResultPage, SummaryPage};
 use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute};
 use crate::utils::preference::save_preference;
 
@@ -40,6 +40,9 @@ pub fn App() -> impl IntoView {
     let analysis_source = RwSignal::new(AnalysisSource::NewAnalysis);
 
     let current_tab = RwSignal::new(TabRoute::Home);
+    let last_home_path = RwSignal::new("/".to_string());
+    let last_history_path = RwSignal::new("/history".to_string());
+    let last_profile_path = RwSignal::new("/profile".to_string());
 
     provide_context(AppState {
         analysis_id,
@@ -57,6 +60,9 @@ pub fn App() -> impl IntoView {
         auth_loading,
         analysis_source,
         current_tab,
+        last_home_path,
+        last_history_path,
+        last_profile_path,
     });
 
     let auth_state = use_context::<AppState>().expect("AppState not found");
@@ -98,9 +104,14 @@ pub fn App() -> impl IntoView {
                             <HistoryPage />
                         </MainLayout>
                     } />
-                    <Route path=path!("/profile") view=move || view! { 
+                    <Route path=path!("/profile") view=move || view! {
                         <MainLayout>
                             <ProfilePage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/preference") view=move || view! {
+                        <MainLayout>
+                            <PreferencePage />
                         </MainLayout>
                     } />
                     <Route path=path!("/ocr") view=move || view! {

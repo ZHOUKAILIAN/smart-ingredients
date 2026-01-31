@@ -14,8 +14,6 @@ use uuid::Uuid;
 pub fn LoginPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = use_navigate();
-    let navigate_for_back = navigate.clone();
-    let navigate_for_skip = navigate.clone();
     let phone = RwSignal::new(String::new());
     let code = RwSignal::new(String::new());
     let sending = RwSignal::new(false);
@@ -171,10 +169,11 @@ pub fn LoginPage() -> impl IntoView {
 
     view! {
         <section class="page page-login figma">
-            <div class="login-hero">
+            <div class="page-scrollable-content">
+                <div class="login-hero">
                 <div class="brand-mark">
-                    <div class="brand-icon">"SI"</div>
-                    <div class="brand-ai">"AI"</div>
+                    <div class="brand-icon brand-icon-float">"SI"</div>
+                    <div class="brand-ai brand-ai-float">"AI"</div>
                 </div>
                 <h2 class="login-title">"Smart Ingredients"</h2>
                 <p class="login-subtitle">"登录以同步您的数据"</p>
@@ -231,10 +230,17 @@ pub fn LoginPage() -> impl IntoView {
             <div class="login-footer">
                 <button
                     class="link-button"
-                    on:click=move |_| navigate_for_skip("/", Default::default())
+                    on:click=move |_| {
+                        if let Some(window) = web_sys::window() {
+                            if let Some(history) = window.history().ok() {
+                                let _ = history.back();
+                            }
+                        }
+                    }
                 >
                     "跳过，稍后登录 →"
                 </button>
+            </div>
             </div>
         </section>
     }

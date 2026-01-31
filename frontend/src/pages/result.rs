@@ -260,15 +260,17 @@ pub fn ResultPage() -> impl IntoView {
 
     view! {
         <section class="page page-result figma">
-            <div class="scan-header">
+            <div class="page-topbar">
                 <button class="icon-button" on:click=on_back_home_top>
                     <IconArrowLeft />
                 </button>
-                <h1 class="figma-title">"分析报告"</h1>
+                <h1 class="page-topbar-title">"分析报告"</h1>
                 <button class="icon-button" type="button" aria-label="分享" disabled>
                     "↗"
                 </button>
             </div>
+
+            <div class="page-scrollable-content">
 
             // Preference badge
             <div class="preference-badge-container">
@@ -389,6 +391,7 @@ pub fn ResultPage() -> impl IntoView {
                 <button class="primary-cta" on:click=on_new_analysis>
                     "分析新产品"
                 </button>
+            </div>
             </div>
         </section>
     }

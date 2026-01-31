@@ -104,7 +104,7 @@ pub fn AnalyzingPage() -> impl IntoView {
 
     view! {
         <section class="page page-analyzing figma">
-            <div class="waiting-body">
+            <div class="page-scrollable-content">
                 <div class="surface-card status-card">
                     <div class="status-icon">"AI"</div>
                     <div class="progress-bar" aria-hidden="true">
@@ -113,10 +113,9 @@ pub fn AnalyzingPage() -> impl IntoView {
                     <h2 class="status-title">"AI 分析中..."</h2>
                     <p class="status-text">"请稍候，通常需要5-10秒"</p>
                 </div>
-            </div>
 
-            <Show when=move || state_for_error.with_value(|state| state.error_message.get().is_some())>
-                <div class="error-actions">
+                <Show when=move || state_for_error.with_value(|state| state.error_message.get().is_some())>
+                    <div class="error-actions">
                     <button
                         class="secondary-cta"
                         on:click=move |_| {
@@ -156,6 +155,7 @@ pub fn AnalyzingPage() -> impl IntoView {
                     </button>
                 </div>
             </Show>
+            </div>
         </section>
     }
 }

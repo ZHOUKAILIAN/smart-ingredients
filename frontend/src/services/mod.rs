@@ -9,11 +9,7 @@ use crate::utils::emit_toast;
 use crate::utils::auth_storage;
 use crate::utils::error_messages::{map_api_error, map_client_error};
 
-const DEFAULT_API_BASE: &str = "https://api.smartingredients.my";
-const API_BASE: &str = match option_env!("API_BASE") {
-    Some(value) if !value.is_empty() => value,
-    _ => DEFAULT_API_BASE,
-};
+const API_BASE: &str = env!("API_BASE");
 
 pub fn resolve_media_url(value: &str) -> String {
     if value.trim().is_empty() {

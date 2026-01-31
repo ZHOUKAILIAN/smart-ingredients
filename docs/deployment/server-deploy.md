@@ -90,9 +90,10 @@ docker compose exec backend bash -lc "cd /app && ./migrate.sh"
 curl http://<SERVER_IP>:3000/health
 ```
 
-## 7) Optional: run behind Nginx
+## 7) Optional: run behind Nginx (HTTP/2 + TLS)
 
-If you want a custom domain and TLS, proxy `http://127.0.0.1:3000` via Nginx.
+If you want a custom domain, HTTP/2, and TLS, proxy `http://127.0.0.1:3000` via Nginx.
+Cloudflare → Origin HTTP/2 requires TLS + ALPN on the origin.
 
 ### 7.1 Install Nginx + Certbot
 
@@ -107,15 +108,30 @@ Replace `example.com` with your domain.
 
 ```bash
 sudo tee /etc/nginx/sites-available/smart-ingredients <<'EOF'
+upstream smart_ingredients_backend {
+  server 127.0.0.1:3000;
+  keepalive 64;
+}
+
 server {
   listen 80;
+  server_name example.com;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
   server_name example.com;
 
   client_max_body_size 20m;
 
+  ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
   location / {
-    proxy_pass http://127.0.0.1:3000;
+    proxy_pass http://smart_ingredients_backend;
     proxy_http_version 1.1;
+    proxy_set_header Connection "";
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -123,6 +139,8 @@ server {
   }
 }
 EOF
+
+Template file in repo: `docs/deployment/nginx/smart-ingredients.conf`
 ```
 
 Enable the site and reload Nginx:
@@ -144,6 +162,12 @@ sudo certbot --nginx -d example.com
 ```bash
 curl https://example.com/health
 ```
+
+### 7.5 Cloudflare settings (for end-to-end HTTP/2)
+
+- **SSL/TLS mode**: Full (strict)
+- **HTTP/2**: On
+- **HTTP/2 to Origin**: On
 
 ## 8) Ops notes (domain + HTTPS + monitoring)
 
