@@ -1,7 +1,7 @@
 //! Error display component
 
-use leptos::prelude::*;
 use crate::stores::ErrorInfo;
+use leptos::prelude::*;
 
 #[component]
 pub fn ErrorDisplay(

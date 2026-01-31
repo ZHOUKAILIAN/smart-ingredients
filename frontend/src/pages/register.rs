@@ -32,18 +32,19 @@ fn validate_password(password: &str) -> Result<(), &'static str> {
 }
 
 #[component]
-pub fn LoginPage() -> impl IntoView {
+pub fn RegisterPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = StoredValue::new(use_navigate());
     let username = RwSignal::new(String::new());
     let password = RwSignal::new(String::new());
-    let logging_in = RwSignal::new(false);
+    let confirm_password = RwSignal::new(String::new());
+    let registering = RwSignal::new(false);
 
     let post_auth = {
         let navigate = navigate.clone();
         move |state: AppState, auth: shared::AuthResponse| async move {
             state.auth_user.set(Some(auth.user));
-            emit_toast(ToastLevel::Success, "登录成功", "欢迎回来");
+            emit_toast(ToastLevel::Success, "注册成功", "欢迎加入");
             let local_items = local_history::load_local_history();
             if !local_items.is_empty() {
                 let should_migrate = web_sys::window()
@@ -114,11 +115,12 @@ pub fn LoginPage() -> impl IntoView {
         }
     };
 
-    let on_login = {
+    let on_register = {
         let post_auth = post_auth.clone();
         move |_| {
             let username_value = username.get().trim().to_string();
             let password_value = password.get().trim().to_string();
+            let confirm_value = confirm_password.get().trim().to_string();
             if username_value.is_empty() || password_value.is_empty() {
                 emit_toast(ToastLevel::Warning, "请输入完整信息", "账号与密码不能为空");
                 return;
@@ -131,21 +133,29 @@ pub fn LoginPage() -> impl IntoView {
                 emit_toast(ToastLevel::Warning, "密码格式错误", msg);
                 return;
             }
-            if logging_in.get() {
+            if password_value != confirm_value {
+                emit_toast(
+                    ToastLevel::Warning,
+                    "密码不一致",
+                    "请确认两次输入的密码一致",
+                );
                 return;
             }
-            logging_in.set(true);
+            if registering.get() {
+                return;
+            }
+            registering.set(true);
             let state = state.clone();
             spawn_local(async move {
-                match services::login(username_value, password_value).await {
+                match services::register(username_value, password_value).await {
                     Ok(auth) => {
                         post_auth(state, auth).await;
                     }
                     Err(err) => {
-                        emit_toast(ToastLevel::Error, "登录失败", &err);
+                        emit_toast(ToastLevel::Error, "注册失败", &err);
                     }
                 }
-                logging_in.set(false);
+                registering.set(false);
             });
         }
     };
@@ -159,7 +169,7 @@ pub fn LoginPage() -> impl IntoView {
                     <div class="brand-ai brand-ai-float">"AI"</div>
                 </div>
                 <h2 class="login-title">"Smart Ingredients"</h2>
-                <p class="login-subtitle">"登录以同步您的数据"</p>
+                <p class="login-subtitle">"注册新账号以同步您的数据"</p>
             </div>
 
             <div class="login-form">
@@ -187,23 +197,39 @@ pub fn LoginPage() -> impl IntoView {
                     </div>
                 </div>
 
+                <div class="input-field-group">
+                    <label class="input-label">"确认密码"</label>
+                    <div class="input-wrapper">
+                        <input
+                            class="custom-input"
+                            type="password"
+                            placeholder="注册时需确认"
+                            on:input=move |ev| confirm_password.set(event_target_value(&ev))
+                        />
+                    </div>
+                </div>
+
+                <div class="input-field-group">
+                    <p class="hint">"⚠️ 忘记密码无法找回，仅可重新注册"</p>
+                </div>
+
                 <button
                     class="primary-button"
                     style="width: 100%;"
-                    on:click=on_login
-                    disabled=move || logging_in.get()
+                    on:click=on_register
+                    disabled=move || registering.get()
                 >
-                    {move || if logging_in.get() { "登录中..." } else { "登录" }}
+                    {move || if registering.get() { "注册中..." } else { "注册账号" }}
                 </button>
 
                 <button
                     class="link-button login-switch"
                     on:click=move |_| {
                         let navigate = navigate.get_value();
-                        navigate("/register", Default::default());
+                        navigate("/login", Default::default());
                     }
                 >
-                    "没有账号？去注册"
+                    "已有账号？去登录"
                 </button>
             </div>
 

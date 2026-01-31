@@ -1,8 +1,8 @@
 //! Ingredient card component
 
-use leptos::prelude::*;
 use crate::components::RiskBadge;
 use crate::utils::category_label;
+use leptos::prelude::*;
 
 #[component]
 pub fn IngredientCard(

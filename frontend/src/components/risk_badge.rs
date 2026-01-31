@@ -1,7 +1,7 @@
 //! Risk badge component
 
-use leptos::prelude::*;
 use crate::utils::risk_badge_class;
+use leptos::prelude::*;
 
 #[component]
 pub fn RiskBadge(level: String) -> impl IntoView {

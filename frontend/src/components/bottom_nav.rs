@@ -1,8 +1,8 @@
-use leptos::prelude::*;
-use leptos_router::hooks::{use_location, use_navigate};
-use crate::components::{IconHome, IconHistory, IconUser};
+use crate::components::{IconHistory, IconHome, IconUser};
 use crate::stores::{AppState, TabRoute};
 use crate::utils::local_storage;
+use leptos::prelude::*;
+use leptos_router::hooks::{use_location, use_navigate};
 
 fn tab_for_path(path: &str) -> TabRoute {
     if path == "/history" || path.starts_with("/history/") {
@@ -19,7 +19,7 @@ fn tab_for_path(path: &str) -> TabRoute {
 }
 
 fn should_record_last_path(path: &str) -> bool {
-    path != "/login"
+    path != "/login" && path != "/register"
 }
 
 #[component]
@@ -60,8 +60,12 @@ pub fn BottomNav() -> impl IntoView {
             TabRoute::History => state.last_history_path.get(),
             TabRoute::Profile => state.last_profile_path.get(),
         };
-        let target = if target.is_empty() { tab.path().to_string() } else { target };
-        let target = if target.starts_with("/login") {
+        let target = if target.is_empty() {
+            tab.path().to_string()
+        } else {
+            target
+        };
+        let target = if target.starts_with("/login") || target.starts_with("/register") {
             tab.path().to_string()
         } else {
             target
@@ -78,7 +82,7 @@ pub fn BottomNav() -> impl IntoView {
                     let is_active = move || current_tab.get() == tab;
                     let tab_clone = tab;
                     let on_click = on_tab_click.clone();
-                    
+
                     view! {
                         <button
                             class="tab-item"

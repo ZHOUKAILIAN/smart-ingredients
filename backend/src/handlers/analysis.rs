@@ -2,8 +2,7 @@
 
 use axum::{
     extract::{Multipart, Path, Query, State},
-    Json,
-    Router,
+    Json, Router,
 };
 use serde::Deserialize;
 use shared::{
@@ -15,8 +14,8 @@ use uuid::Uuid;
 use crate::{
     db,
     errors::AppError,
-    services::{llm::PreferenceType, ocr, storage},
     middleware::OptionalAuthUser,
+    services::{llm::PreferenceType, ocr, storage},
     state::AppState,
 };
 
@@ -41,9 +40,11 @@ async fn upload_handler(
     let mut filename = None;
     let mut content_type = None;
 
-    while let Some(field) = multipart.next_field().await.map_err(|err| {
-        AppError::BadRequest(format!("invalid multipart field: {}", err))
-    })? {
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|err| AppError::BadRequest(format!("invalid multipart field: {}", err)))?
+    {
         if field.name() != Some("file") {
             continue;
         }
@@ -51,9 +52,10 @@ async fn upload_handler(
         filename = field.file_name().map(|name| name.to_string());
         content_type = field.content_type().map(|ct| ct.to_string());
 
-        let bytes = field.bytes().await.map_err(|err| {
-            AppError::BadRequest(format!("failed to read file: {}", err))
-        })?;
+        let bytes = field
+            .bytes()
+            .await
+            .map_err(|err| AppError::BadRequest(format!("failed to read file: {}", err)))?;
 
         if bytes.len() > MAX_UPLOAD_BYTES {
             let size_mb = bytes.len() as f64 / (1024.0 * 1024.0);
@@ -67,9 +69,7 @@ async fn upload_handler(
         break;
     }
 
-    let file_bytes = file_bytes.ok_or_else(|| {
-        AppError::BadRequest("缺少文件字段".to_string())
-    })?;
+    let file_bytes = file_bytes.ok_or_else(|| AppError::BadRequest("缺少文件字段".to_string()))?;
 
     // Basic validation of Content-Type
     validate_content_type(content_type.as_deref())?;
@@ -128,9 +128,7 @@ async fn confirm_handler(
     }
 
     if row.ocr_status != "completed" {
-        return Err(AppError::BadRequest(
-            "OCR not completed yet".to_string(),
-        ));
+        return Err(AppError::BadRequest("OCR not completed yet".to_string()));
     }
 
     let confirmed_text = payload.confirmed_text.trim().to_string();
@@ -140,8 +138,7 @@ async fn confirm_handler(
         ));
     }
 
-    db::update_confirmed_text(&state.pool, id, &confirmed_text, "llm_pending")
-        .await?;
+    db::update_confirmed_text(&state.pool, id, &confirmed_text, "llm_pending").await?;
 
     let preference = PreferenceType::from_str(payload.preference.as_deref());
 
@@ -189,12 +186,12 @@ async fn retry_llm_handler(
         .await?
         .ok_or_else(|| AppError::NotFound("analysis not found".to_string()))?;
 
-    let confirmed_text = row.confirmed_text.clone().ok_or_else(|| {
-        AppError::BadRequest("missing confirmed text".to_string())
-    })?;
+    let confirmed_text = row
+        .confirmed_text
+        .clone()
+        .ok_or_else(|| AppError::BadRequest("missing confirmed text".to_string()))?;
 
-    db::update_llm_status(&state.pool, id, "pending", "llm_pending", None)
-        .await?;
+    db::update_llm_status(&state.pool, id, "pending", "llm_pending", None).await?;
 
     let pool = state.pool.clone();
     let llm = state.llm.clone();
@@ -267,10 +264,7 @@ fn to_analysis_response(row: &db::AnalysisRow) -> AnalysisResponse {
         llm_status: parse_llm_status(&row.llm_status),
         ocr_text: row.ocr_text.clone(),
         confirmed_text: row.confirmed_text.clone(),
-        ocr_completed_at: row
-            .ocr_completed_at
-            .as_ref()
-            .map(|ts| ts.to_rfc3339()),
+        ocr_completed_at: row.ocr_completed_at.as_ref().map(|ts| ts.to_rfc3339()),
         result: row
             .result
             .as_ref()
@@ -346,14 +340,7 @@ async fn run_ocr_task(
     analysis_id: Uuid,
     image_url: String,
 ) {
-    let _ = db::update_ocr_status(
-        &pool,
-        analysis_id,
-        "processing",
-        "ocr_processing",
-        None,
-    )
-    .await;
+    let _ = db::update_ocr_status(&pool, analysis_id, "processing", "ocr_processing", None).await;
 
     let image_path = match storage::resolve_image_path(&config.upload_dir, &image_url) {
         Ok(path) => path,
@@ -397,8 +384,7 @@ async fn run_ocr_task(
         return;
     }
 
-    let _ = db::save_ocr_result(&pool, analysis_id, &ocr_text, "ocr_completed")
-        .await;
+    let _ = db::save_ocr_result(&pool, analysis_id, &ocr_text, "ocr_completed").await;
 }
 
 async fn run_llm_task(
@@ -408,14 +394,7 @@ async fn run_llm_task(
     text: String,
     preference: PreferenceType,
 ) {
-    let _ = db::update_llm_status(
-        &pool,
-        analysis_id,
-        "processing",
-        "llm_processing",
-        None,
-    )
-    .await;
+    let _ = db::update_llm_status(&pool, analysis_id, "processing", "llm_processing", None).await;
 
     let result = match llm.analyze_ingredients(&text, preference).await {
         Ok(result) => result,
@@ -503,13 +482,9 @@ fn normalize_dimension(value: &str) -> Option<ScoreDimension> {
             Some(ScoreDimension::AdditivesProcessing)
         }
         "sugar_fat" | "sugarfat" | "sugar" | "fat" => Some(ScoreDimension::SugarFat),
-        "nutrition_value" | "nutrition" | "nutritionvalue" => {
-            Some(ScoreDimension::NutritionValue)
-        }
+        "nutrition_value" | "nutrition" | "nutritionvalue" => Some(ScoreDimension::NutritionValue),
         "sensitive" | "sensitivity" => Some(ScoreDimension::Sensitive),
-        "formula_complexity" | "complexity" | "formula" => {
-            Some(ScoreDimension::FormulaComplexity)
-        }
+        "formula_complexity" | "complexity" | "formula" => Some(ScoreDimension::FormulaComplexity),
         _ => None,
     }
 }

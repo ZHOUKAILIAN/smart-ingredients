@@ -101,7 +101,7 @@ pub struct AppState {
     pub auth_user: RwSignal<Option<UserProfile>>,
     pub auth_loading: RwSignal<bool>,
     pub analysis_source: RwSignal<AnalysisSource>,
-    
+
     // New fields for navigation
     pub current_tab: RwSignal<TabRoute>,
     pub last_home_path: RwSignal<String>,

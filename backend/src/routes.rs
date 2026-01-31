@@ -1,14 +1,13 @@
 //! Route definitions
 
 use axum::{extract::DefaultBodyLimit, Router};
-use tower_http::{
-    cors::CorsLayer,
-    limit::RequestBodyLimitLayer,
-    services::ServeDir,
-};
+use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer, services::ServeDir};
 
-use crate::{handlers::{analysis, auth, users}, middleware};
 use crate::state::AppState;
+use crate::{
+    handlers::{analysis, auth, users},
+    middleware,
+};
 
 /// Create all application routes
 pub fn create_routes(state: AppState) -> Router {

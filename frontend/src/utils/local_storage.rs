@@ -9,9 +9,7 @@ pub fn get_last_tab() -> Option<String> {
 }
 
 pub fn set_last_tab(tab: &str) {
-    if let Some(storage) = window()
-        .and_then(|w| w.local_storage().ok().flatten())
-    {
+    if let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) {
         let _ = storage.set_item(KEY_LAST_TAB, tab);
     }
 }

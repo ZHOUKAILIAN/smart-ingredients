@@ -4,8 +4,8 @@ use axum::{
     extract::{Path, Query, State},
     Json, Router,
 };
-use serde::Deserialize;
 use redis::AsyncCommands;
+use serde::Deserialize;
 use shared::{
     BatchDeleteRequest, HistoryItem, HistoryPruneRequest, HistoryPruneResponse, HistoryResponse,
     LocalHistoryMigrateRequest, LocalHistoryMigrateResponse, UpdatePreferencesRequest,
@@ -13,12 +13,7 @@ use shared::{
 };
 use uuid::Uuid;
 
-use crate::{
-    db,
-    errors::AppError,
-    middleware::AuthUser,
-    state::AppState,
-};
+use crate::{db, errors::AppError, middleware::AuthUser, state::AppState};
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -40,16 +35,11 @@ async fn get_profile(
     let user = db::get_user_by_id(&state.pool, user_id)
         .await?
         .ok_or_else(|| AppError::NotFound("user not found".to_string()))?;
-    let phone = crate::services::auth::decrypt_phone(
-        &user.phone_encrypted,
-        &state.config.auth.phone_enc_key,
-    )
-    .unwrap_or_else(|_| "".to_string());
     let analysis_count = db::count_user_analyses(&state.pool, user.id).await?;
 
     Ok(Json(UserProfile {
         id: user.id,
-        phone_masked: crate::services::auth::mask_phone(&phone),
+        login_id: resolve_login_id(&user),
         created_at: user.created_at.to_rfc3339(),
         analysis_count,
     }))
@@ -71,6 +61,10 @@ async fn delete_account(
     db::delete_user(&state.pool, user_id).await?;
 
     Ok(Json(serde_json::json!({ "success": true })))
+}
+
+fn resolve_login_id(user: &db::UserRow) -> String {
+    user.username.clone().unwrap_or_else(|| "用户".to_string())
 }
 
 async fn get_preferences(
@@ -186,7 +180,9 @@ async fn prune_history(
     Json(payload): Json<HistoryPruneRequest>,
 ) -> Result<Json<HistoryPruneResponse>, AppError> {
     if payload.delete_count <= 0 {
-        return Err(AppError::BadRequest("delete_count must be positive".to_string()));
+        return Err(AppError::BadRequest(
+            "delete_count must be positive".to_string(),
+        ));
     }
 
     let deleted = db::prune_user_history(&state.pool, user_id, payload.delete_count).await?;

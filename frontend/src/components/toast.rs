@@ -23,8 +23,7 @@ pub fn ToastHost() -> impl IntoView {
                 return;
             };
             let detail = custom_event.detail();
-            let title =
-                detail_string(&detail, "title").unwrap_or_else(|| "提示".to_string());
+            let title = detail_string(&detail, "title").unwrap_or_else(|| "提示".to_string());
             let message =
                 detail_string(&detail, "message").unwrap_or_else(|| "请求失败".to_string());
             let level = match detail_string(&detail, "level")
@@ -55,10 +54,8 @@ pub fn ToastHost() -> impl IntoView {
             });
         }) as Box<dyn FnMut(_)>);
 
-        let _ = window.add_event_listener_with_callback(
-            "global-toast",
-            handler.as_ref().unchecked_ref(),
-        );
+        let _ = window
+            .add_event_listener_with_callback("global-toast", handler.as_ref().unchecked_ref());
         handler.forget();
     });
 

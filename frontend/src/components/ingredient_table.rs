@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use crate::utils::category_label;
+use leptos::prelude::*;
 
 #[derive(Clone)]
 pub struct IngredientRow {

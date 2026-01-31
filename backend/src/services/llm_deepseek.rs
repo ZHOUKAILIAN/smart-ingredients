@@ -208,9 +208,8 @@ fn parse_analysis_result(content: &str) -> anyhow::Result<shared::AnalysisResult
         return Ok(result);
     }
 
-    let extracted = extract_json_block(&without_fence).ok_or_else(|| {
-        anyhow::anyhow!("unable to extract JSON object from DeepSeek content")
-    })?;
+    let extracted = extract_json_block(&without_fence)
+        .ok_or_else(|| anyhow::anyhow!("unable to extract JSON object from DeepSeek content"))?;
     serde_json::from_str::<shared::AnalysisResult>(extracted).map_err(Into::into)
 }
 

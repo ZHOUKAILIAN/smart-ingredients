@@ -1,13 +1,10 @@
 //! Health score card component
 
-use leptos::prelude::*;
 use crate::utils::{get_health_score_color, get_health_score_label};
+use leptos::prelude::*;
 
 #[component]
-pub fn HealthScoreCard(
-    score: i32,
-    recommendation: String,
-) -> impl IntoView {
+pub fn HealthScoreCard(score: i32, recommendation: String) -> impl IntoView {
     let normalized_score = score.clamp(0, 100);
     let score_color = get_health_score_color(normalized_score);
     let score_label = get_health_score_label(normalized_score);
@@ -16,10 +13,7 @@ pub fn HealthScoreCard(
     } else {
         recommendation
     };
-    let progress_style = format!(
-        "width: {}%; background: {}",
-        normalized_score, score_color
-    );
+    let progress_style = format!("width: {}%; background: {}", normalized_score, score_color);
 
     view! {
         <div class="surface-card score-card">

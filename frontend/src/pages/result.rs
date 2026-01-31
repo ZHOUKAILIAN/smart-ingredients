@@ -1,12 +1,14 @@
-use leptos::prelude::*;
-use crate::components::{HealthScoreCard, IconArrowLeft, RiskBadge, get_preference_label, get_preference_icon};
-use leptos::leptos_dom::helpers::set_timeout;
-use leptos::task::spawn_local;
-use leptos_router::hooks::use_navigate;
+use crate::components::{
+    get_preference_icon, get_preference_label, HealthScoreCard, IconArrowLeft, RiskBadge,
+};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
 use crate::utils::preference::load_preference;
+use leptos::leptos_dom::helpers::set_timeout;
+use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos_router::hooks::use_navigate;
 use shared::AnalysisStatus;
 use std::time::Duration;
 

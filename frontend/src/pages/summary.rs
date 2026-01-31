@@ -1,7 +1,7 @@
 //! Summary page - shows analysis overview
 
-use leptos::prelude::*;
 use leptos::leptos_dom::helpers::set_timeout;
+use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use std::time::Duration;

@@ -14,8 +14,11 @@ use leptos::task::spawn_local;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
-use crate::components::{ToastHost, MainLayout};
-use crate::pages::{AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage, PreferencePage, ProfilePage, ResultPage, SummaryPage};
+use crate::components::{MainLayout, ToastHost};
+use crate::pages::{
+    AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage,
+    PreferencePage, ProfilePage, RegisterPage, ResultPage, SummaryPage,
+};
 use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute};
 use crate::utils::preference::save_preference;
 
@@ -73,7 +76,9 @@ pub fn App() -> impl IntoView {
                 auth_state.auth_user.set(user.clone());
                 if user.is_some() {
                     if let Ok(prefs) = services::fetch_preferences().await {
-                        if let Some(value) = prefs.preferences.get("selection").and_then(|v| v.as_str()) {
+                        if let Some(value) =
+                            prefs.preferences.get("selection").and_then(|v| v.as_str())
+                        {
                             save_preference(value);
                             auth_state.analysis_preference.set(Some(value.to_string()));
                         }
@@ -93,13 +98,14 @@ pub fn App() -> impl IntoView {
                 <ToastHost />
                 <Routes fallback=|| view! { <p>"Not found"</p> }>
                     <Route path=path!("/login") view=LoginPage />
-                    
-                    <Route path=path!("/") view=move || view! { 
+                    <Route path=path!("/register") view=RegisterPage />
+
+                    <Route path=path!("/") view=move || view! {
                         <MainLayout>
                             <CapturePage />
                         </MainLayout>
                     } />
-                    <Route path=path!("/history") view=move || view! { 
+                    <Route path=path!("/history") view=move || view! {
                         <MainLayout>
                             <HistoryPage />
                         </MainLayout>

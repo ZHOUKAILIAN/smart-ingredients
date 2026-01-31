@@ -1,6 +1,3 @@
-use leptos::prelude::*;
-use leptos::task::spawn_local;
-use leptos_router::hooks::use_navigate;
 use crate::components::{
     ExampleImages, IconArrowLeft, IconCamera, IconChart, IconCheckBadge, ImagePreview,
     PreferenceCard,
@@ -9,11 +6,14 @@ use crate::services;
 use crate::stores::{AnalysisSource, AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
 use crate::utils::preference::{load_preference, save_preference};
+use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos_router::hooks::use_navigate;
 
 use serde_json::json;
 use wasm_bindgen::JsCast;
-use web_sys::{HtmlInputElement, Url};
 use web_sys::window;
+use web_sys::{HtmlInputElement, Url};
 
 #[component]
 pub fn CapturePage() -> impl IntoView {
@@ -52,7 +52,8 @@ pub fn CapturePage() -> impl IntoView {
             }
         }
         if !open_preference {
-            open_preference = state.analysis_preference.get().is_none() && load_preference().is_none();
+            open_preference =
+                state.analysis_preference.get().is_none() && load_preference().is_none();
         }
         show_preference_modal.set(open_preference);
     });
@@ -256,12 +257,6 @@ pub fn CapturePage() -> impl IntoView {
                         </div>
                     </div>
                 </div>
-
-                <Show when=move || state.auth_user.get().is_some()>
-                    <div class="recent-analyses">
-                        <p class="text-muted" style="text-align:center;">"点击下方按钮开始分析"</p>
-                    </div>
-                </Show>
 
                 <div class="home-actions">
                     <button class="primary-cta" on:click=move |_| {
