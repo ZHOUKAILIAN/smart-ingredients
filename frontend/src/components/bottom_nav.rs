@@ -18,6 +18,10 @@ fn tab_for_path(path: &str) -> TabRoute {
     }
 }
 
+fn should_record_last_path(path: &str) -> bool {
+    path != "/login"
+}
+
 #[component]
 pub fn BottomNav() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
@@ -32,6 +36,9 @@ pub fn BottomNav() -> impl IntoView {
 
     create_effect(move |_| {
         let path = location.pathname.get();
+        if !should_record_last_path(path.as_str()) {
+            return;
+        }
         let search = location.search.get();
         let full_path = if search.is_empty() {
             path.clone()
@@ -54,6 +61,11 @@ pub fn BottomNav() -> impl IntoView {
             TabRoute::Profile => state.last_profile_path.get(),
         };
         let target = if target.is_empty() { tab.path().to_string() } else { target };
+        let target = if target.starts_with("/login") {
+            tab.path().to_string()
+        } else {
+            target
+        };
         navigate(&target, Default::default());
     };
 
