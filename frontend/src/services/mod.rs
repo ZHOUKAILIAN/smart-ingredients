@@ -5,8 +5,8 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{FormData, Headers, Request, RequestInit, RequestMode, Response};
 
 use crate::stores::ToastLevel;
-use crate::utils::emit_toast;
 use crate::utils::auth_storage;
+use crate::utils::emit_toast;
 use crate::utils::error_messages::{map_api_error, map_client_error};
 
 const API_BASE: &str = env!("API_BASE");
@@ -130,11 +130,9 @@ pub async fn fetch_analysis(id: uuid::Uuid) -> Result<shared::AnalysisResponse, 
     apply_auth_header(&headers)?;
     init.set_headers(&headers);
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/analysis/{}", API_BASE, id),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/analysis/{}", API_BASE, id), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
@@ -168,8 +166,8 @@ async fn send_request(request: Request) -> Result<Response, String> {
     Ok(response)
 }
 
-pub async fn send_sms(phone: String) -> Result<shared::SendSmsResponse, String> {
-    let payload = shared::SendSmsRequest { phone };
+pub async fn register(username: String, password: String) -> Result<shared::AuthResponse, String> {
+    let payload = shared::RegisterRequest { username, password };
     let body =
         serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
 
@@ -184,19 +182,20 @@ pub async fn send_sms(phone: String) -> Result<shared::SendSmsResponse, String> 
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/auth/sms/send", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/auth/register", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
-    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+    let auth: shared::AuthResponse =
+        serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))?;
+    auth_storage::save_tokens(&auth.access_token, &auth.refresh_token);
+    Ok(auth)
 }
 
-pub async fn verify_sms(phone: String, code: String) -> Result<shared::AuthResponse, String> {
-    let payload = shared::VerifySmsRequest { phone, code };
+pub async fn login(username: String, password: String) -> Result<shared::AuthResponse, String> {
+    let payload = shared::LoginRequest { username, password };
     let body =
         serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
 
@@ -211,11 +210,8 @@ pub async fn verify_sms(phone: String, code: String) -> Result<shared::AuthRespo
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/auth/sms/verify", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request = Request::new_with_str_and_init(&format!("{}/api/v1/auth/login", API_BASE), &init)
+        .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
@@ -244,11 +240,9 @@ pub async fn refresh_session() -> Result<shared::AuthResponse, String> {
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/auth/refresh", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/auth/refresh", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
@@ -288,11 +282,9 @@ pub async fn logout() -> Result<(), String> {
             .map_err(|_| map_client_error("content_type"))?;
         init.set_headers(&headers);
         init.set_body(&JsValue::from_str(&body));
-        let request = Request::new_with_str_and_init(
-            &format!("{}/api/v1/auth/logout", API_BASE),
-            &init,
-        )
-        .map_err(|_| map_client_error("build_request"))?;
+        let request =
+            Request::new_with_str_and_init(&format!("{}/api/v1/auth/logout", API_BASE), &init)
+                .map_err(|_| map_client_error("build_request"))?;
         let _ = send_request(request).await?;
     }
     auth_storage::clear_tokens();
@@ -307,11 +299,8 @@ pub async fn fetch_profile() -> Result<shared::UserProfile, String> {
     apply_auth_header(&headers)?;
     init.set_headers(&headers);
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/me", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request = Request::new_with_str_and_init(&format!("{}/api/v1/users/me", API_BASE), &init)
+        .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
@@ -326,11 +315,8 @@ pub async fn delete_account() -> Result<(), String> {
     apply_auth_header(&headers)?;
     init.set_headers(&headers);
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/me", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request = Request::new_with_str_and_init(&format!("{}/api/v1/users/me", API_BASE), &init)
+        .map_err(|_| map_client_error("build_request"))?;
 
     let _ = send_request(request).await?;
     auth_storage::clear_tokens();
@@ -345,11 +331,9 @@ pub async fn fetch_preferences() -> Result<shared::UserPreferences, String> {
     apply_auth_header(&headers)?;
     init.set_headers(&headers);
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/preferences", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/users/preferences", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
@@ -375,21 +359,16 @@ pub async fn update_preferences(
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/preferences", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/users/preferences", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
     serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
 }
 
-pub async fn fetch_user_history(
-    page: i64,
-    limit: i64,
-) -> Result<shared::HistoryResponse, String> {
+pub async fn fetch_user_history(page: i64, limit: i64) -> Result<shared::HistoryResponse, String> {
     let mut init = RequestInit::new();
     init.set_method("GET");
     init.set_mode(RequestMode::Cors);
@@ -419,11 +398,9 @@ pub async fn delete_history(id: uuid::Uuid) -> Result<(), String> {
     apply_auth_header(&headers)?;
     init.set_headers(&headers);
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/history/{}", API_BASE, id),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/users/history/{}", API_BASE, id), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let _ = send_request(request).await?;
     Ok(())
@@ -445,11 +422,9 @@ pub async fn delete_history_batch(ids: Vec<uuid::Uuid>) -> Result<(), String> {
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/history", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/users/history", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let _ = send_request(request).await?;
     Ok(())
@@ -473,11 +448,9 @@ pub async fn migrate_local_history(
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/history/batch", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/users/history/batch", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
@@ -500,11 +473,9 @@ pub async fn prune_history(delete_count: i64) -> Result<shared::HistoryPruneResp
     init.set_headers(&headers);
     init.set_body(&JsValue::from_str(&body));
 
-    let request = Request::new_with_str_and_init(
-        &format!("{}/api/v1/users/history/prune", API_BASE),
-        &init,
-    )
-    .map_err(|_| map_client_error("build_request"))?;
+    let request =
+        Request::new_with_str_and_init(&format!("{}/api/v1/users/history/prune", API_BASE), &init)
+            .map_err(|_| map_client_error("build_request"))?;
 
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;

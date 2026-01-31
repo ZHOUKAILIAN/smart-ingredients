@@ -6,14 +6,6 @@ use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
 
-fn mask_phone(phone: &str) -> String {
-    if phone.len() >= 11 {
-        format!("{}****{}", &phone[..3], &phone[7..])
-    } else {
-        phone.to_string()
-    }
-}
-
 #[component]
 pub fn ProfilePage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
@@ -34,7 +26,10 @@ pub fn ProfilePage() -> impl IntoView {
     let state_for_delete = state.clone();
     let on_delete = Callback::new(move |_| {
         let confirmed = web_sys::window()
-            .and_then(|w| w.confirm_with_message("确认注销账号吗？该操作不可恢复。").ok())
+            .and_then(|w| {
+                w.confirm_with_message("确认注销账号吗？该操作不可恢复。")
+                    .ok()
+            })
             .unwrap_or(false);
         if !confirmed {
             return;
@@ -89,14 +84,13 @@ pub fn ProfilePage() -> impl IntoView {
                 // 已登录状态
                 {move || {
                     state.auth_user.get().map(|user| {
-                        let phone_display = mask_phone(&user.phone_masked);
                         view! {
                             <div class="profile-container">
                                 <div class="profile-header">
                                     <div class="profile-avatar">
                                         <span class="avatar-icon">"👤"</span>
                                     </div>
-                                    <div class="profile-name">{phone_display}</div>
+                                    <div class="profile-name">{user.login_id}</div>
                                     <div class="profile-stats">
                                         <span class="stat-item">
                                             <span class="stat-label">"分析次数"</span>

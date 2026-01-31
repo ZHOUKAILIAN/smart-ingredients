@@ -74,7 +74,7 @@ pub fn HistoryPage() -> impl IntoView {
 
     create_effect(move |_| {
         if state.auth_user.get().is_some() {
-            load_page.run(page.get());
+            load_page.run(page.get_untracked());
         }
     });
 

@@ -22,21 +22,12 @@ pub fn map_api_error(status: u16, body: &str) -> (String, String) {
             error_codes::BAD_REQUEST => "请求参数有误，请检查后重试",
             error_codes::UNAUTHORIZED => "请先登录后再试",
             error_codes::FORBIDDEN => "暂无权限访问该资源",
-            error_codes::UNSUPPORTED_MEDIA_TYPE => {
-                "不支持该图片格式，请选择常见图片格式后重试"
-            }
+            error_codes::UNSUPPORTED_MEDIA_TYPE => "不支持该图片格式，请选择常见图片格式后重试",
             error_codes::PAYLOAD_TOO_LARGE => "图片文件过大，请选择更小的图片",
             error_codes::NOT_FOUND => "未找到对应资源，请返回重试",
-            error_codes::SMS_COOLDOWN => "验证码发送过于频繁，请稍后再试",
-            error_codes::SMS_CODE_INVALID => "验证码错误，请重新输入",
-            error_codes::SMS_CODE_EXPIRED => "验证码已过期，请重新获取",
-            error_codes::SMS_LOCKED => "验证码错误次数过多，请稍后再试",
-            error_codes::OCR_ERROR | error_codes::OCR_TIMEOUT => {
-                "OCR 服务暂不可用，请稍后重试"
-            }
-            error_codes::LLM_ERROR | error_codes::LLM_TIMEOUT => {
-                "分析服务暂不可用，请稍后重试"
-            }
+            error_codes::RATE_LIMIT_EXCEEDED => "操作过于频繁，请稍后再试",
+            error_codes::OCR_ERROR | error_codes::OCR_TIMEOUT => "OCR 服务暂不可用，请稍后重试",
+            error_codes::LLM_ERROR | error_codes::LLM_TIMEOUT => "分析服务暂不可用，请稍后重试",
             error_codes::STORAGE_ERROR => "图片保存失败，请稍后重试",
             error_codes::INTERNAL_ERROR => "服务异常，请稍后重试",
             error_codes::SERVICE_UNAVAILABLE => "服务暂不可用，请稍后重试",
@@ -54,10 +45,7 @@ pub fn map_api_error(status: u16, body: &str) -> (String, String) {
             error_codes::PAYLOAD_TOO_LARGE => "图片过大",
             error_codes::UNAUTHORIZED => "需要登录",
             error_codes::FORBIDDEN => "无权限",
-            error_codes::SMS_COOLDOWN
-            | error_codes::SMS_CODE_INVALID
-            | error_codes::SMS_CODE_EXPIRED
-            | error_codes::SMS_LOCKED => "验证码错误",
+            error_codes::RATE_LIMIT_EXCEEDED => "请求过于频繁",
             error_codes::OCR_ERROR | error_codes::OCR_TIMEOUT => "识别失败",
             error_codes::LLM_ERROR | error_codes::LLM_TIMEOUT => "分析失败",
             error_codes::STORAGE_ERROR => "保存失败",

@@ -17,8 +17,7 @@ pub struct LocalHistoryItem {
 }
 
 pub fn load_local_history() -> Vec<LocalHistoryItem> {
-    let Some(storage) = window()
-        .and_then(|w| w.local_storage().ok().flatten()) else {
+    let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) else {
         return Vec::new();
     };
     let Some(raw) = storage.get_item(LOCAL_HISTORY_KEY).ok().flatten() else {
@@ -28,12 +27,10 @@ pub fn load_local_history() -> Vec<LocalHistoryItem> {
 }
 
 pub fn save_local_history(items: &[LocalHistoryItem]) -> Result<(), String> {
-    let Some(storage) = window()
-        .and_then(|w| w.local_storage().ok().flatten()) else {
+    let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) else {
         return Err("localStorage 不可用".to_string());
     };
-    let payload = serde_json::to_string(items)
-        .map_err(|_| "本地记录序列化失败".to_string())?;
+    let payload = serde_json::to_string(items).map_err(|_| "本地记录序列化失败".to_string())?;
     storage
         .set_item(LOCAL_HISTORY_KEY, &payload)
         .map_err(|_| "本地记录写入失败".to_string())?;

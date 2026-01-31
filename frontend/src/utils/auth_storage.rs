@@ -28,21 +28,33 @@ pub fn load_refresh_token() -> Option<String> {
 }
 
 pub fn save_tokens(access_token: &str, refresh_token: &str) {
-    let Some(window) = web_sys::window() else { return };
-    let Ok(Some(storage)) = window.local_storage() else { return };
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let Ok(Some(storage)) = window.local_storage() else {
+        return;
+    };
     let _ = storage.set_item(ACCESS_TOKEN_KEY, access_token);
     let _ = storage.set_item(REFRESH_TOKEN_KEY, refresh_token);
 }
 
 pub fn save_access_token(access_token: &str) {
-    let Some(window) = web_sys::window() else { return };
-    let Ok(Some(storage)) = window.local_storage() else { return };
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let Ok(Some(storage)) = window.local_storage() else {
+        return;
+    };
     let _ = storage.set_item(ACCESS_TOKEN_KEY, access_token);
 }
 
 pub fn clear_tokens() {
-    let Some(window) = web_sys::window() else { return };
-    let Ok(Some(storage)) = window.local_storage() else { return };
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let Ok(Some(storage)) = window.local_storage() else {
+        return;
+    };
     let _ = storage.remove_item(ACCESS_TOKEN_KEY);
     let _ = storage.remove_item(REFRESH_TOKEN_KEY);
 }

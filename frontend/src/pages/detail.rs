@@ -55,8 +55,7 @@ fn risk_rank(level: &str) -> i32 {
 }
 
 fn sort_rows_by_risk(rows: Vec<IngredientRow>) -> Vec<IngredientRow> {
-    let mut indexed_rows: Vec<(usize, IngredientRow)> =
-        rows.into_iter().enumerate().collect();
+    let mut indexed_rows: Vec<(usize, IngredientRow)> = rows.into_iter().enumerate().collect();
     indexed_rows.sort_by_key(|(index, row)| (risk_rank(&row.risk_level), *index));
     indexed_rows.into_iter().map(|(_, row)| row).collect()
 }

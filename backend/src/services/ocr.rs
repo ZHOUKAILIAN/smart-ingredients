@@ -14,9 +14,7 @@ pub async fn extract_text(image_path: &Path, config: &OcrConfig) -> Result<Strin
         .mime_str("image/jpeg")?;
     let form = reqwest::multipart::Form::new().part("file", part);
 
-    let client = reqwest::Client::builder()
-        .timeout(config.timeout)
-        .build()?;
+    let client = reqwest::Client::builder().timeout(config.timeout).build()?;
 
     let response = client
         .post(&config.paddle_url)

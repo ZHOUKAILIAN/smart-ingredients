@@ -7,10 +7,7 @@ use axum::{
     middleware::Next,
     response::Response,
 };
-use std::{
-    sync::OnceLock,
-    time::Instant,
-};
+use std::{sync::OnceLock, time::Instant};
 use tracing::info;
 use uuid::Uuid;
 
@@ -39,13 +36,11 @@ fn deploy_env() -> &'static str {
 }
 
 /// Add request ID to all requests for tracing
-pub async fn request_id_middleware(
-    mut req: Request,
-    next: Next,
-) -> Response {
+pub async fn request_id_middleware(mut req: Request, next: Next) -> Response {
     let request_id = Uuid::new_v4().to_string();
     let header_value = HeaderValue::from_str(&request_id).unwrap();
-    req.headers_mut().insert("x-request-id", header_value.clone());
+    req.headers_mut()
+        .insert("x-request-id", header_value.clone());
     req.extensions_mut().insert(RequestId(request_id));
     let mut response = next.run(req).await;
     response.headers_mut().insert("x-request-id", header_value);
@@ -53,10 +48,7 @@ pub async fn request_id_middleware(
 }
 
 /// Log structured request/response metrics.
-pub async fn trace_middleware(
-    req: Request,
-    next: Next,
-) -> Response {
+pub async fn trace_middleware(req: Request, next: Next) -> Response {
     let start = Instant::now();
     let method = req.method().clone();
     let uri = req.uri().clone();

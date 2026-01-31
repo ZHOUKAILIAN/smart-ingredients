@@ -14,7 +14,11 @@ pub fn load_preference() -> Option<String> {
 }
 
 pub fn save_preference(value: &str) {
-    let Some(window) = web_sys::window() else { return };
-    let Ok(Some(storage)) = window.local_storage() else { return };
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let Ok(Some(storage)) = window.local_storage() else {
+        return;
+    };
     let _ = storage.set_item(PREFERENCE_KEY, value);
 }

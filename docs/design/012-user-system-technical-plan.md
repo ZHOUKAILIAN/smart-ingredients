@@ -1,5 +1,7 @@
 # 012-用户体系技术方案
 
+> ⚠️ 已废弃：登录体系已改为“账号 + 密码”，请以 `018-username-password-login-technical-plan.md` 为准。
+
 ## 元数据
 
 | 字段     | 值                     |

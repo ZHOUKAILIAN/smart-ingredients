@@ -4,22 +4,15 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SendSmsRequest {
-    pub phone: String,
+pub struct RegisterRequest {
+    pub username: String,
+    pub password: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SendSmsResponse {
-    pub success: bool,
-    pub cooldown_seconds: i64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub debug_code: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VerifySmsRequest {
-    pub phone: String,
-    pub code: String,
+pub struct LoginRequest {
+    pub username: String,
+    pub password: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,7 +36,7 @@ pub struct AuthResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserProfile {
     pub id: Uuid,
-    pub phone_masked: String,
+    pub login_id: String,
     pub created_at: String,
     pub analysis_count: i64,
 }

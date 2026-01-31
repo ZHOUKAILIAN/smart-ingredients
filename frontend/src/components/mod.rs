@@ -1,38 +1,40 @@
 //! Reusable components
 
-mod ingredient_table;
-mod risk_badge;
+mod confirm_modal;
+mod error_display;
+mod example_images;
 mod health_score_card;
-mod summary_card;
+mod icons;
+mod image_preview;
 mod ingredient_card;
 mod ingredient_card_list;
-mod image_preview;
-mod usage_tips;
-mod example_images;
+mod ingredient_table;
 mod loading_spinner;
-mod error_display;
-mod toast;
-mod icons;
 mod preference_selector;
-mod confirm_modal;
+mod risk_badge;
+mod summary_card;
 mod tab_icons;
+mod toast;
+mod usage_tips;
 
-pub use ingredient_table::{IngredientRow, IngredientTable};
-pub use risk_badge::RiskBadge;
+pub use confirm_modal::ConfirmModal;
+pub use error_display::ErrorDisplay;
+pub use example_images::ExampleImages;
 pub use health_score_card::HealthScoreCard;
-pub use summary_card::SummaryCard;
+pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
+pub use image_preview::ImagePreview;
 pub use ingredient_card::IngredientCard;
 pub use ingredient_card_list::IngredientCardList;
-pub use image_preview::ImagePreview;
-pub use usage_tips::UsageTips;
-pub use example_images::ExampleImages;
+pub use ingredient_table::{IngredientRow, IngredientTable};
 pub use loading_spinner::LoadingSpinner;
-pub use error_display::ErrorDisplay;
+pub use preference_selector::{
+    get_preference_icon, get_preference_label, PreferenceCard, PreferenceSelector,
+};
+pub use risk_badge::RiskBadge;
+pub use summary_card::SummaryCard;
+pub use tab_icons::{IconHistory, IconHome, IconUser};
 pub use toast::ToastHost;
-pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
-pub use preference_selector::{PreferenceSelector, PreferenceCard, get_preference_label, get_preference_icon};
-pub use confirm_modal::ConfirmModal;
-pub use tab_icons::{IconHome, IconHistory, IconUser};
+pub use usage_tips::UsageTips;
 
 mod bottom_nav;
 mod main_layout;

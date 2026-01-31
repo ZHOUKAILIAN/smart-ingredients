@@ -1,10 +1,10 @@
 //! Utility functions
 
-pub mod error_messages;
 pub mod auth_storage;
+pub mod error_messages;
 pub mod local_history;
-pub mod preference;
 pub mod local_storage;
+pub mod preference;
 
 use wasm_bindgen::JsValue;
 use web_sys::{CustomEvent, CustomEventInit};
@@ -53,9 +53,15 @@ pub fn category_label(value: &str) -> String {
 }
 
 pub fn emit_toast(level: ToastLevel, title: &str, message: &str) {
-    let Some(window) = web_sys::window() else { return };
+    let Some(window) = web_sys::window() else {
+        return;
+    };
     let detail = js_sys::Object::new();
-    let _ = js_sys::Reflect::set(&detail, &JsValue::from_str("title"), &JsValue::from_str(title));
+    let _ = js_sys::Reflect::set(
+        &detail,
+        &JsValue::from_str("title"),
+        &JsValue::from_str(title),
+    );
     let _ = js_sys::Reflect::set(
         &detail,
         &JsValue::from_str("message"),

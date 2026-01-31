@@ -2695,6 +2695,7 @@ body {
   border: none;
 }
 
+
 .login-hero {
   display: flex;
   flex-direction: column;
@@ -2734,10 +2735,6 @@ body {
   transition: all 0.2s ease;
 }
 
-.input-wrapper .custom-input {
-  padding-right: 96px;
-}
-
 .custom-input:focus {
   outline: none;
   background: #ffffff;
@@ -2749,31 +2746,10 @@ body {
   color: #9ca3af;
 }
 
-.btn-send-code {
-  position: absolute;
-  right: 8px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+.login-switch {
+  margin-top: 4px;
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: none;
-  transition: all 0.2s;
-}
-
-.btn-send-code:active {
-  transform: scale(0.96);
-}
-
-.btn-send-code:disabled {
-  color: #9ca3af;
-  cursor: not-allowed;
-  background: #f3f4f6;
-  box-shadow: none;
+  color: #6b7280;
 }
 
 .login-footer {

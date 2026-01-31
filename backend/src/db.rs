@@ -53,11 +53,7 @@ pub async fn insert_analysis(
     row.try_get::<Uuid, _>("id")
 }
 
-pub async fn attach_user_to_analysis(
-    pool: &PgPool,
-    id: Uuid,
-    user_id: Uuid,
-) -> sqlx::Result<()> {
+pub async fn attach_user_to_analysis(pool: &PgPool, id: Uuid, user_id: Uuid) -> sqlx::Result<()> {
     sqlx::query(
         r#"
         UPDATE analyses
@@ -325,11 +321,7 @@ pub async fn list_user_history(
     Ok((total, rows))
 }
 
-pub async fn delete_user_history(
-    pool: &PgPool,
-    user_id: Uuid,
-    id: Uuid,
-) -> sqlx::Result<u64> {
+pub async fn delete_user_history(pool: &PgPool, user_id: Uuid, id: Uuid) -> sqlx::Result<u64> {
     let result = sqlx::query(
         r#"
         DELETE FROM analyses
@@ -418,8 +410,9 @@ pub async fn prune_user_history(
 #[derive(Debug, Clone, FromRow)]
 pub struct UserRow {
     pub id: Uuid,
-    pub phone_encrypted: String,
-    pub phone_hash: String,
+    pub username: Option<String>,
+    pub username_normalized: Option<String>,
+    pub password_hash: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub last_login_at: Option<DateTime<Utc>>,
@@ -472,35 +465,13 @@ pub async fn upsert_user_preferences(
     Ok(row)
 }
 
-pub async fn get_user_by_phone_hash(
-    pool: &PgPool,
-    phone_hash: &str,
-) -> sqlx::Result<Option<UserRow>> {
-    let row = sqlx::query_as::<_, UserRow>(
-        r#"
-        SELECT id,
-               phone_encrypted,
-               phone_hash,
-               created_at,
-               updated_at,
-               last_login_at
-        FROM users
-        WHERE phone_hash = $1
-        "#,
-    )
-    .bind(phone_hash)
-    .fetch_optional(pool)
-    .await?;
-
-    Ok(row)
-}
-
 pub async fn get_user_by_id(pool: &PgPool, user_id: Uuid) -> sqlx::Result<Option<UserRow>> {
     let row = sqlx::query_as::<_, UserRow>(
         r#"
         SELECT id,
-               phone_encrypted,
-               phone_hash,
+               username,
+               username_normalized,
+               password_hash,
                created_at,
                updated_at,
                last_login_at
@@ -515,25 +486,52 @@ pub async fn get_user_by_id(pool: &PgPool, user_id: Uuid) -> sqlx::Result<Option
     Ok(row)
 }
 
-pub async fn create_user(
+pub async fn get_user_by_username(
     pool: &PgPool,
-    phone_encrypted: &str,
-    phone_hash: &str,
+    username_normalized: &str,
+) -> sqlx::Result<Option<UserRow>> {
+    let row = sqlx::query_as::<_, UserRow>(
+        r#"
+        SELECT id,
+               username,
+               username_normalized,
+               password_hash,
+               created_at,
+               updated_at,
+               last_login_at
+        FROM users
+        WHERE username_normalized = $1
+        "#,
+    )
+    .bind(username_normalized)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn create_user_with_password(
+    pool: &PgPool,
+    username: &str,
+    username_normalized: &str,
+    password_hash: &str,
 ) -> sqlx::Result<UserRow> {
     let row = sqlx::query_as::<_, UserRow>(
         r#"
-        INSERT INTO users (phone_encrypted, phone_hash, last_login_at)
-        VALUES ($1, $2, NOW())
+        INSERT INTO users (username, username_normalized, password_hash, last_login_at)
+        VALUES ($1, $2, $3, NOW())
         RETURNING id,
-                  phone_encrypted,
-                  phone_hash,
+                  username,
+                  username_normalized,
+                  password_hash,
                   created_at,
                   updated_at,
                   last_login_at
         "#,
     )
-    .bind(phone_encrypted)
-    .bind(phone_hash)
+    .bind(username)
+    .bind(username_normalized)
+    .bind(password_hash)
     .fetch_one(pool)
     .await?;
 

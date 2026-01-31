@@ -22,22 +22,15 @@ pub async fn store_image(
 
     // 2. Convert format if needed
     let (final_bytes, extension) = if format.needs_conversion() {
-        info!(
-            "转换图片格式: {:?} -> {:?}",
-            format,
-            format.target_format()
-        );
+        info!("转换图片格式: {:?} -> {:?}", format, format.target_format());
 
         // Handle GIF specially (extract first frame)
         if matches!(format, image_converter::SupportedFormat::Gif) {
-            image_converter::extract_gif_first_frame(bytes)
-                .context("GIF 第一帧提取失败")?
+            image_converter::extract_gif_first_frame(bytes).context("GIF 第一帧提取失败")?
         } else if matches!(format, image_converter::SupportedFormat::Svg) {
-            image_converter::convert_svg_to_png(bytes)
-                .context("SVG 光栅化失败")?
+            image_converter::convert_svg_to_png(bytes).context("SVG 光栅化失败")?
         } else {
-            image_converter::convert_image(bytes, format)
-                .context("图片格式转换失败")?
+            image_converter::convert_image(bytes, format).context("图片格式转换失败")?
         }
     } else {
         let ext = match format {

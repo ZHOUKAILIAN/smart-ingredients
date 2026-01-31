@@ -1,7 +1,7 @@
 //! Ingredient card list component
 
-use leptos::prelude::*;
 use crate::components::{IngredientCard, IngredientRow};
+use leptos::prelude::*;
 
 #[component]
 pub fn IngredientCardList(items: Vec<IngredientRow>) -> impl IntoView {

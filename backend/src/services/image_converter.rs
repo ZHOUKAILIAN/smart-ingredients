@@ -80,8 +80,8 @@ pub fn detect_format(
         }
     }
 
-    let format = image::guess_format(bytes)
-        .context("无法识别图片格式，请确保上传的是有效的图片文件")?;
+    let format =
+        image::guess_format(bytes).context("无法识别图片格式，请确保上传的是有效的图片文件")?;
 
     match format {
         ImageFormat::Jpeg => Ok(SupportedFormat::Jpeg),
@@ -134,20 +134,20 @@ pub fn convert_image(
         ImageFormat::Jpeg => {
             // JPEG quality set to 92
             let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 92);
-            encoder.encode_image(&img)
-                .context("转换为 JPEG 格式失败")?;
+            encoder.encode_image(&img).context("转换为 JPEG 格式失败")?;
             Ok((output, "jpg"))
         }
         ImageFormat::Png => {
             // PNG lossless compression
             let encoder = image::codecs::png::PngEncoder::new(&mut output);
-            encoder.write_image(
-                img.as_bytes(),
-                img.width(),
-                img.height(),
-                img.color().into(),
-            )
-            .context("转换为 PNG 格式失败")?;
+            encoder
+                .write_image(
+                    img.as_bytes(),
+                    img.width(),
+                    img.height(),
+                    img.color().into(),
+                )
+                .context("转换为 PNG 格式失败")?;
             Ok((output, "png"))
         }
         _ => unreachable!(),
@@ -170,7 +170,8 @@ pub fn convert_heic_to_jpeg(bytes: &[u8]) -> Result<(Vec<u8>, &'static str)> {
 
         let mut output = Vec::new();
         let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 92);
-        encoder.encode_image(&image)
+        encoder
+            .encode_image(&image)
             .context("转换为 JPEG 格式失败")?;
 
         Ok((output, "jpg"))
@@ -192,8 +193,7 @@ pub fn extract_gif_first_frame(bytes: &[u8]) -> Result<(Vec<u8>, &'static str)> 
 
     let mut output = Vec::new();
     let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 92);
-    encoder.encode_image(&img)
-        .context("提取 GIF 第一帧失败")?;
+    encoder.encode_image(&img).context("提取 GIF 第一帧失败")?;
 
     Ok((output, "jpg"))
 }
@@ -249,8 +249,7 @@ fn is_svg_payload(bytes: &[u8]) -> bool {
 fn decode_heic(bytes: &[u8]) -> Result<DynamicImage> {
     use libheif_rs::{ColorSpace, HeifContext, RgbChroma};
 
-    let ctx = HeifContext::read_from_bytes(bytes)
-        .context("无法读取 HEIC 数据")?;
+    let ctx = HeifContext::read_from_bytes(bytes).context("无法读取 HEIC 数据")?;
     let handle = ctx.primary_image_handle().context("无法解析 HEIC 主图像")?;
     let image = handle
         .decode(ColorSpace::Rgb(RgbChroma::Rgb), None)
@@ -259,10 +258,7 @@ fn decode_heic(bytes: &[u8]) -> Result<DynamicImage> {
     let width = image.width();
     let height = image.height();
     let planes = image.planes();
-    let interleaved = planes
-        .interleaved
-        .as_ref()
-        .context("HEIC 图片数据缺失")?;
+    let interleaved = planes.interleaved.as_ref().context("HEIC 图片数据缺失")?;
     let stride = interleaved.stride;
     let data = &interleaved.data;
 
@@ -273,8 +269,8 @@ fn decode_heic(bytes: &[u8]) -> Result<DynamicImage> {
         rgba.extend_from_slice(&data[row_start..row_end]);
     }
 
-    let buffer = image::RgbImage::from_raw(width, height, rgba)
-        .context("HEIC 像素缓冲区构建失败")?;
+    let buffer =
+        image::RgbImage::from_raw(width, height, rgba).context("HEIC 像素缓冲区构建失败")?;
     Ok(DynamicImage::ImageRgb8(buffer))
 }
 
@@ -283,8 +279,7 @@ fn load_svg_tree(bytes: &[u8]) -> Result<resvg::usvg::Tree> {
         font_family: "Sans".to_string(),
         ..Default::default()
     };
-    resvg::usvg::Tree::from_data(bytes, &options)
-        .context("无法解析 SVG 内容")
+    resvg::usvg::Tree::from_data(bytes, &options).context("无法解析 SVG 内容")
 }
 
 fn render_svg(tree: &resvg::usvg::Tree) -> Result<resvg::tiny_skia::Pixmap> {
@@ -296,9 +291,12 @@ fn render_svg(tree: &resvg::usvg::Tree) -> Result<resvg::tiny_skia::Pixmap> {
         height = 1024;
     }
 
-    let mut pixmap =
-        resvg::tiny_skia::Pixmap::new(width, height).context("创建 SVG 画布失败")?;
-    resvg::render(tree, resvg::usvg::Transform::default(), &mut pixmap.as_mut());
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(width, height).context("创建 SVG 画布失败")?;
+    resvg::render(
+        tree,
+        resvg::usvg::Transform::default(),
+        &mut pixmap.as_mut(),
+    );
     Ok(pixmap)
 }
 

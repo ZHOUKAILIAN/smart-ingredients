@@ -3,10 +3,7 @@
 use leptos::prelude::*;
 
 #[component]
-pub fn ImagePreview<F>(
-    preview_url: Signal<Option<String>>,
-    on_remove: F,
-) -> impl IntoView
+pub fn ImagePreview<F>(preview_url: Signal<Option<String>>, on_remove: F) -> impl IntoView
 where
     F: Fn() + Copy + Send + Sync + 'static,
 {

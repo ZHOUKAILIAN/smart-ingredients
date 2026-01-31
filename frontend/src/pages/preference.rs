@@ -3,7 +3,9 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use serde_json::json;
 
-use crate::components::{PreferenceCard, get_preference_label, get_preference_icon, IconArrowLeft, ConfirmModal};
+use crate::components::{
+    get_preference_icon, get_preference_label, ConfirmModal, IconArrowLeft, PreferenceCard,
+};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
@@ -65,7 +67,10 @@ pub fn PreferencePage() -> impl IntoView {
     });
 
     let confirm_message = Signal::derive(move || {
-        format!("确定保存为「{}」吗？", get_preference_label(&preference.get()))
+        format!(
+            "确定保存为「{}」吗？",
+            get_preference_label(&preference.get())
+        )
     });
 
     view! {
