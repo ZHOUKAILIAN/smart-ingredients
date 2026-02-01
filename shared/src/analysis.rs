@@ -158,6 +158,8 @@ pub struct HistoryItem {
     pub image_url: String,
     /// Health score
     pub health_score: Option<i32>,
+    /// Summary text
+    pub summary: Option<String>,
     /// Creation timestamp
     pub created_at: String,
     /// Whether marked as favorite

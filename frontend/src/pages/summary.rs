@@ -5,8 +5,9 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use std::time::Duration;
+use wasm_bindgen::JsCast;
 
-use crate::components::{HealthScoreCard, SummaryCard};
+use crate::components::{HealthScoreCard, IconArrowLeft, SummaryCard};
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
 use crate::utils::{emit_toast, local_history};
@@ -156,17 +157,24 @@ pub fn SummaryPage() -> impl IntoView {
         navigate_detail("/detail", Default::default());
     };
 
-    let ingredient_count = move || {
-        state
-            .analysis_result
-            .get()
-            .and_then(|r| r.result)
-            .map(|result| result.ingredients.len())
-            .unwrap_or(0)
+    let on_back = move |_| {
+        // Navigate back using browser history
+        if let Some(window) = web_sys::window() {
+            if let Some(history) = window.history().ok() {
+                let _ = history.back();
+            }
+        }
     };
 
     view! {
         <section class="page page-summary figma">
+            <div class="page-topbar">
+                <button class="icon-button" on:click=on_back aria-label="返回上一页">
+                    <IconArrowLeft />
+                </button>
+                <div class="icon-placeholder"></div>
+            </div>
+
             <div class="page-scrollable-content">
                 // Health score card
                 <Show when=move || {

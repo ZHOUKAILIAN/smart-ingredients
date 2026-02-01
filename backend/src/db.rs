@@ -241,6 +241,7 @@ pub async fn list_history(
         r#"
         SELECT COUNT(*) as count
         FROM analyses
+        WHERE status = 'completed'
         "#,
     )
     .fetch_one(pool)
@@ -262,6 +263,7 @@ pub async fn list_history(
                created_at,
                updated_at
         FROM analyses
+        WHERE status = 'completed'
         ORDER BY created_at DESC
         LIMIT $1 OFFSET $2
         "#,
@@ -284,7 +286,7 @@ pub async fn list_user_history(
         r#"
         SELECT COUNT(*) as count
         FROM analyses
-        WHERE user_id = $1
+        WHERE user_id = $1 AND status = 'completed'
         "#,
     )
     .bind(user_id)
@@ -307,7 +309,7 @@ pub async fn list_user_history(
                created_at,
                updated_at
         FROM analyses
-        WHERE user_id = $1
+        WHERE user_id = $1 AND status = 'completed'
         ORDER BY created_at DESC
         LIMIT $2 OFFSET $3
         "#,

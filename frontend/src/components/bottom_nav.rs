@@ -54,22 +54,30 @@ pub fn BottomNav() -> impl IntoView {
 
     let on_tab_click = move |tab: TabRoute| {
         local_storage::set_last_tab(tab.path());
+
+        // Check if we're already on this tab
+        let current = current_tab.get();
+        let is_same_tab = current == tab;
+
         state.current_tab.set(tab);
-        let target = match tab {
-            TabRoute::Home => state.last_home_path.get(),
-            TabRoute::History => state.last_history_path.get(),
-            TabRoute::Profile => state.last_profile_path.get(),
-        };
-        let target = if target.is_empty() {
+
+        let target = if is_same_tab {
+            // If clicking the same tab, always go to root path
             tab.path().to_string()
         } else {
-            target
+            // If switching tabs, go to last visited path
+            let last_path = match tab {
+                TabRoute::Home => state.last_home_path.get(),
+                TabRoute::History => state.last_history_path.get(),
+                TabRoute::Profile => state.last_profile_path.get(),
+            };
+            if last_path.is_empty() || last_path.starts_with("/login") || last_path.starts_with("/register") {
+                tab.path().to_string()
+            } else {
+                last_path
+            }
         };
-        let target = if target.starts_with("/login") || target.starts_with("/register") {
-            tab.path().to_string()
-        } else {
-            target
-        };
+
         navigate(&target, Default::default());
     };
 

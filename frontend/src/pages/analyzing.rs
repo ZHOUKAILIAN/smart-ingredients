@@ -3,7 +3,9 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use std::time::Duration;
+use wasm_bindgen::JsCast;
 
+use crate::components::IconArrowLeft;
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
@@ -20,6 +22,7 @@ pub fn AnalyzingPage() -> impl IntoView {
     let state_for_retry = StoredValue::new(state.clone());
     let state_for_error = StoredValue::new(state.clone());
     let navigate_for_home = StoredValue::new(navigate.clone());
+    let navigate_for_back = navigate.clone();
 
     create_effect(move |_| {
         if fetching.get() {
@@ -102,8 +105,24 @@ pub fn AnalyzingPage() -> impl IntoView {
         }
     });
 
+    let on_back = move |_| {
+        // Navigate back using browser history
+        if let Some(window) = web_sys::window() {
+            if let Some(history) = window.history().ok() {
+                let _ = history.back();
+            }
+        }
+    };
+
     view! {
         <section class="page page-analyzing figma">
+            <div class="page-topbar">
+                <button class="icon-button" on:click=on_back aria-label="返回上一页">
+                    <IconArrowLeft />
+                </button>
+                <div class="icon-placeholder"></div>
+            </div>
+
             <div class="page-scrollable-content">
                 <div class="surface-card status-card">
                     <div class="status-icon">"AI"</div>
