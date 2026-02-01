@@ -113,12 +113,21 @@ async fn list_history(
     let (total, rows) = db::list_user_history(&state.pool, user_id, limit, offset).await?;
     let items = rows
         .into_iter()
-        .map(|row| HistoryItem {
-            id: row.id,
-            image_url: row.image_url,
-            health_score: row.health_score,
-            created_at: row.created_at.to_rfc3339(),
-            is_favorite: false,
+        .map(|row| {
+            let summary = row
+                .result
+                .as_ref()
+                .and_then(|r| r.get("summary"))
+                .and_then(|s| s.as_str())
+                .map(|s| s.to_string());
+            HistoryItem {
+                id: row.id,
+                image_url: row.image_url,
+                health_score: row.health_score,
+                summary,
+                created_at: row.created_at.to_rfc3339(),
+                is_favorite: false,
+            }
         })
         .collect();
 

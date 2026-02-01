@@ -16,6 +16,21 @@ fn format_timestamp(timestamp: i64) -> String {
     trimmed.replace('T', " ")
 }
 
+fn format_iso_datetime(iso_string: &str) -> String {
+    // Parse ISO 8601 format: "2026-01-31T14:44:08.106418+00:00"
+    // Convert to: "2026-01-31 14:44:08"
+    if let Some(date_time) = iso_string.split('.').next() {
+        return date_time.replace('T', " ");
+    }
+    // Fallback: just replace T with space
+    iso_string.split('+').next()
+        .unwrap_or(iso_string)
+        .split('.')
+        .next()
+        .unwrap_or(iso_string)
+        .replace('T', " ")
+}
+
 fn local_to_response(item: &local_history::LocalHistoryItem) -> Option<AnalysisResponse> {
     let id = uuid::Uuid::parse_str(&item.id).ok()?;
     let created_at = format_timestamp(item.timestamp);
@@ -43,6 +58,7 @@ pub fn HistoryPage() -> impl IntoView {
     let total = RwSignal::new(0_i64);
     let items = RwSignal::new(Vec::<shared::HistoryItem>::new());
     let local_items = RwSignal::new(Vec::<local_history::LocalHistoryItem>::new());
+    let last_load_key = RwSignal::new(None::<(uuid::Uuid, i64)>);
 
     // Confirm modal state
     let show_confirm = RwSignal::new(false);
@@ -50,19 +66,18 @@ pub fn HistoryPage() -> impl IntoView {
     let pending_delete_local_id = RwSignal::new(None::<String>);
 
     let load_page = Callback::new(move |page_number: i64| {
-        if loading.get() {
+        if loading.get_untracked() {
             return;
         }
         loading.set(true);
         let items = items.clone();
         let total = total.clone();
-        let page_signal = page.clone();
         spawn_local(async move {
             match services::fetch_user_history(page_number, 20).await {
                 Ok(response) => {
                     items.set(response.items);
                     total.set(response.total);
-                    page_signal.set(response.page);
+                    // 不要在这里设置 page，避免触发循环
                 }
                 Err(err) => {
                     emit_toast(ToastLevel::Error, "加载失败", &err);
@@ -73,13 +88,20 @@ pub fn HistoryPage() -> impl IntoView {
     });
 
     create_effect(move |_| {
-        if state.auth_user.get().is_some() {
-            load_page.run(page.get_untracked());
+        if let Some(user) = state.auth_user.get() {
+            let current_page = page.get();
+            let key = (user.id, current_page);
+            if last_load_key.get_untracked().as_ref() == Some(&key) {
+                return;
+            }
+            last_load_key.set(Some(key));
+            load_page.run(current_page);
         }
     });
 
     create_effect(move |_| {
         if state.auth_user.get().is_none() {
+            last_load_key.set(None);
             local_items.set(local_history::load_local_history());
         }
     });
@@ -96,44 +118,41 @@ pub fn HistoryPage() -> impl IntoView {
         show_confirm.set(true);
     };
 
-    let on_confirm_delete = {
-        let load_page = load_page.clone();
-        Callback::new(move |_| {
-            show_confirm.set(false);
+    let on_confirm_delete = Callback::new(move |_| {
+        show_confirm.set(false);
 
-            // Delete cloud record
-            if let Some(id) = pending_delete_id.get() {
-                let current_page = page.get();
-                spawn_local(async move {
-                    match services::delete_history(id).await {
-                        Ok(()) => {
-                            emit_toast(ToastLevel::Success, "已删除", "记录已删除");
-                            load_page.run(current_page);
-                        }
-                        Err(err) => {
-                            emit_toast(ToastLevel::Error, "删除失败", &err);
-                        }
-                    }
-                });
-            }
-
-            // Delete local record
-            if let Some(id) = pending_delete_local_id.get() {
-                match local_history::delete_local_history(&id) {
+        // Delete cloud record
+        if let Some(id) = pending_delete_id.get() {
+            spawn_local(async move {
+                match services::delete_history(id).await {
                     Ok(()) => {
-                        local_items.set(local_history::load_local_history());
-                        emit_toast(ToastLevel::Success, "已删除", "本地记录已删除");
+                        emit_toast(ToastLevel::Success, "已删除", "记录已删除");
+                        // 强制重新加载：清除缓存的 key
+                        last_load_key.set(None);
                     }
                     Err(err) => {
                         emit_toast(ToastLevel::Error, "删除失败", &err);
                     }
                 }
-            }
+            });
+        }
 
-            pending_delete_id.set(None);
-            pending_delete_local_id.set(None);
-        })
-    };
+        // Delete local record
+        if let Some(id) = pending_delete_local_id.get() {
+            match local_history::delete_local_history(&id) {
+                Ok(()) => {
+                    local_items.set(local_history::load_local_history());
+                    emit_toast(ToastLevel::Success, "已删除", "本地记录已删除");
+                }
+                Err(err) => {
+                    emit_toast(ToastLevel::Error, "删除失败", &err);
+                }
+            }
+        }
+
+        pending_delete_id.set(None);
+        pending_delete_local_id.set(None);
+    });
 
     let on_cancel_delete = Callback::new(move |_| {
         show_confirm.set(false);
@@ -153,6 +172,29 @@ pub fn HistoryPage() -> impl IntoView {
             } else {
                 emit_toast(ToastLevel::Error, "加载失败", "记录格式无效");
             }
+        }
+    };
+
+    let on_view_cloud = {
+        let navigate = navigate.clone();
+        move |item: shared::HistoryItem| {
+            let id = item.id;
+            state.analysis_id.set(Some(id));
+            state.analysis_source.set(AnalysisSource::History);
+
+            // 异步获取完整的分析结果
+            spawn_local(async move {
+                match services::fetch_analysis(id).await {
+                    Ok(response) => {
+                        state.analysis_result.set(Some(response));
+                        let navigate = navigate.get_value();
+                        navigate("/summary", Default::default());
+                    }
+                    Err(err) => {
+                        emit_toast(ToastLevel::Error, "加载失败", &err);
+                    }
+                }
+            });
         }
     };
 
@@ -270,6 +312,9 @@ pub fn HistoryPage() -> impl IntoView {
                         <ul class="history-list">
                             {move || items.get().into_iter().map(|item| {
                                 let id = item.id;
+                                let item_clone = item.clone();
+                                let summary = item.summary.clone().unwrap_or_default();
+                                let formatted_time = format_iso_datetime(&item.created_at);
                                 let image_url = StoredValue::new(item.image_url.clone());
                                 let resolved_image_url =
                                     StoredValue::new(services::resolve_media_url(&image_url.get_value()));
@@ -286,7 +331,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                             <circle cx="12" cy="12" r="10"></circle>
                                                             <polyline points="12 6 12 12 16 14"></polyline>
                                                         </svg>
-                                                        <span>{item.created_at.clone()}</span>
+                                                        <span>{formatted_time}</span>
                                                     </div>
                                                 </div>
 
@@ -310,6 +355,8 @@ pub fn HistoryPage() -> impl IntoView {
                                                 </div>
                                             </div>
 
+                                            <p class="history-description">{summary}</p>
+
                                             <div class="history-divider"></div>
 
                                             <div class="history-footer">
@@ -324,6 +371,9 @@ pub fn HistoryPage() -> impl IntoView {
                                                     </span>
                                                 </div>
                                                 <div class="history-actions">
+                                                    <button class="history-action-btn" on:click=move |_| on_view_cloud(item_clone.clone())>
+                                                        "查看"
+                                                    </button>
                                                     <button class="history-action-btn delete" on:click=move |_| on_delete(id)>
                                                         "删除"
                                                     </button>
@@ -338,15 +388,21 @@ pub fn HistoryPage() -> impl IntoView {
                             <button
                                 class="secondary-cta"
                                 disabled=move || page.get() <= 1
-                                on:click=move |_| load_page.run(page.get() - 1)
+                                on:click=move |_| {
+                                    let new_page = page.get() - 1;
+                                    page.set(new_page);
+                                }
                             >
                                 "上一页"
                             </button>
                             <span>{move || format!("第 {} 页 / 共 {} 条", page.get(), total.get())}</span>
                             <button
                                 class="secondary-cta"
-                                disabled=move || (page.get() * 20) >= total.get()
-                                on:click=move |_| load_page.run(page.get() + 1)
+                                disabled=move || page.get() * 20 >= total.get()
+                                on:click=move |_| {
+                                    let new_page = page.get() + 1;
+                                    page.set(new_page);
+                                }
                             >
                                 "下一页"
                             </button>

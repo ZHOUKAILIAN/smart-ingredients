@@ -11,6 +11,7 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use shared::AnalysisStatus;
 use std::time::Duration;
+use wasm_bindgen::JsCast;
 
 #[derive(Clone)]
 struct AnalysisItem {
@@ -229,14 +230,12 @@ pub fn ResultPage() -> impl IntoView {
             .unwrap_or_else(|| "none".to_string())
     };
 
-    let on_back_home_top = {
-        let state = state.clone();
-        let navigate = navigate.clone();
-        move |_| {
-            state.analysis_id.set(None);
-            state.analysis_result.set(None);
-            state.analysis_preference.set(None);
-            navigate("/", Default::default());
+    let on_back = move |_| {
+        // Navigate back using browser history
+        if let Some(window) = web_sys::window() {
+            if let Some(history) = window.history().ok() {
+                let _ = history.back();
+            }
         }
     };
     let on_back_home_bottom = {
@@ -263,13 +262,10 @@ pub fn ResultPage() -> impl IntoView {
     view! {
         <section class="page page-result figma">
             <div class="page-topbar">
-                <button class="icon-button" on:click=on_back_home_top>
+                <button class="icon-button" on:click=on_back aria-label="返回上一页">
                     <IconArrowLeft />
                 </button>
-                <h1 class="page-topbar-title">"分析报告"</h1>
-                <button class="icon-button" type="button" aria-label="分享" disabled>
-                    "↗"
-                </button>
+                <div class="icon-placeholder"></div>
             </div>
 
             <div class="page-scrollable-content">

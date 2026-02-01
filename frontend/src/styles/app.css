@@ -493,8 +493,13 @@ body {
     rgba(240, 253, 250, 0.6) 100%
   );
   border-radius: 0;
-  padding: 24px 20px 28px;
+  padding: 0;
   box-shadow: none;
+}
+
+.page.page-history .page-scrollable-content,
+.page.page-profile .page-scrollable-content {
+  padding: 24px 20px 28px;
 }
 
 .page.page-result.figma {
@@ -834,9 +839,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  background: transparent;
 }
 
 .page-topbar-title {

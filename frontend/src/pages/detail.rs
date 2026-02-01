@@ -2,6 +2,7 @@
 
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
+use wasm_bindgen::JsCast;
 
 use crate::components::{IconArrowLeft, IngredientCardList, IngredientRow};
 use crate::stores::AppState;
@@ -66,7 +67,12 @@ pub fn DetailPage() -> impl IntoView {
     let navigate = use_navigate();
 
     let on_back = move |_| {
-        navigate("/summary", Default::default());
+        // Navigate back using browser history
+        if let Some(window) = web_sys::window() {
+            if let Some(history) = window.history().ok() {
+                let _ = history.back();
+            }
+        }
     };
 
     let table_rows = move || {
@@ -87,10 +93,9 @@ pub fn DetailPage() -> impl IntoView {
     view! {
         <section class="page page-detail figma">
             <div class="page-topbar">
-                <button class="icon-button" on:click=on_back aria-label="返回概要">
+                <button class="icon-button" on:click=on_back aria-label="返回上一页">
                     <IconArrowLeft />
                 </button>
-                <h1 class="page-topbar-title">"详细配料列表"</h1>
                 <div class="icon-placeholder"></div>
             </div>
 
