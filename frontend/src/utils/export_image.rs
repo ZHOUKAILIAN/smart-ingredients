@@ -61,7 +61,7 @@ const DIVIDER: &str = "rgba(229, 231, 235, 0.8)";
 /// Export and immediately download the image.
 pub fn export_and_download(data: &ExportData) -> Result<(), String> {
     let (canvas, _ctx) = render_image(data)?;
-    download_canvas(&canvas, &generate_filename())
+    download_canvas(&canvas)
 }
 
 /// Export to a data URL for preview in the modal.
@@ -661,7 +661,7 @@ fn generate_filename() -> String {
     format!("smart-ingredients-{y}{m:02}{d:02}.png")
 }
 
-fn download_canvas(canvas: &HtmlCanvasElement, filename: &str) -> Result<(), String> {
+fn download_canvas(canvas: &HtmlCanvasElement) -> Result<(), String> {
     let data_url = canvas
         .to_data_url_with_type("image/png")
         .map_err(|_| "生成图片数据失败")?;
