@@ -136,6 +136,21 @@ fn format_rule_evidence(evidence: &Option<String>, source: &Option<String>) -> O
     }
 }
 
+fn build_risk_chain(rule_hits: &[RuleHit]) -> Vec<String> {
+    let mut chains = Vec::new();
+    for hit in rule_hits {
+        let mut chain = format!("{} → {} 风险", hit.name, hit.risk_level);
+        if !hit.group_tags.is_empty() {
+            let tags = format_group_tags(&hit.group_tags);
+            if !tags.is_empty() {
+                chain = format!("{} → {}", chain, tags);
+            }
+        }
+        chains.push(chain);
+    }
+    chains
+}
+
 fn build_strong_alerts(rule_hits: &[RuleHit]) -> Vec<String> {
     let mut has_allergy = false;
     let mut has_kids = false;
@@ -455,6 +470,20 @@ pub fn ResultPage() -> impl IntoView {
             <div class="section-padding">
                 <Show when=move || !rule_hits().is_empty()>
                     <div class="surface-card result-section">
+                        <h2 class="card-title">"风险链路"</h2>
+                        <ul class="advice-list">
+                            {move || {
+                                build_risk_chain(&rule_hits())
+                                    .into_iter()
+                                    .map(|item| view! { <li>{item}</li> })
+                                    .collect_view()
+                            }}
+                        </ul>
+                    </div>
+                </Show>
+
+                <Show when=move || !rule_hits().is_empty()>
+                    <div class="surface-card result-section">
                         <h2 class="card-title">"规则命中"</h2>
                         <div class="analysis-list">
                             {move || {
@@ -467,11 +496,11 @@ pub fn ResultPage() -> impl IntoView {
                                         let evidence_text = evidence.clone().unwrap_or_default();
                                         let evidence_for_check = evidence_text.clone();
                                         view! {
-                                            <div class="analysis-item">
-                                                <div class="analysis-header">
+                                            <details class="analysis-item">
+                                                <summary class="analysis-header">
                                                     <span class="analysis-name">{item.name}</span>
                                                     <RiskBadge level={item.risk_level} />
-                                                </div>
+                                                </summary>
                                                 <p class="analysis-desc">{item.description}</p>
                                                 <Show when=move || !group_tags_for_check.is_empty()>
                                                     <p class="analysis-summary">
@@ -481,7 +510,7 @@ pub fn ResultPage() -> impl IntoView {
                                                 <Show when=move || !evidence_for_check.is_empty()>
                                                     <p class="analysis-summary">{evidence_text.clone()}</p>
                                                 </Show>
-                                            </div>
+                                            </details>
                                         }
                                     })
                                     .collect_view()
