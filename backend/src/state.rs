@@ -6,6 +6,7 @@ use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 
 use crate::{config::AppConfig, services::llm::LlmProviderClient, services::rules::RuleEngine};
+use tokio::sync::RwLock;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -13,5 +14,5 @@ pub struct AppState {
     pub redis: ConnectionManager,
     pub config: AppConfig,
     pub llm: Arc<dyn LlmProviderClient>,
-    pub rules: Arc<RuleEngine>,
+    pub rules: Arc<RwLock<RuleEngine>>,
 }

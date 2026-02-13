@@ -2,7 +2,7 @@
 
 ## Workflow
 
-- Follow "调研 → 计划 → 执行" for each iteration.
+- Follow "调研 → 计划 → 执行 → 验证" for each iteration.
 - Write requirements and technical plan first; get user confirmation before implementation.
 - Branch names must be `feat/*` and open a PR after pushing.
 

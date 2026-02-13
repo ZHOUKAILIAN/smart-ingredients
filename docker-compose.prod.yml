@@ -36,6 +36,7 @@ services:
       OCR_TIMEOUT: ${OCR_TIMEOUT:-30}
       OCR_PADDLE_URL: ${OCR_PADDLE_URL:-http://ocr:8000/ocr}
       RULES_PATH: /app/rules.json
+      RULES_REFRESH_SECONDS: 300
       SERVICE_NAME: ${SERVICE_NAME:-backend}
       DEPLOY_ENV: ${DEPLOY_ENV:-prod}
       RUST_LOG: ${RUST_LOG:-info}

@@ -1,6 +1,7 @@
 //! Rule-based ingredient analysis
 
 use serde::Deserialize;
+use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 
 use crate::services::llm::PreferenceType;
@@ -22,6 +23,19 @@ pub struct RuleItem {
     pub source: Option<String>,
 }
 
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct RuleRow {
+    id: String,
+    name: String,
+    aliases: Vec<String>,
+    category: String,
+    risk_level: String,
+    groups: Vec<String>,
+    description: String,
+    evidence: Option<String>,
+    source: Option<String>,
+}
+
 #[derive(Debug, Clone)]
 pub struct RuleEvaluation {
     pub hits: Vec<shared::RuleHit>,
@@ -37,22 +51,40 @@ pub struct RuleEngine {
 
 impl RuleEngine {
     pub fn load_from_path(path: &str) -> Self {
-        let content = std::fs::read_to_string(path);
-        match content {
-            Ok(raw) => match serde_json::from_str::<Vec<RuleItem>>(&raw) {
-                Ok(items) => Self::build(items),
-                Err(err) => Self {
-                    items: Vec::new(),
-                    lookup: HashMap::new(),
-                    load_error: Some(format!("rules parse failed: {}", err)),
-                },
-            },
+        match load_items_from_path(path) {
+            Ok(items) => Self::build(items),
             Err(err) => Self {
                 items: Vec::new(),
                 lookup: HashMap::new(),
                 load_error: Some(format!("rules load failed: {}", err)),
             },
         }
+    }
+
+    pub async fn try_load_from_db(pool: &PgPool) -> anyhow::Result<Self> {
+        let rows = sqlx::query_as::<_, RuleRow>(
+            "SELECT id, name, aliases, category, risk_level, groups, description, evidence, source \
+             FROM rules WHERE enabled = true",
+        )
+        .fetch_all(pool)
+        .await?;
+
+        let items = rows
+            .into_iter()
+            .map(|row| RuleItem {
+                id: row.id,
+                name: row.name,
+                aliases: row.aliases,
+                category: row.category,
+                risk_level: row.risk_level,
+                groups: row.groups,
+                description: row.description,
+                evidence: row.evidence,
+                source: row.source,
+            })
+            .collect();
+
+        Ok(Self::build(items))
     }
 
     fn build(items: Vec<RuleItem>) -> Self {
@@ -118,6 +150,12 @@ impl RuleEngine {
 
         RuleEvaluation { hits, confidence }
     }
+}
+
+pub fn load_items_from_path(path: &str) -> anyhow::Result<Vec<RuleItem>> {
+    let content = std::fs::read_to_string(path)?;
+    let items = serde_json::from_str::<Vec<RuleItem>>(&content)?;
+    Ok(items)
 }
 
 fn build_confidence(hits: &[shared::RuleHit], text: &str) -> shared::ConfidenceInfo {

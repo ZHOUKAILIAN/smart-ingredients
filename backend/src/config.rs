@@ -10,6 +10,7 @@ pub struct AppConfig {
     pub ocr: OcrConfig,
     pub auth: AuthConfig,
     pub rules_path: String,
+    pub rules_refresh_seconds: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -121,6 +122,11 @@ impl AppConfig {
                 .to_string()
         });
 
+        let rules_refresh_seconds = env::var("RULES_REFRESH_SECONDS")
+            .ok()
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(300);
+
         Ok(Self {
             database_url,
             upload_dir,
@@ -128,6 +134,7 @@ impl AppConfig {
             ocr,
             auth,
             rules_path,
+            rules_refresh_seconds,
         })
     }
 }

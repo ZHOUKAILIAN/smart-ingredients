@@ -401,7 +401,7 @@ async fn run_ocr_task(
 async fn run_llm_task(
     pool: sqlx::PgPool,
     llm: std::sync::Arc<dyn crate::services::llm::LlmProviderClient>,
-    rules: std::sync::Arc<crate::services::rules::RuleEngine>,
+    rules: std::sync::Arc<tokio::sync::RwLock<crate::services::rules::RuleEngine>>,
     analysis_id: Uuid,
     text: String,
     preference: PreferenceType,
@@ -423,7 +423,10 @@ async fn run_llm_task(
         }
     };
 
-    let evaluation = rules.evaluate(&text, preference);
+    let evaluation = {
+        let guard = rules.read().await;
+        guard.evaluate(&text, preference)
+    };
     result.rule_hits = evaluation.hits;
     result.confidence = Some(evaluation.confidence);
 
