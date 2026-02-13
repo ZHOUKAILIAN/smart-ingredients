@@ -54,6 +54,7 @@ WORKDIR /app
 
 # Copy binary from builder
 COPY --from=builder /app/target/release/backend /app/backend
+COPY --from=builder /app/backend/rules.json /app/rules.json
 
 ENV RUST_LOG=info
 

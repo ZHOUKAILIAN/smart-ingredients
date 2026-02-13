@@ -144,8 +144,9 @@ async fn confirm_handler(
 
     let pool = state.pool.clone();
     let llm = state.llm.clone();
+    let rules = state.rules.clone();
     tokio::spawn(async move {
-        run_llm_task(pool, llm, id, confirmed_text, preference).await;
+        run_llm_task(pool, llm, rules, id, confirmed_text, preference).await;
     });
 
     let updated = db::get_analysis(&state.pool, id)
@@ -195,8 +196,9 @@ async fn retry_llm_handler(
 
     let pool = state.pool.clone();
     let llm = state.llm.clone();
+    let rules = state.rules.clone();
     tokio::spawn(async move {
-        run_llm_task(pool, llm, id, confirmed_text, PreferenceType::None).await;
+        run_llm_task(pool, llm, rules, id, confirmed_text, PreferenceType::None).await;
     });
 
     let updated = db::get_analysis(&state.pool, id)
@@ -399,13 +401,14 @@ async fn run_ocr_task(
 async fn run_llm_task(
     pool: sqlx::PgPool,
     llm: std::sync::Arc<dyn crate::services::llm::LlmProviderClient>,
+    rules: std::sync::Arc<crate::services::rules::RuleEngine>,
     analysis_id: Uuid,
     text: String,
     preference: PreferenceType,
 ) {
     let _ = db::update_llm_status(&pool, analysis_id, "processing", "llm_processing", None).await;
 
-    let result = match llm.analyze_ingredients(&text, preference).await {
+    let mut result = match llm.analyze_ingredients(&text, preference).await {
         Ok(result) => result,
         Err(err) => {
             let _ = db::update_llm_status(
@@ -419,6 +422,10 @@ async fn run_llm_task(
             return;
         }
     };
+
+    let evaluation = rules.evaluate(&text, preference);
+    result.rule_hits = evaluation.hits;
+    result.confidence = Some(evaluation.confidence);
 
     let result = ensure_summary_table(result);
     let result = apply_score_breakdown(result, preference);

@@ -42,11 +42,13 @@ async fn main() -> Result<()> {
 
     let http = reqwest::Client::new();
     let llm = services::llm::build_llm_client(&config.llm, http.clone());
+    let rules = services::rules::RuleEngine::load_from_path(&config.rules_path);
     let state = state::AppState {
         pool,
         redis,
         config,
         llm: std::sync::Arc::from(llm),
+        rules: std::sync::Arc::new(rules),
     };
 
     // Build application

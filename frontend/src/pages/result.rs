@@ -96,6 +96,15 @@ fn risk_rank(level: &str) -> i32 {
     }
 }
 
+fn confidence_label(level: &str) -> &'static str {
+    match level.trim().to_lowercase().as_str() {
+        "high" => "高",
+        "medium" => "中",
+        "low" => "低",
+        _ => "未知",
+    }
+}
+
 #[component]
 pub fn ResultPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
@@ -222,6 +231,23 @@ pub fn ResultPage() -> impl IntoView {
             .unwrap_or_else(|| "暂无分析总结".to_string())
     };
 
+    let rule_hits = move || {
+        state
+            .analysis_result
+            .get()
+            .and_then(|response| response.result)
+            .map(|result| result.rule_hits)
+            .unwrap_or_default()
+    };
+
+    let confidence_info = move || {
+        state
+            .analysis_result
+            .get()
+            .and_then(|response| response.result)
+            .and_then(|result| result.confidence)
+    };
+
     let current_preference = move || {
         state
             .analysis_preference
@@ -297,7 +323,47 @@ pub fn ResultPage() -> impl IntoView {
                 }}
             </Show>
 
+            <Show when=move || confidence_info().is_some()>
+                {move || {
+                    confidence_info().map(|confidence| view! {
+                        <div class="surface-card result-section">
+                            <h2 class="card-title">"可信度"</h2>
+                            <p class="analysis-summary">
+                                {format!("可信度：{}", confidence_label(&confidence.level))}
+                            </p>
+                            <Show when=move || !confidence.reasons.is_empty()>
+                                <ul class="advice-list">
+                                    {confidence.reasons.iter().map(|reason| view! { <li>{reason}</li> }).collect_view()}
+                                </ul>
+                            </Show>
+                        </div>
+                    })
+                }}
+            </Show>
+
             <div class="section-padding">
+                <Show when=move || !rule_hits().is_empty()>
+                    <div class="surface-card result-section">
+                        <h2 class="card-title">"规则命中"</h2>
+                        <div class="analysis-list">
+                            {move || {
+                                rule_hits()
+                                    .into_iter()
+                                    .map(|item| view! {
+                                        <div class="analysis-item">
+                                            <div class="analysis-header">
+                                                <span class="analysis-name">{item.name}</span>
+                                                <RiskBadge level={item.risk_level} />
+                                            </div>
+                                            <p class="analysis-desc">{item.description}</p>
+                                        </div>
+                                    })
+                                    .collect_view()
+                            }}
+                        </div>
+                    </div>
+                </Show>
+
                 <div class="surface-card result-section">
                     <h2 class="card-title">"配料分析"</h2>
                     {move || {
