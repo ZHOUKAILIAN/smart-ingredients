@@ -9,7 +9,8 @@ use leptos::leptos_dom::helpers::set_timeout;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
-use shared::AnalysisStatus;
+use shared::{AnalysisStatus, RuleHit};
+use std::collections::HashSet;
 use std::time::Duration;
 use wasm_bindgen::JsCast;
 
@@ -103,6 +104,57 @@ fn confidence_label(level: &str) -> &'static str {
         "low" => "低",
         _ => "未知",
     }
+}
+
+fn tag_label(tag: &str) -> &'static str {
+    match tag.trim().to_lowercase().as_str() {
+        "allergy" => "过敏人群",
+        "kids" => "儿童/婴幼儿",
+        "pregnancy" => "孕妇",
+        _ => "关注人群",
+    }
+}
+
+fn format_group_tags(tags: &[String]) -> String {
+    let mut seen = HashSet::new();
+    let mut labels = Vec::new();
+    for tag in tags {
+        let label = tag_label(tag);
+        if seen.insert(label) {
+            labels.push(label);
+        }
+    }
+    labels.join(" / ")
+}
+
+fn build_strong_alerts(rule_hits: &[RuleHit]) -> Vec<String> {
+    let mut has_allergy = false;
+    let mut has_kids = false;
+    let mut has_pregnancy = false;
+
+    for hit in rule_hits {
+        for tag in &hit.group_tags {
+            match tag.trim().to_lowercase().as_str() {
+                "allergy" => has_allergy = true,
+                "kids" => has_kids = true,
+                "pregnancy" => has_pregnancy = true,
+                _ => {}
+            }
+        }
+    }
+
+    let mut alerts = Vec::new();
+    if has_allergy {
+        alerts.push("包含过敏原成分，过敏人群必须严格避免。".to_string());
+    }
+    if has_kids {
+        alerts.push("含儿童敏感成分，儿童/婴幼儿需谨慎或避免食用。".to_string());
+    }
+    if has_pregnancy {
+        alerts.push("含孕期敏感成分，孕妇建议谨慎或咨询医生。".to_string());
+    }
+
+    alerts
 }
 
 #[component]
@@ -248,6 +300,15 @@ pub fn ResultPage() -> impl IntoView {
             .and_then(|result| result.confidence)
     };
 
+    let strong_alerts = move || {
+        state
+            .analysis_result
+            .get()
+            .and_then(|response| response.result)
+            .map(|result| build_strong_alerts(&result.rule_hits))
+            .unwrap_or_default()
+    };
+
     let current_preference = move || {
         state
             .analysis_preference
@@ -323,20 +384,38 @@ pub fn ResultPage() -> impl IntoView {
                 }}
             </Show>
 
+            <Show when=move || !strong_alerts().is_empty()>
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"重要提醒"</h2>
+                    <ul class="advice-list">
+                        {move || {
+                            strong_alerts()
+                                .into_iter()
+                                .map(|item| view! { <li>{item}</li> })
+                                .collect_view()
+                        }}
+                    </ul>
+                </div>
+            </Show>
+
             <Show when=move || confidence_info().is_some()>
                 {move || {
-                    confidence_info().map(|confidence| view! {
-                        <div class="surface-card result-section">
-                            <h2 class="card-title">"可信度"</h2>
-                            <p class="analysis-summary">
-                                {format!("可信度：{}", confidence_label(&confidence.level))}
-                            </p>
-                            <Show when=move || !confidence.reasons.is_empty()>
-                                <ul class="advice-list">
-                                    {confidence.reasons.iter().map(|reason| view! { <li>{reason}</li> }).collect_view()}
-                                </ul>
-                            </Show>
-                        </div>
+                    confidence_info().map(|confidence| {
+                        let reasons = confidence.reasons.clone();
+                        let reasons_for_check = reasons.clone();
+                        view! {
+                            <div class="surface-card result-section">
+                                <h2 class="card-title">"可信度"</h2>
+                                <p class="analysis-summary">
+                                    {format!("可信度：{}", confidence_label(&confidence.level))}
+                                </p>
+                                <Show when=move || !reasons_for_check.is_empty()>
+                                    <ul class="advice-list">
+                                        {reasons.iter().map(|reason| view! { <li>{reason.clone()}</li> }).collect_view()}
+                                    </ul>
+                                </Show>
+                            </div>
+                        }
                     })
                 }}
             </Show>
@@ -349,14 +428,23 @@ pub fn ResultPage() -> impl IntoView {
                             {move || {
                                 rule_hits()
                                     .into_iter()
-                                    .map(|item| view! {
-                                        <div class="analysis-item">
-                                            <div class="analysis-header">
-                                                <span class="analysis-name">{item.name}</span>
-                                                <RiskBadge level={item.risk_level} />
+                                    .map(|item| {
+                                        let group_tags = item.group_tags.clone();
+                                        let group_tags_for_check = group_tags.clone();
+                                        view! {
+                                            <div class="analysis-item">
+                                                <div class="analysis-header">
+                                                    <span class="analysis-name">{item.name}</span>
+                                                    <RiskBadge level={item.risk_level} />
+                                                </div>
+                                                <p class="analysis-desc">{item.description}</p>
+                                                <Show when=move || !group_tags_for_check.is_empty()>
+                                                    <p class="analysis-summary">
+                                                        {format!("适用人群：{}", format_group_tags(&group_tags))}
+                                                    </p>
+                                                </Show>
                                             </div>
-                                            <p class="analysis-desc">{item.description}</p>
-                                        </div>
+                                        }
                                     })
                                     .collect_view()
                             }}

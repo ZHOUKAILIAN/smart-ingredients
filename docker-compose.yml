@@ -64,6 +64,11 @@ services:
     container_name: smart-ingredients-ocr
     environment:
       PADDLE_OCR_LANG: ch
+      OCR_PREPROCESS_ENABLED: ${OCR_PREPROCESS_ENABLED:-true}
+      OCR_RETRY_MAX: ${OCR_RETRY_MAX:-1}
+      OCR_MIN_TEXT_LEN: ${OCR_MIN_TEXT_LEN:-2}
+      OCR_PREPROCESS_THRESHOLD: ${OCR_PREPROCESS_THRESHOLD:-180}
+      OCR_PREPROCESS_SCALE: ${OCR_PREPROCESS_SCALE:-1.5}
     ports:
       - "8000:8000"
 
