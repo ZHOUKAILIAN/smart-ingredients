@@ -3,6 +3,7 @@
 mod confirm_modal;
 mod error_display;
 mod example_images;
+mod export_preview_modal;
 mod health_score_card;
 mod icons;
 mod image_preview;
@@ -12,6 +13,7 @@ mod ingredient_table;
 mod loading_spinner;
 mod preference_selector;
 mod risk_badge;
+mod share_button;
 mod summary_card;
 mod tab_icons;
 mod toast;
@@ -20,6 +22,7 @@ mod usage_tips;
 pub use confirm_modal::ConfirmModal;
 pub use error_display::ErrorDisplay;
 pub use example_images::ExampleImages;
+pub use export_preview_modal::ExportPreviewModal;
 pub use health_score_card::HealthScoreCard;
 pub use icons::{IconArrowLeft, IconCamera, IconChart, IconCheckBadge};
 pub use image_preview::ImagePreview;
@@ -31,6 +34,7 @@ pub use preference_selector::{
     get_preference_icon, get_preference_label, PreferenceCard, PreferenceSelector,
 };
 pub use risk_badge::RiskBadge;
+pub use share_button::{ShareButton, ShareExportProps};
 pub use summary_card::SummaryCard;
 pub use tab_icons::{IconHistory, IconHome, IconUser};
 pub use toast::ToastHost;

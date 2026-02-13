@@ -2,6 +2,7 @@
 
 pub mod auth_storage;
 pub mod error_messages;
+pub mod export_image;
 pub mod local_history;
 pub mod local_storage;
 pub mod preference;
