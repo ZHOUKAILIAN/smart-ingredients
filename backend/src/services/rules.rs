@@ -16,6 +16,10 @@ pub struct RuleItem {
     #[serde(default)]
     pub groups: Vec<String>,
     pub description: String,
+    #[serde(default)]
+    pub evidence: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -74,6 +78,12 @@ impl RuleEngine {
                 confidence: shared::ConfidenceInfo {
                     level: "low".to_string(),
                     reasons: vec![format!("规则库不可用：{}", error)],
+                    factors: vec![shared::ConfidenceFactor {
+                        key: "rule_engine".to_string(),
+                        label: "规则引擎".to_string(),
+                        score: -30,
+                        detail: Some("规则库加载失败".to_string()),
+                    }],
                 },
             };
         }
@@ -98,23 +108,90 @@ impl RuleEngine {
                     risk_level,
                     description: item.description.clone(),
                     group_tags: item.groups.clone(),
+                    evidence: item.evidence.clone(),
+                    source: item.source.clone(),
                 });
             }
         }
 
-        let confidence = if hits.is_empty() {
-            shared::ConfidenceInfo {
-                level: "medium".to_string(),
-                reasons: vec!["未命中规则，基于模型解释".to_string()],
-            }
-        } else {
-            shared::ConfidenceInfo {
-                level: "high".to_string(),
-                reasons: vec!["命中规则库成分".to_string()],
-            }
-        };
+        let confidence = build_confidence(&hits, text);
 
         RuleEvaluation { hits, confidence }
+    }
+}
+
+fn build_confidence(hits: &[shared::RuleHit], text: &str) -> shared::ConfidenceInfo {
+    let text_len = text.trim().chars().count();
+    let hit_count = hits.len();
+    let mut score = 50;
+
+    let mut factors = Vec::new();
+    if hit_count > 0 {
+        score += 30;
+        factors.push(shared::ConfidenceFactor {
+            key: "rule_hits".to_string(),
+            label: "规则命中".to_string(),
+            score: 30,
+            detail: Some(format!("命中 {} 条规则", hit_count)),
+        });
+    } else {
+        score -= 10;
+        factors.push(shared::ConfidenceFactor {
+            key: "rule_hits".to_string(),
+            label: "规则命中".to_string(),
+            score: -10,
+            detail: Some("未命中规则".to_string()),
+        });
+    }
+
+    if text_len < 6 {
+        score -= 20;
+        factors.push(shared::ConfidenceFactor {
+            key: "text_length".to_string(),
+            label: "文本长度".to_string(),
+            score: -20,
+            detail: Some("文本过短".to_string()),
+        });
+    } else if text_len < 20 {
+        score -= 10;
+        factors.push(shared::ConfidenceFactor {
+            key: "text_length".to_string(),
+            label: "文本长度".to_string(),
+            score: -10,
+            detail: Some("文本偏短".to_string()),
+        });
+    } else {
+        factors.push(shared::ConfidenceFactor {
+            key: "text_length".to_string(),
+            label: "文本长度".to_string(),
+            score: 10,
+            detail: Some("文本长度充足".to_string()),
+        });
+        score += 10;
+    }
+
+    let level = if score >= 75 {
+        "high"
+    } else if score >= 50 {
+        "medium"
+    } else {
+        "low"
+    };
+
+    let mut reasons = Vec::new();
+    if hit_count > 0 {
+        reasons.push("命中规则库成分".to_string());
+    } else {
+        reasons.push("未命中规则，基于模型解释".to_string());
+    }
+    if text_len < 6 {
+        reasons.push("OCR 文本过短，可信度降低".to_string());
+    }
+
+    shared::ConfidenceInfo {
+        level: level.to_string(),
+        reasons,
+        factors,
     }
 }
 

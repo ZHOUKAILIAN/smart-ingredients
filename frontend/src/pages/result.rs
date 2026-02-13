@@ -127,6 +127,15 @@ fn format_group_tags(tags: &[String]) -> String {
     labels.join(" / ")
 }
 
+fn format_rule_evidence(evidence: &Option<String>, source: &Option<String>) -> Option<String> {
+    match (evidence.as_ref(), source.as_ref()) {
+        (Some(ev), Some(src)) => Some(format!("证据：{}（{}）", ev, src)),
+        (Some(ev), None) => Some(format!("证据：{}", ev)),
+        (None, Some(src)) => Some(format!("证据来源：{}", src)),
+        (None, None) => None,
+    }
+}
+
 fn build_strong_alerts(rule_hits: &[RuleHit]) -> Vec<String> {
     let mut has_allergy = false;
     let mut has_kids = false;
@@ -403,6 +412,8 @@ pub fn ResultPage() -> impl IntoView {
                     confidence_info().map(|confidence| {
                         let reasons = confidence.reasons.clone();
                         let reasons_for_check = reasons.clone();
+                        let factors = confidence.factors.clone();
+                        let factors_for_check = factors.clone();
                         view! {
                             <div class="surface-card result-section">
                                 <h2 class="card-title">"可信度"</h2>
@@ -413,6 +424,27 @@ pub fn ResultPage() -> impl IntoView {
                                     <ul class="advice-list">
                                         {reasons.iter().map(|reason| view! { <li>{reason.clone()}</li> }).collect_view()}
                                     </ul>
+                                </Show>
+                                <Show when=move || !factors_for_check.is_empty()>
+                                    <div class="analysis-list">
+                                        {factors.iter().map(|factor| {
+                                            let detail = factor.detail.clone().unwrap_or_default();
+                                            let detail_for_check = detail.clone();
+                                            view! {
+                                                <div class="analysis-item">
+                                                    <div class="analysis-header">
+                                                        <span class="analysis-name">{factor.label.clone()}</span>
+                                                        <span class="analysis-desc">
+                                                            {format!("{}分", factor.score)}
+                                                        </span>
+                                                    </div>
+                                                    <Show when=move || !detail_for_check.is_empty()>
+                                                        <p class="analysis-summary">{detail.clone()}</p>
+                                                    </Show>
+                                                </div>
+                                            }
+                                        }).collect_view()}
+                                    </div>
                                 </Show>
                             </div>
                         }
@@ -431,6 +463,9 @@ pub fn ResultPage() -> impl IntoView {
                                     .map(|item| {
                                         let group_tags = item.group_tags.clone();
                                         let group_tags_for_check = group_tags.clone();
+                                        let evidence = format_rule_evidence(&item.evidence, &item.source);
+                                        let evidence_text = evidence.clone().unwrap_or_default();
+                                        let evidence_for_check = evidence_text.clone();
                                         view! {
                                             <div class="analysis-item">
                                                 <div class="analysis-header">
@@ -442,6 +477,9 @@ pub fn ResultPage() -> impl IntoView {
                                                     <p class="analysis-summary">
                                                         {format!("适用人群：{}", format_group_tags(&group_tags))}
                                                     </p>
+                                                </Show>
+                                                <Show when=move || !evidence_for_check.is_empty()>
+                                                    <p class="analysis-summary">{evidence_text.clone()}</p>
                                                 </Show>
                                             </div>
                                         }

@@ -241,5 +241,107 @@
     "risk_level": "low",
     "groups": [],
     "description": "常见油脂原料，注意总体脂肪摄入。"
+  },
+  {
+    "id": "allergen-soy",
+    "name": "大豆",
+    "aliases": ["大豆制品", "豆粉", "黄豆"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy", "kids"],
+    "description": "常见致敏原，大豆过敏人群需避免。",
+    "evidence": "常见过敏原成分",
+    "source": "食安常识"
+  },
+  {
+    "id": "allergen-shellfish",
+    "name": "甲壳类",
+    "aliases": ["虾", "蟹", "贝类"],
+    "category": "allergen",
+    "risk_level": "high",
+    "groups": ["allergy"],
+    "description": "高致敏性海鲜类成分，过敏人群需严格避免。",
+    "evidence": "常见高致敏原",
+    "source": "食安常识"
+  },
+  {
+    "id": "allergen-fish",
+    "name": "鱼类",
+    "aliases": ["鱼粉", "鱼油"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy"],
+    "description": "鱼类蛋白可引发过敏反应。"
+  },
+  {
+    "id": "allergen-tree-nuts",
+    "name": "坚果",
+    "aliases": ["核桃", "杏仁", "腰果", "榛子", "开心果", "山核桃"],
+    "category": "allergen",
+    "risk_level": "high",
+    "groups": ["allergy"],
+    "description": "坚果类为高致敏原之一，过敏人群需避免。",
+    "evidence": "常见过敏原成分",
+    "source": "食安常识"
+  },
+  {
+    "id": "allergen-sesame",
+    "name": "芝麻",
+    "aliases": ["芝麻酱", "芝麻粉"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy"],
+    "description": "芝麻可能引发过敏反应，敏感人群需注意。"
+  },
+  {
+    "id": "other-alcohol",
+    "name": "酒精",
+    "aliases": ["乙醇"],
+    "category": "other",
+    "risk_level": "high",
+    "groups": ["pregnancy", "kids"],
+    "description": "含酒精成分，孕妇与儿童应避免。",
+    "evidence": "特定人群不宜",
+    "source": "食安常识"
+  },
+  {
+    "id": "other-trans-fat",
+    "name": "反式脂肪酸",
+    "aliases": ["氢化植物油", "部分氢化"],
+    "category": "other",
+    "risk_level": "high",
+    "groups": ["health"],
+    "description": "与心血管风险相关，建议尽量避免。",
+    "evidence": "高风险脂肪类型",
+    "source": "营养常识"
+  },
+  {
+    "id": "other-high-sodium",
+    "name": "食盐",
+    "aliases": ["钠"],
+    "category": "other",
+    "risk_level": "medium",
+    "groups": ["health"],
+    "description": "高钠摄入不利于心血管健康，需控制。"
+  },
+  {
+    "id": "other-msg",
+    "name": "谷氨酸钠",
+    "aliases": ["味精"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": ["kids"],
+    "description": "常见增鲜剂，儿童建议适量。"
+  },
+  {
+    "id": "additive-sulfites",
+    "name": "二氧化硫",
+    "aliases": ["亚硫酸盐", "焦亚硫酸钠"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["allergy", "kids"],
+    "description": "可能引发敏感反应，哮喘人群需注意。",
+    "evidence": "敏感人群可能反应",
+    "source": "食安常识"
   }
 ]
