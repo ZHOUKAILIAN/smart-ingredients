@@ -1,5 +1,6 @@
 use crate::components::{
     get_preference_icon, get_preference_label, HealthScoreCard, IconArrowLeft, RiskBadge,
+    ShareButton, ShareExportProps,
 };
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
@@ -386,6 +387,33 @@ pub fn ResultPage() -> impl IntoView {
                 <button class="secondary-cta" on:click=on_back_home_bottom>
                     "返回首页"
                 </button>
+                {move || {
+                    state.analysis_result.get()
+                        .and_then(|r| r.result)
+                        .map(|result| {
+                            let pref = current_preference();
+                            let props = ShareExportProps {
+                                health_score: result.health_score,
+                                recommendation: result.recommendation.clone(),
+                                ingredients: result.ingredients.iter().map(|i| {
+                                    crate::utils::export_image::ExportIngredient {
+                                        name: i.name.clone(),
+                                        risk_level: i.risk_level.clone(),
+                                        description: i.description.clone().unwrap_or_default(),
+                                        is_focus: result.focus_ingredients.as_ref()
+                                            .map(|fi| fi.iter().any(|f| f.trim().to_lowercase() == i.name.trim().to_lowercase()))
+                                            .unwrap_or(false),
+                                    }
+                                }).collect(),
+                                warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
+                                summary: result.focus_summary.clone()
+                                    .filter(|s| !s.trim().is_empty())
+                                    .unwrap_or_else(|| result.summary.clone()),
+                                preference_label: get_preference_label(&pref).to_string(),
+                            };
+                            view! { <ShareButton props=props /> }
+                        })
+                }}
                 <button class="primary-cta" on:click=on_new_analysis>
                     "分析新产品"
                 </button>
