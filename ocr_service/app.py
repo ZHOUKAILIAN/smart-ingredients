@@ -38,10 +38,14 @@ async def ocr_endpoint(file: UploadFile = File(...)) -> dict:
         raise HTTPException(status_code=400, detail=f"invalid image: {exc}") from exc
 
     result = OCR_ENGINE.ocr(np.array(image), cls=True)
+    if not result:
+        return {"text": "", "lines": []}
 
     lines = []
     texts = []
     for block in result:
+        if not block:
+            continue
         for item in block:
             text, score = item[1]
             if text:

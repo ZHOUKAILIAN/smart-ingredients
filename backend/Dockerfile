@@ -11,7 +11,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 COPY backend/Cargo.toml backend/Cargo.toml
 COPY shared/Cargo.toml shared/Cargo.toml
 
@@ -30,7 +30,7 @@ RUN mkdir -p frontend/src frontend/src-tauri/src backend/src shared/src \
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
-    cargo fetch
+    cargo generate-lockfile && cargo fetch
 
 # Copy actual source code
 COPY backend ./backend
