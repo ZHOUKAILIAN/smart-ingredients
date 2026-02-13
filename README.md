@@ -4,12 +4,14 @@
 
 一个智能食品配料表分析工具，帮助用户快速了解食品的健康程度。
 
-## 核心功能
+## 核心功能（已实现）
 
-1. **拍照识别**：用户通过 App/小程序拍摄食品配料表
-2. **OCR 解析**：自动识别图片中的文字内容
-3. **智能分析**：基于 LLM 分析配料健康程度
-4. **结果展示**：返回详细的健康评估报告
+1. **拍照/上传**：前端支持拍照或相册选择配料表图片
+2. **OCR 解析**：后端接入 PaddleOCR 服务识别文本
+3. **文本确认**：OCR 结果可在前端确认后再分析
+4. **智能分析**：LLM 输出健康评分与分析报告
+5. **偏好设置**：支持体重管理/健康/健身/过敏/儿童等偏好
+6. **历史记录**：可查看分析历史与详情
 
 ## 技术架构
 
@@ -26,12 +28,14 @@
 
 ```text
 smart-ingredients/
-├── frontend/                 # Rust 前端应用
-├── backend/                  # Rust 后端服务
+├── frontend/                 # Rust 前端应用（Tauri + Leptos）
+├── backend/                  # Rust 后端服务（Axum + SQLx）
 ├── shared/                   # 共享类型定义
+├── ocr_service/              # PaddleOCR 服务（FastAPI）
 ├── docs/                     # 项目文档
 ├── scripts/                  # 开发脚本
-└── docker-compose.yml        # 本地开发环境
+├── docker-compose.yml        # 本地开发环境
+└── docker-compose.prod.yml   # 生产环境示例
 ```
 
 ## 快速开始
@@ -40,20 +44,39 @@ smart-ingredients/
 
 - Rust 1.80+
 - Docker & Docker Compose
+- Node.js（用于 Tauri 前端构建环境）
 
-### 安装
+### 方式一：Docker 一键启动（推荐）
 
 ```bash
 # 克隆仓库
 git clone git@github.com:ZHOUKAILIAN/smart-ingredients.git
 cd smart-ingredients
 
+# 复制环境变量模板
+cp .env.example .env
+
+# 启动后端 + OCR + 数据库 + Redis
+
+docker compose up --build
+```
+
+后端默认端口为 `http://localhost:3000`，OCR 服务为 `http://localhost:8000`。
+
+### 方式二：本地开发启动
+
+```bash
+# 克隆仓库
+git clone git@github.com:ZHOUKAILIAN/smart-ingredients.git
+cd smart-ingredients
+cp .env.example .env
+
 # 启动后端
 cd backend
 cargo run
 
 # 启动前端
-cd frontend
+cd ../frontend
 cargo tauri dev
 ```
 
@@ -70,13 +93,12 @@ cargo tauri dev
 | OCR    | PaddleOCR (FastAPI) + Tesseract 备用 |
 | LLM    | DeepSeek / 智谱 AI    |
 
-## 开发计划
+## 路线图（建议下一步）
 
-- [ ] 前端框架搭建
-- [ ] 后端 API 设计
-- [ ] OCR 服务集成
-- [ ] LLM 接入
-- [ ] 数据库设计
+- [ ] 完善配料解析与风险规则库
+- [ ] 增加分享卡片/导出能力
+- [ ] 丰富过敏原/偏好配置（细分项 + 强提醒）
+- [ ] 提升 OCR 图像预处理与准确率
 
 ## License
 
