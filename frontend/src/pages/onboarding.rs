@@ -9,10 +9,10 @@ use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
 use crate::utils::preference::save_preference;
 
-const ONBOARDING_STEPS: &[&str] = &[
-    "选择您的关注人群",
-    "AI 会优先解读相关风险",
-    "结果页会对准关注点提示",
+const ONBOARDING_STEPS: &[(&str, &str)] = &[
+    ("选人群", "告诉我们你更在意哪类风险"),
+    ("拍配料表", "上传清晰配料表，AI 自动识别"),
+    ("看识别结果", "先拿到文本，再决定下一步"),
 ];
 
 #[component]
@@ -86,14 +86,20 @@ pub fn OnboardingPage() -> impl IntoView {
             <div class="page-scrollable-content">
                 <div class="preference-page-container">
                     <div class="preference-intro">
-                        <h2>"欢迎使用 Smart Ingredients"</h2>
-                        <p>"先选人群定位，AI 会把分析结果对准你的关注点"</p>
+                        <h2>"先选人群定位"</h2>
+                        <p>"只做最关键的判断，把结果对准你的关注点"</p>
+                        <p class="analysis-desc">"随时可在个人中心修改"</p>
                     </div>
 
                     <div class="analysis-list">
                         {ONBOARDING_STEPS
                             .iter()
-                            .map(|step| view! { <div class="analysis-item">{*step}</div> })
+                            .map(|(title, desc)| view! {
+                                <div class="analysis-item">
+                                    <p class="analysis-summary">{*title}</p>
+                                    <p class="analysis-desc">{*desc}</p>
+                                </div>
+                            })
                             .collect_view()}
                     </div>
 
@@ -106,15 +112,15 @@ pub fn OnboardingPage() -> impl IntoView {
 
                     <div class="preference-actions">
                         <button class="secondary-cta" on:click=on_skip>
-                            "先用普通人群"
+                            "先体验，后设置"
                         </button>
                         <button class="primary-cta" on:click=on_save_click>
-                            "确认并开始"
+                            "确认人群并开始"
                         </button>
                     </div>
 
                     <div class="preference-hint">
-                        "💡 之后可在个人中心随时修改"
+                        "💡 识别到配料文本后，你可以继续深入分析"
                     </div>
                 </div>
             </div>
