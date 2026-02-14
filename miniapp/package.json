@@ -1,0 +1,26 @@
+{
+  "name": "smart-ingredients-miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Smart Ingredients WeChat Mini Program",
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp"
+  },
+  "dependencies": {
+    "@tarojs/components": "^3.6.30",
+    "@tarojs/runtime": "^3.6.30",
+    "@tarojs/taro": "^3.6.30",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@tarojs/cli": "^3.6.30",
+    "@tarojs/plugin-framework-react": "^3.6.30",
+    "@tarojs/plugin-platform-weapp": "^3.6.30",
+    "@tarojs/webpack5-runner": "^3.6.30",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "typescript": "^5.3.3"
+  }
+}
