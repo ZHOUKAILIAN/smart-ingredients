@@ -5,6 +5,7 @@ use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
 use crate::utils::preference::load_preference;
+use leptos::either::Either;
 use leptos::leptos_dom::helpers::set_timeout;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
@@ -198,14 +199,19 @@ fn conclusion_label(score: i32) -> &'static str {
     }
 }
 
-fn build_key_risk_tags(rule_hits: &[RuleHit], max_items: usize) -> Vec<RuleHit> {
+fn split_key_risks(rule_hits: &[RuleHit], max_items: usize) -> (Vec<RuleHit>, Vec<RuleHit>) {
     let mut hits: Vec<RuleHit> = rule_hits
         .iter()
         .filter(|item| risk_rank(&item.risk_level) <= 1)
         .cloned()
         .collect();
     hits.sort_by_key(|item| risk_rank(&item.risk_level));
-    hits.into_iter().take(max_items).collect()
+    let remaining = if hits.len() > max_items {
+        hits.split_off(max_items)
+    } else {
+        Vec::new()
+    };
+    (hits, remaining)
 }
 
 fn format_dimension_label(value: &str) -> &'static str {
@@ -532,25 +538,67 @@ pub fn ResultPage() -> impl IntoView {
                 }}
             </Show>
 
-            <Show when=move || !rule_hits().is_empty()>
+            <Show when=move || {
+                state.analysis_result.get()
+                    .and_then(|r| r.result)
+                    .is_some()
+            }>
                 <div class="surface-card result-section">
                     <h2 class="card-title">"关键风险"</h2>
-                    <div class="analysis-list">
-                        {move || {
-                            build_key_risk_tags(&rule_hits(), 5)
-                                .into_iter()
-                                .map(|item| view! {
-                                    <div class="analysis-item">
-                                        <div class="analysis-header">
-                                            <span class="analysis-name">{item.name}</span>
-                                            <RiskBadge level={item.risk_level} />
+                    <p class="hint">"仅展示中高风险成分"</p>
+                    {move || {
+                        let (primary, remaining) = split_key_risks(&rule_hits(), 3);
+                        let content = if primary.is_empty() {
+                            Either::Right(view! { <p class="analysis-summary">"暂未识别中高风险成分"</p> })
+                        } else {
+                            let has_remaining = !remaining.is_empty();
+                            let remaining_block = has_remaining.then(|| {
+                                view! {
+                                    <details class="analysis-item">
+                                        <summary class="analysis-header">
+                                            <span class="analysis-name">
+                                                {format!("查看更多（{}）", remaining.len())}
+                                            </span>
+                                        </summary>
+                                        <div class="analysis-list">
+                                            {remaining
+                                                .iter()
+                                                .cloned()
+                                                .map(|item| view! {
+                                                    <div class="analysis-item">
+                                                        <div class="analysis-header">
+                                                            <span class="analysis-name">{item.name}</span>
+                                                            <RiskBadge level={item.risk_level} />
+                                                        </div>
+                                                        <p class="analysis-desc">{item.description}</p>
+                                                    </div>
+                                                })
+                                                .collect_view()}
                                         </div>
-                                        <p class="analysis-desc">{item.description}</p>
-                                    </div>
-                                })
-                                .collect_view()
-                        }}
-                    </div>
+                                    </details>
+                                }
+                            });
+                            Either::Left(view! {
+                                <div class="analysis-list">
+                                    {primary
+                                        .iter()
+                                        .cloned()
+                                        .map(|item| view! {
+                                            <div class="analysis-item">
+                                                <div class="analysis-header">
+                                                    <span class="analysis-name">{item.name}</span>
+                                                    <RiskBadge level={item.risk_level} />
+                                                </div>
+                                                <p class="analysis-desc">{item.description}</p>
+                                            </div>
+                                        })
+                                        .collect_view()}
+                                </div>
+                                {remaining_block}
+                            })
+                        };
+                        content
+                    }}
                 </div>
             </Show>
 
@@ -568,66 +616,65 @@ pub fn ResultPage() -> impl IntoView {
                 </div>
             </Show>
 
-            <Show when=move || confidence_info().is_some()>
-                {move || {
-                    confidence_info().map(|confidence| {
-                        let reasons = confidence.reasons.clone();
-                        let reasons_for_check = reasons.clone();
-                        let factors = confidence.factors.clone();
-                        let factors_for_check = factors.clone();
-                        view! {
-                            <div class="surface-card result-section">
-                                <h2 class="card-title">"可信度"</h2>
-                                <p class="analysis-summary">
-                                    {format!("可信度：{}", confidence_label(&confidence.level))}
-                                </p>
-                                <div class="analysis-item">
-                                    <div class="analysis-header">
-                                        <span class="analysis-name">"可信度进度"</span>
-                                        <span class="analysis-desc">
-                                            {format!("{}%", confidence_percent(&confidence.level))}
-                                        </span>
-                                    </div>
-                                    <div class="progress-track">
-                                        <div
-                                            class="progress-bar"
-                                            style={format!("width: {}%", confidence_percent(&confidence.level))}
-                                        ></div>
-                                    </div>
-                                </div>
-                                <Show when=move || !reasons_for_check.is_empty()>
-                                    <ul class="advice-list">
-                                        {reasons.iter().map(|reason| view! { <li>{reason.clone()}</li> }).collect_view()}
-                                    </ul>
-                                </Show>
-                                <Show when=move || !factors_for_check.is_empty()>
-                                    <div class="analysis-list">
-                                        {factors.iter().map(|factor| {
-                                            let detail = factor.detail.clone().unwrap_or_default();
-                                            let detail_for_check = detail.clone();
-                                            view! {
-                                                <div class="analysis-item">
-                                                    <div class="analysis-header">
-                                                        <span class="analysis-name">{factor.label.clone()}</span>
-                                                        <span class="analysis-desc">
-                                                            {format!("{}分", factor.score)}
-                                                        </span>
-                                                    </div>
-                                                    <Show when=move || !detail_for_check.is_empty()>
-                                                        <p class="analysis-summary">{detail.clone()}</p>
-                                                    </Show>
-                                                </div>
-                                            }
-                                        }).collect_view()}
-                                    </div>
-                                </Show>
-                            </div>
-                        }
-                    })
-                }}
-            </Show>
-
             <div class="section-padding">
+                <Show when=move || confidence_info().is_some()>
+                    {move || {
+                        confidence_info().map(|confidence| {
+                            let reasons = confidence.reasons.clone();
+                            let reasons_for_check = reasons.clone();
+                            let factors = confidence.factors.clone();
+                            let factors_for_check = factors.clone();
+                            view! {
+                                <div class="surface-card result-section">
+                                    <h2 class="card-title">"可信度"</h2>
+                                    <p class="analysis-summary">
+                                        {format!("可信度：{}", confidence_label(&confidence.level))}
+                                    </p>
+                                    <div class="analysis-item">
+                                        <div class="analysis-header">
+                                            <span class="analysis-name">"可信度进度"</span>
+                                            <span class="analysis-desc">
+                                                {format!("{}%", confidence_percent(&confidence.level))}
+                                            </span>
+                                        </div>
+                                        <div class="progress-track">
+                                            <div
+                                                class="progress-bar"
+                                                style={format!("width: {}%", confidence_percent(&confidence.level))}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    <Show when=move || !reasons_for_check.is_empty()>
+                                        <ul class="advice-list">
+                                            {reasons.iter().map(|reason| view! { <li>{reason.clone()}</li> }).collect_view()}
+                                        </ul>
+                                    </Show>
+                                    <Show when=move || !factors_for_check.is_empty()>
+                                        <div class="analysis-list">
+                                            {factors.iter().map(|factor| {
+                                                let detail = factor.detail.clone().unwrap_or_default();
+                                                let detail_for_check = detail.clone();
+                                                view! {
+                                                    <div class="analysis-item">
+                                                        <div class="analysis-header">
+                                                            <span class="analysis-name">{factor.label.clone()}</span>
+                                                            <span class="analysis-desc">
+                                                                {format!("{}分", factor.score)}
+                                                            </span>
+                                                        </div>
+                                                        <Show when=move || !detail_for_check.is_empty()>
+                                                            <p class="analysis-summary">{detail.clone()}</p>
+                                                        </Show>
+                                                    </div>
+                                                }
+                                            }).collect_view()}
+                                        </div>
+                                    </Show>
+                                </div>
+                            }
+                        })
+                    }}
+                </Show>
                 <Show when=move || {
                     state.analysis_result.get()
                         .and_then(|r| r.result)
@@ -793,14 +840,23 @@ pub fn ResultPage() -> impl IntoView {
 
                 <div class="surface-card result-section">
                     <h2 class="card-title">"人群建议"</h2>
-                    <ul class="advice-list">
-                        {move || {
-                            build_preference_guidance(&current_preference(), &rule_hits())
-                                .into_iter()
-                                .map(|item| view! { <li>{item}</li> })
-                                .collect_view()
-                        }}
-                    </ul>
+                    {move || {
+                        let guidance = build_preference_guidance(&current_preference(), &rule_hits());
+                        let content = if guidance.is_empty() {
+                            Either::Right(view! { <p class="analysis-summary">"暂无特定人群建议"</p> })
+                        } else {
+                            Either::Left(view! {
+                                <ul class="advice-list">
+                                    {guidance
+                                        .iter()
+                                        .cloned()
+                                        .map(|item| view! { <li>{item}</li> })
+                                        .collect_view()}
+                                </ul>
+                            })
+                        };
+                        content
+                    }}
                 </div>
 
                 <div class="surface-card result-section">
