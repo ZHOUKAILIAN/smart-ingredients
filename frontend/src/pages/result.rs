@@ -16,7 +16,7 @@ use std::collections::HashSet;
 use std::time::Duration;
 use wasm_bindgen::JsCast;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 struct AnalysisItem {
     name: String,
     risk_level: String,
@@ -302,6 +302,14 @@ pub fn ResultPage() -> impl IntoView {
     let selected_rule = RwSignal::new(None::<String>);
 
     create_effect(move |_| {
+        let _ = state.analysis_id.get();
+        selected_rule.set(None);
+        polling.set(false);
+        poll_attempts.set(0);
+        fetching.set(false);
+    });
+
+    create_effect(move |_| {
         if fetching.get() {
             return;
         }
@@ -312,6 +320,7 @@ pub fn ResultPage() -> impl IntoView {
         if let Some(id) = analysis_id {
             fetching.set(true);
             let state = state_for_effect.clone();
+            let fetching = fetching.clone();
             spawn_local(async move {
                 match services::fetch_analysis(id).await {
                     Ok(response) => {
@@ -324,6 +333,7 @@ pub fn ResultPage() -> impl IntoView {
                         emit_toast(ToastLevel::Error, "分析失败", &err);
                     }
                 }
+                fetching.set(false);
             });
         }
     });
@@ -385,14 +395,14 @@ pub fn ResultPage() -> impl IntoView {
         }
     });
 
-    let ingredient_items = move || {
+    let ingredient_items = create_memo(move |_| {
         state
             .analysis_result
             .get()
             .and_then(|response| response.result)
             .map(|result| analysis_items(&result))
             .unwrap_or_default()
-    };
+    });
 
     let advice_items = move || {
         state
@@ -839,7 +849,7 @@ pub fn ResultPage() -> impl IntoView {
                 <div class="surface-card result-section">
                     <h2 class="card-title">"配料分析"</h2>
                     {move || {
-                        let has_focus_items = ingredient_items().iter().any(|item| item.is_focus);
+                        let has_focus_items = ingredient_items.get().iter().any(|item| item.is_focus);
                         has_focus_items.then(|| view! {
                             <p class="focus-hint">
                                 "⭐ 带星标的成分是您关注的偏好相关成分"
@@ -847,7 +857,7 @@ pub fn ResultPage() -> impl IntoView {
                         })
                     }}
                     <Show
-                        when=move || !ingredient_items().is_empty()
+                        when=move || !ingredient_items.get().is_empty()
                         fallback=move || {
                             let status = state_for_status
                                 .analysis_result
@@ -866,7 +876,7 @@ pub fn ResultPage() -> impl IntoView {
                     >
                         <div class="analysis-list">
                             {move || {
-                                ingredient_items()
+                                ingredient_items.get()
                                     .into_iter()
                                     .map(|item| {
                                         let is_focus = item.is_focus;
