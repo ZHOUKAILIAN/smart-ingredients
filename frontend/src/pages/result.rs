@@ -106,6 +106,15 @@ fn confidence_label(level: &str) -> &'static str {
     }
 }
 
+fn confidence_percent(level: &str) -> i32 {
+    match level.trim().to_lowercase().as_str() {
+        "high" => 85,
+        "medium" => 60,
+        "low" => 35,
+        _ => 50,
+    }
+}
+
 fn tag_label(tag: &str) -> &'static str {
     match tag.trim().to_lowercase().as_str() {
         "allergy" => "过敏人群",
@@ -179,6 +188,98 @@ fn build_strong_alerts(rule_hits: &[RuleHit]) -> Vec<String> {
     }
 
     alerts
+}
+
+fn conclusion_label(score: i32) -> &'static str {
+    match score {
+        75..=100 => "可吃",
+        50..=74 => "谨慎",
+        _ => "不推荐",
+    }
+}
+
+fn build_key_risk_tags(rule_hits: &[RuleHit], max_items: usize) -> Vec<RuleHit> {
+    let mut hits: Vec<RuleHit> = rule_hits
+        .iter()
+        .filter(|item| risk_rank(&item.risk_level) <= 1)
+        .cloned()
+        .collect();
+    hits.sort_by_key(|item| risk_rank(&item.risk_level));
+    hits.into_iter().take(max_items).collect()
+}
+
+fn format_dimension_label(value: &str) -> &'static str {
+    match value.trim().to_lowercase().as_str() {
+        "additives_processing" => "添加剂/加工",
+        "sugar_fat" => "糖/脂",
+        "nutrition_value" => "营养价值",
+        "sensitive" => "敏感人群",
+        "formula_complexity" => "配方复杂度",
+        _ => "其他",
+    }
+}
+
+fn build_preference_guidance(preference: &str, rule_hits: &[RuleHit]) -> Vec<String> {
+    let mut guidance = Vec::new();
+    let pref = preference.trim().to_lowercase();
+
+    if pref == "allergy" {
+        guidance.push("过敏人群优先关注过敏原与交叉污染提示。".to_string());
+    } else if pref == "kids" {
+        guidance.push("儿童人群建议避免高糖与高风险添加剂。".to_string());
+    } else if pref == "pregnancy" {
+        guidance.push("孕期建议避开刺激性成分与不明确添加剂。".to_string());
+    } else if pref == "weight_loss" {
+        guidance.push("控重人群建议优先选择低糖/低脂产品。".to_string());
+    } else if pref == "health" {
+        guidance.push("健康人群建议减少高糖与高盐摄入。".to_string());
+    }
+
+    let has_allergen = rule_hits
+        .iter()
+        .any(|item| item.category.trim().to_lowercase() == "allergen");
+    if has_allergen {
+        guidance.push("检测到过敏原，建议优先选择无过敏原替代品。".to_string());
+    }
+
+    guidance
+}
+
+fn build_alternative_suggestions(rule_hits: &[RuleHit]) -> Vec<String> {
+    let mut suggestions = Vec::new();
+    let mut has_allergen = false;
+    let mut has_additives = false;
+    let mut has_sugar = false;
+
+    for hit in rule_hits {
+        let category = hit.category.trim().to_lowercase();
+        if category == "allergen" {
+            has_allergen = true;
+        }
+        if category == "additive" && risk_rank(&hit.risk_level) <= 1 {
+            has_additives = true;
+        }
+        let name = hit.name.trim();
+        if name.contains("糖") || name.contains("糖浆") {
+            has_sugar = true;
+        }
+    }
+
+    if has_allergen {
+        suggestions.push("优先选择无过敏原或有清晰过敏原标识的替代品。".to_string());
+    }
+    if has_sugar {
+        suggestions.push("可尝试低糖/无糖版本，或用天然甜味来源替代。".to_string());
+    }
+    if has_additives {
+        suggestions.push("优先选择配料表更简洁、添加剂更少的产品。".to_string());
+    }
+
+    if suggestions.is_empty() {
+        suggestions.push("当前配料结构较简单，可优先选择配料更短、更透明的产品。".to_string());
+    }
+
+    suggestions
 }
 
 #[component]
@@ -390,6 +491,29 @@ pub fn ResultPage() -> impl IntoView {
                 </span>
             </div>
 
+            // Conclusion card
+            <Show when=move || {
+                state.analysis_result.get()
+                    .and_then(|r| r.result)
+                    .is_some()
+            }>
+                {move || {
+                    state.analysis_result.get()
+                        .and_then(|r| r.result)
+                        .map(|result| {
+                            let conclusion = conclusion_label(result.health_score);
+                            let reason = summary_text();
+                            view! {
+                                <div class="surface-card result-section">
+                                    <h2 class="card-title">"结论"</h2>
+                                    <p class="analysis-summary">{format!("综合判断：{}", conclusion)}</p>
+                                    <p class="analysis-desc">{reason}</p>
+                                </div>
+                            }
+                        })
+                }}
+            </Show>
+
             // Health score card
             <Show when=move || {
                 state.analysis_result.get()
@@ -406,6 +530,28 @@ pub fn ResultPage() -> impl IntoView {
                             />
                         })
                 }}
+            </Show>
+
+            <Show when=move || !rule_hits().is_empty()>
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"关键风险"</h2>
+                    <div class="analysis-list">
+                        {move || {
+                            build_key_risk_tags(&rule_hits(), 5)
+                                .into_iter()
+                                .map(|item| view! {
+                                    <div class="analysis-item">
+                                        <div class="analysis-header">
+                                            <span class="analysis-name">{item.name}</span>
+                                            <RiskBadge level={item.risk_level} />
+                                        </div>
+                                        <p class="analysis-desc">{item.description}</p>
+                                    </div>
+                                })
+                                .collect_view()
+                        }}
+                    </div>
+                </div>
             </Show>
 
             <Show when=move || !strong_alerts().is_empty()>
@@ -435,6 +581,20 @@ pub fn ResultPage() -> impl IntoView {
                                 <p class="analysis-summary">
                                     {format!("可信度：{}", confidence_label(&confidence.level))}
                                 </p>
+                                <div class="analysis-item">
+                                    <div class="analysis-header">
+                                        <span class="analysis-name">"可信度进度"</span>
+                                        <span class="analysis-desc">
+                                            {format!("{}%", confidence_percent(&confidence.level))}
+                                        </span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div
+                                            class="progress-bar"
+                                            style={format!("width: {}%", confidence_percent(&confidence.level))}
+                                        ></div>
+                                    </div>
+                                </div>
                                 <Show when=move || !reasons_for_check.is_empty()>
                                     <ul class="advice-list">
                                         {reasons.iter().map(|reason| view! { <li>{reason.clone()}</li> }).collect_view()}
@@ -468,6 +628,52 @@ pub fn ResultPage() -> impl IntoView {
             </Show>
 
             <div class="section-padding">
+                <Show when=move || {
+                    state.analysis_result.get()
+                        .and_then(|r| r.result)
+                        .and_then(|result| result.score_breakdown)
+                        .map(|items| !items.is_empty())
+                        .unwrap_or(false)
+                } fallback=move || view! {
+                    <div class="surface-card result-section">
+                        <h2 class="card-title">"风险维度"</h2>
+                        <p class="hint">"同类对比暂无，风险维度将随数据完善"</p>
+                    </div>
+                }>
+                    {move || {
+                        state.analysis_result.get()
+                            .and_then(|r| r.result)
+                            .and_then(|result| result.score_breakdown)
+                            .map(|items| view! {
+                                <div class="surface-card result-section">
+                                    <h2 class="card-title">"风险维度"</h2>
+                                    <div class="analysis-list">
+                                        {items.iter().map(|item| {
+                                            let label = format_dimension_label(&item.dimension);
+                                            view! {
+                                                <div class="analysis-item">
+                                                    <div class="analysis-header">
+                                                        <span class="analysis-name">{label}</span>
+                                                        <span class="analysis-desc">
+                                                            {format!("{}分", item.score)}
+                                                        </span>
+                                                    </div>
+                                                    <div class="progress-track">
+                                                        <div
+                                                            class="progress-bar"
+                                                            style={format!("width: {}%", item.score.clamp(0, 100))}
+                                                        ></div>
+                                                    </div>
+                                                    <p class="analysis-summary">{item.reason.clone()}</p>
+                                                </div>
+                                            }
+                                        }).collect_view()}
+                                    </div>
+                                </div>
+                            })
+                    }}
+                </Show>
+
                 <Show when=move || !rule_hits().is_empty()>
                     <div class="surface-card result-section">
                         <h2 class="card-title">"风险链路"</h2>
@@ -583,6 +789,30 @@ pub fn ResultPage() -> impl IntoView {
                 <div class="surface-card result-section">
                     <h2 class="card-title">"营养成分 (每100ml)"</h2>
                     <p class="hint">"暂无营养成分数据"</p>
+                </div>
+
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"人群建议"</h2>
+                    <ul class="advice-list">
+                        {move || {
+                            build_preference_guidance(&current_preference(), &rule_hits())
+                                .into_iter()
+                                .map(|item| view! { <li>{item}</li> })
+                                .collect_view()
+                        }}
+                    </ul>
+                </div>
+
+                <div class="surface-card result-section">
+                    <h2 class="card-title">"可替代建议"</h2>
+                    <ul class="advice-list">
+                        {move || {
+                            build_alternative_suggestions(&rule_hits())
+                                .into_iter()
+                                .map(|item| view! { <li>{item}</li> })
+                                .collect_view()
+                        }}
+                    </ul>
                 </div>
 
                 <div class="surface-card result-section recommendation-card">
