@@ -18,6 +18,10 @@ const config = {
   framework: 'react',
   compiler: 'webpack5',
   cache: { enable: false },
+  babel: {
+    presets: ['taro'],
+    plugins: []
+  },
   mini: {
     postcss: {
       pxtransform: {
