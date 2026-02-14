@@ -215,6 +215,25 @@ fn split_key_risks(rule_hits: &[RuleHit], max_items: usize) -> (Vec<RuleHit>, Ve
     (hits, remaining)
 }
 
+fn build_key_risk_tags(rule_hits: &[RuleHit], max_items: usize) -> Vec<String> {
+    let mut seen = HashSet::new();
+    rule_hits
+        .iter()
+        .filter(|item| risk_rank(&item.risk_level) <= 1)
+        .filter_map(|item| {
+            let name = item.name.trim();
+            if name.is_empty() {
+                None
+            } else if seen.insert(name.to_lowercase()) {
+                Some(name.to_string())
+            } else {
+                None
+            }
+        })
+        .take(max_items)
+        .collect()
+}
+
 fn format_dimension_label(value: &str) -> &'static str {
     match value.trim().to_lowercase().as_str() {
         "additives_processing" => "添加剂/加工",
@@ -535,11 +554,24 @@ pub fn ResultPage() -> impl IntoView {
                         .map(|result| {
                             let conclusion = conclusion_label(result.health_score);
                             let reason = summary_text();
+                            let key_tags = build_key_risk_tags(&result.rule_hits, 5);
+                            let key_tags_for_check = key_tags.clone();
                             view! {
                                 <div class="surface-card result-section">
                                     <h2 class="card-title">"结论"</h2>
                                     <p class="analysis-summary">{format!("综合判断：{}", conclusion)}</p>
                                     <p class="analysis-desc">{reason}</p>
+                                    <Show when=move || !key_tags_for_check.is_empty()>
+                                        <div class="tags-row">
+                                            {key_tags
+                                                .iter()
+                                                .cloned()
+                                                .map(|tag| view! {
+                                                    <span class="tag tag-category">{tag}</span>
+                                                })
+                                                .collect_view()}
+                                        </div>
+                                    </Show>
                                 </div>
                             }
                         })
