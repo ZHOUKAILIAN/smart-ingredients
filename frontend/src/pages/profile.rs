@@ -71,10 +71,10 @@ pub fn ProfilePage() -> impl IntoView {
                         <div class="profile-menu">
                             <button class="menu-item" on:click=move |_| {
                                 let navigate = navigate.get_value();
-                                navigate("/preference", Default::default());
+                                navigate("/onboarding", Default::default());
                             }>
                                 <span class="menu-icon">"⚙️"</span>
-                                <span class="menu-label">"偏好设置"</span>
+                                <span class="menu-label">"人群设置"</span>
                                 <span class="menu-arrow">"›"</span>
                             </button>
                         </div>
@@ -102,10 +102,10 @@ pub fn ProfilePage() -> impl IntoView {
                                 <div class="profile-menu">
                                     <button class="menu-item" on:click=move |_| {
                                         let navigate = navigate.get_value();
-                                        navigate("/preference", Default::default());
+                                        navigate("/onboarding", Default::default());
                                     }>
                                         <span class="menu-icon">"⚙️"</span>
-                                        <span class="menu-label">"偏好设置"</span>
+                                        <span class="menu-label">"人群设置"</span>
                                         <span class="menu-arrow">"›"</span>
                                     </button>
 

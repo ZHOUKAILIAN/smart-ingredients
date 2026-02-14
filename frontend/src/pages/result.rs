@@ -260,23 +260,36 @@ fn build_preference_guidance(preference: &str, rule_hits: &[RuleHit]) -> Vec<Str
     let mut guidance = Vec::new();
     let pref = preference.trim().to_lowercase();
 
-    if pref == "allergy" {
-        guidance.push("过敏人群优先关注过敏原与交叉污染提示。".to_string());
+    if pref == "normal" || pref.is_empty() {
+        guidance.push("普通人群建议优先关注高糖与高风险添加剂。".to_string());
+    } else if pref == "allergy" {
+        guidance.push("过敏体质优先关注过敏原与交叉污染提示。".to_string());
     } else if pref == "kids" {
-        guidance.push("儿童人群建议避免高糖与高风险添加剂。".to_string());
+        guidance.push("儿童/婴幼儿建议避免高糖、刺激性与高风险添加剂。".to_string());
     } else if pref == "pregnancy" {
-        guidance.push("孕期建议避开刺激性成分与不明确添加剂。".to_string());
+        guidance.push("孕期/哺乳建议避开刺激性成分与不明确添加剂。".to_string());
     } else if pref == "weight_loss" {
-        guidance.push("控重人群建议优先选择低糖/低脂产品。".to_string());
-    } else if pref == "health" {
-        guidance.push("健康人群建议减少高糖与高盐摄入。".to_string());
+        guidance.push("控糖/控重人群建议优先选择低糖/低脂产品。".to_string());
+    } else if pref == "low_sodium" {
+        guidance.push("低钠/心血管关注人群建议减少钠盐与重口味调味剂。".to_string());
+    } else if pref == "fitness" {
+        guidance.push("健身增肌人群建议关注蛋白质来源与整体营养结构。".to_string());
+    } else if pref == "gut_sensitive" {
+        guidance.push("肠胃敏感人群建议减少刺激性或难消化成分。".to_string());
+    } else if pref == "lactose_intolerant" {
+        guidance.push("乳糖不耐/乳制品敏感人群请关注乳制品相关成分。".to_string());
     }
 
     let has_allergen = rule_hits
         .iter()
         .any(|item| item.category.trim().to_lowercase() == "allergen");
     if has_allergen {
-        guidance.push("检测到过敏原，建议优先选择无过敏原替代品。".to_string());
+        guidance.push("检测到过敏原，过敏体质人群应优先回避。".to_string());
+    }
+
+    let has_high_risk = rule_hits.iter().any(|item| risk_rank(&item.risk_level) == 0);
+    if has_high_risk {
+        guidance.push("存在高风险成分，建议优先查看“关键风险/规则命中”。".to_string());
     }
 
     guidance
@@ -287,6 +300,7 @@ fn build_alternative_suggestions(rule_hits: &[RuleHit]) -> Vec<String> {
     let mut has_allergen = false;
     let mut has_additives = false;
     let mut has_sugar = false;
+    let mut has_sodium = false;
 
     for hit in rule_hits {
         let category = hit.category.trim().to_lowercase();
@@ -300,13 +314,19 @@ fn build_alternative_suggestions(rule_hits: &[RuleHit]) -> Vec<String> {
         if name.contains("糖") || name.contains("糖浆") {
             has_sugar = true;
         }
+        if name.contains("钠") || name.contains("盐") {
+            has_sodium = true;
+        }
     }
 
     if has_allergen {
         suggestions.push("优先选择无过敏原或有清晰过敏原标识的替代品。".to_string());
     }
     if has_sugar {
-        suggestions.push("可尝试低糖/无糖版本，或用天然甜味来源替代。".to_string());
+        suggestions.push("可尝试低糖/无糖版本，或选择不以糖为主要成分的产品。".to_string());
+    }
+    if has_sodium {
+        suggestions.push("优先选择低钠配方，减少口味过咸的产品。".to_string());
     }
     if has_additives {
         suggestions.push("优先选择配料表更简洁、添加剂更少的产品。".to_string());
@@ -501,7 +521,7 @@ pub fn ResultPage() -> impl IntoView {
             .analysis_preference
             .get()
             .or_else(|| load_preference())
-            .unwrap_or_else(|| "none".to_string())
+            .unwrap_or_else(|| "normal".to_string())
     };
 
     let on_back = move |_| {
@@ -897,7 +917,7 @@ pub fn ResultPage() -> impl IntoView {
                         let has_focus_items = ingredient_items.get().iter().any(|item| item.is_focus);
                         has_focus_items.then(|| view! {
                             <p class="focus-hint">
-                                "⭐ 带星标的成分是您关注的偏好相关成分"
+                                "⭐ 带星标的成分是您关注人群相关成分"
                             </p>
                         })
                     }}
@@ -931,7 +951,7 @@ pub fn ResultPage() -> impl IntoView {
                                                     <span class="analysis-name">
                                                         {item.name}
                                                         {is_focus.then(|| view! {
-                                                            <span class="focus-indicator" title="偏好关注成分">"⭐"</span>
+                                                            <span class="focus-indicator" title="人群关注成分">"⭐"</span>
                                                         })}
                                                     </span>
                                                     <RiskBadge level={item.risk_level} />
@@ -958,7 +978,7 @@ pub fn ResultPage() -> impl IntoView {
                 </div>
 
                 <div class="surface-card result-section">
-                    <h2 class="card-title">"人群建议"</h2>
+                    <h2 class="card-title">"人群关注点"</h2>
                     {move || {
                         let guidance = build_preference_guidance(&current_preference(), &rule_hits());
                         let content = if guidance.is_empty() {

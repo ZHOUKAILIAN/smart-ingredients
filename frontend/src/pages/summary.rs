@@ -233,7 +233,7 @@ pub fn SummaryPage() -> impl IntoView {
                             .and_then(|r| r.result)
                             .map(|result| {
                                 let pref = state.analysis_preference.get()
-                                    .unwrap_or_else(|| "none".to_string());
+                                    .unwrap_or_else(|| "normal".to_string());
                                 let props = ShareExportProps {
                                     health_score: result.health_score,
                                     recommendation: result.recommendation.clone(),

@@ -28,7 +28,7 @@ pub fn ConfirmPage() -> impl IntoView {
         .analysis_preference
         .get()
         .or_else(|| load_preference())
-        .unwrap_or_else(|| "none".to_string());
+        .unwrap_or_else(|| "normal".to_string());
     let preference = create_signal(initial_preference).0;
 
     let on_confirm = move |_| {
@@ -113,7 +113,7 @@ pub fn ConfirmPage() -> impl IntoView {
 
                 <div class="preference-container">
                     <p class="preference-tips">
-                        {move || format!("💡 当前分析视角：{}", get_preference_label(&preference.get()))}
+                        {move || format!("💡 当前人群定位：{}", get_preference_label(&preference.get()))}
                     </p>
                 </div>
 

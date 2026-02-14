@@ -1,16 +1,14 @@
 use crate::components::{
     ExampleImages, IconArrowLeft, IconCamera, IconChart, IconCheckBadge, ImagePreview,
-    PreferenceCard,
 };
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
-use crate::utils::preference::{load_preference, save_preference};
+use crate::utils::preference::load_preference;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 
-use serde_json::json;
 use wasm_bindgen::JsCast;
 use web_sys::window;
 use web_sys::{HtmlInputElement, Url};
@@ -26,13 +24,6 @@ pub fn CapturePage() -> impl IntoView {
 
     // 使用 LocalStorage 持久化 show_scan 状态
     let show_scan: RwSignal<bool, LocalStorage> = RwSignal::new_local(false);
-    let show_preference_modal = RwSignal::new(false);
-    let initial_preference = state
-        .analysis_preference
-        .get()
-        .or_else(|| load_preference())
-        .unwrap_or_else(|| "none".to_string());
-    let preference = RwSignal::new(initial_preference);
     let initialized = RwSignal::new(false);
 
     create_effect(move |_| {
@@ -40,22 +31,17 @@ pub fn CapturePage() -> impl IntoView {
             return;
         }
         initialized.set(true);
-        let mut open_preference = false;
         if let Some(win) = window() {
             if let Ok(search) = win.location().search() {
                 if search.contains("view=scan") {
                     show_scan.set(true);
                 }
-                if search.contains("modal=preference") {
-                    open_preference = true;
-                }
             }
         }
-        if !open_preference {
-            open_preference =
-                state.analysis_preference.get().is_none() && load_preference().is_none();
+        if state.analysis_preference.get().is_none() && load_preference().is_none() {
+            let nav = navigate.get_value();
+            nav("/onboarding", Default::default());
         }
-        show_preference_modal.set(open_preference);
     });
 
     let on_file_change = move |ev: leptos::ev::Event| {
@@ -143,62 +129,8 @@ pub fn CapturePage() -> impl IntoView {
         });
     });
 
-    let on_save_preference = {
-        let state = state.clone();
-        Callback::new(move |val: String| {
-            save_preference(&val);
-            state.analysis_preference.set(Some(val.clone()));
-            if state.auth_user.get().is_some() {
-                let val_clone = val.clone();
-                spawn_local(async move {
-                    let _ = services::update_preferences(json!({ "selection": val_clone })).await;
-                });
-            }
-            show_preference_modal.set(false);
-        })
-    };
-
-    let on_skip_preference = {
-        let on_save_preference = on_save_preference.clone();
-        move |_| {
-            preference.set("none".to_string());
-            on_save_preference.run("none".to_string());
-        }
-    };
-
     view! {
         <section class="page page-capture figma">
-            {/* Modal 在外层,不受滚动影响 */}
-            <Show when=move || show_preference_modal.get()>
-                <div class="preference-guide-overlay">
-                    <div class="surface-card preference-guide-card">
-                        <h2 class="preference-guide-title">"选择分析偏好"</h2>
-                        <p class="preference-guide-subtitle">
-                            "告诉我们您更关注哪些点，我们会提供更符合需求的分析结果。"
-                        </p>
-
-                        <PreferenceCard
-                            value=Signal::derive(move || preference.get())
-                            on_change=Callback::new(move |value: String| {
-                                preference.set(value);
-                            })
-                        />
-
-                        <div class="preference-guide-actions">
-                            <button class="secondary-cta" on:click=on_skip_preference>
-                                "暂不选择"
-                            </button>
-                            <button
-                                class="primary-cta"
-                                on:click=move |_| on_save_preference.run(preference.get())
-                            >
-                                "保存偏好"
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </Show>
-
             {/* 可滚动内容区域 */}
             <div class="page-scrollable-content">
                 <Show when=move || !show_scan.get()>

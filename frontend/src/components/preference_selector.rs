@@ -10,40 +10,58 @@ pub struct PreferenceOption {
 
 pub const PREFERENCE_OPTIONS: &[PreferenceOption] = &[
     PreferenceOption {
-        value: "none",
-        label: "通用分析",
-        description: "全面分析配料表,适合大多数人",
-        icon: "🔍",
-    },
-    PreferenceOption {
-        value: "weight_loss",
-        label: "减肥",
-        description: "关注热量、脂肪、糖分等",
-        icon: "⚖️",
-    },
-    PreferenceOption {
-        value: "health",
-        label: "健康",
-        description: "关注添加剂、防腐剂等人工成分",
-        icon: "💚",
-    },
-    PreferenceOption {
-        value: "fitness",
-        label: "健身",
-        description: "关注蛋白质、碳水化合物等营养",
-        icon: "💪",
+        value: "normal",
+        label: "普通人群",
+        description: "适合大多数人，综合查看风险与建议",
+        icon: "🙂",
     },
     PreferenceOption {
         value: "allergy",
-        label: "过敏",
-        description: "关注常见过敏原成分",
+        label: "过敏体质",
+        description: "重点关注过敏原与交叉污染提示",
         icon: "⚠️",
     },
     PreferenceOption {
         value: "kids",
-        label: "儿童",
-        description: "关注色素、香精等儿童敏感成分",
+        label: "儿童/婴幼儿",
+        description: "关注高糖、刺激性与儿童敏感成分",
         icon: "👶",
+    },
+    PreferenceOption {
+        value: "pregnancy",
+        label: "孕期/哺乳",
+        description: "关注刺激性成分与不明确添加剂",
+        icon: "🤰",
+    },
+    PreferenceOption {
+        value: "weight_loss",
+        label: "控糖/控重",
+        description: "关注糖分、脂肪与热量负担",
+        icon: "🍬",
+    },
+    PreferenceOption {
+        value: "low_sodium",
+        label: "低钠/心血管关注",
+        description: "关注钠盐、调味剂与血压负担",
+        icon: "🫀",
+    },
+    PreferenceOption {
+        value: "fitness",
+        label: "健身增肌",
+        description: "关注蛋白质与整体营养结构",
+        icon: "💪",
+    },
+    PreferenceOption {
+        value: "gut_sensitive",
+        label: "肠胃敏感",
+        description: "关注刺激性成分与肠胃负担",
+        icon: "🫧",
+    },
+    PreferenceOption {
+        value: "lactose_intolerant",
+        label: "乳糖不耐/乳制品敏感",
+        description: "关注乳制品相关成分",
+        icon: "🥛",
     },
 ];
 
@@ -52,7 +70,7 @@ pub fn get_preference_label(value: &str) -> &'static str {
         .iter()
         .find(|opt| opt.value == value)
         .map(|opt| opt.label)
-        .unwrap_or("未知")
+        .unwrap_or("普通人群")
 }
 
 pub fn get_preference_icon(value: &str) -> &'static str {
@@ -60,7 +78,7 @@ pub fn get_preference_icon(value: &str) -> &'static str {
         .iter()
         .find(|opt| opt.value == value)
         .map(|opt| opt.icon)
-        .unwrap_or("🔍")
+        .unwrap_or("🙂")
 }
 
 #[component]
@@ -70,7 +88,7 @@ pub fn PreferenceSelector(
     #[prop(optional)] label: Option<&'static str>,
     #[prop(optional)] show_description: bool,
 ) -> impl IntoView {
-    let label_text = label.unwrap_or("分析偏好");
+    let label_text = label.unwrap_or("人群定位");
 
     view! {
         <div class="preference-selector">

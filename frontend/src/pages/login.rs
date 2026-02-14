@@ -109,7 +109,7 @@ pub fn LoginPage() -> impl IntoView {
                 let _ = services::update_preferences(json!({ "selection": pref })).await;
                 navigate.get_value()("/", Default::default());
             } else {
-                navigate.get_value()("/?modal=preference", Default::default());
+                navigate.get_value()("/onboarding", Default::default());
             }
         }
     };

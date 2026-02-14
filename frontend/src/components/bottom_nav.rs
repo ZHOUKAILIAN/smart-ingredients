@@ -9,8 +9,8 @@ fn tab_for_path(path: &str) -> TabRoute {
         TabRoute::History
     } else if path == "/profile"
         || path.starts_with("/profile/")
-        || path == "/preference"
-        || path.starts_with("/preference/")
+        || path == "/onboarding"
+        || path.starts_with("/onboarding/")
     {
         TabRoute::Profile
     } else {
