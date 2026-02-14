@@ -245,6 +245,17 @@ fn format_dimension_label(value: &str) -> &'static str {
     }
 }
 
+fn score_level(score: i32) -> (&'static str, &'static str) {
+    let value = score.clamp(0, 100);
+    if value >= 70 {
+        ("score-good", "风险较低")
+    } else if value >= 40 {
+        ("score-mid", "风险中等")
+    } else {
+        ("score-bad", "风险偏高")
+    }
+}
+
 fn build_preference_guidance(preference: &str, rule_hits: &[RuleHit]) -> Vec<String> {
     let mut guidance = Vec::new();
     let pref = preference.trim().to_lowercase();
@@ -795,17 +806,19 @@ pub fn ResultPage() -> impl IntoView {
                                     <div class="analysis-list">
                                         {items.iter().map(|item| {
                                             let label = format_dimension_label(&item.dimension);
+                                            let (score_class, score_label) = score_level(item.score);
+                                            let bar_class = format!("progress-bar {}", score_class);
                                             view! {
                                                 <div class="analysis-item">
                                                     <div class="analysis-header">
                                                         <span class="analysis-name">{label}</span>
                                                         <span class="analysis-desc">
-                                                            {format!("{}分", item.score)}
+                                                            {format!("{}分 · {}", item.score, score_label)}
                                                         </span>
                                                     </div>
                                                     <div class="progress-track">
                                                         <div
-                                                            class="progress-bar"
+                                                            class=bar_class
                                                             style={format!("width: {}%", item.score.clamp(0, 100))}
                                                         ></div>
                                                     </div>
