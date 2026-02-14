@@ -297,7 +297,9 @@ pub fn ResultPage() -> impl IntoView {
     let state_for_status = state.clone();
     let fetching = RwSignal::new(false);
     let polling = RwSignal::new(false);
+    let poll_attempts = RwSignal::new(0u32);
     let state_for_polling = state.clone();
+    let selected_rule = RwSignal::new(None::<String>);
 
     create_effect(move |_| {
         if fetching.get() {
@@ -342,31 +344,44 @@ pub fn ResultPage() -> impl IntoView {
             Some(AnalysisStatus::LlmPending | AnalysisStatus::LlmProcessing)
         );
 
-        if should_poll {
-            if let Some(id) = analysis_id {
-                polling.set(true);
-                let state = state_for_polling.clone();
-                let polling = polling.clone();
-                set_timeout(
-                    move || {
-                        spawn_local(async move {
-                            match services::fetch_analysis(id).await {
-                                Ok(response) => {
-                                    if let Some(api_error) = response.error_message.clone() {
-                                        emit_toast(ToastLevel::Error, "分析失败", &api_error);
-                                    }
-                                    state.analysis_result.set(Some(response));
+        if !should_poll {
+            poll_attempts.set(0);
+            return;
+        }
+
+        let attempts = poll_attempts.get();
+        let max_attempts = 20u32;
+        if attempts >= max_attempts {
+            emit_toast(ToastLevel::Error, "分析超时", "分析耗时较长，请稍后刷新结果。");
+            poll_attempts.set(0);
+            return;
+        }
+
+        if let Some(id) = analysis_id {
+            polling.set(true);
+            poll_attempts.set(attempts + 1);
+            let state = state_for_polling.clone();
+            let polling = polling.clone();
+            let delay_secs = (2 + attempts as u64).min(6);
+            set_timeout(
+                move || {
+                    spawn_local(async move {
+                        match services::fetch_analysis(id).await {
+                            Ok(response) => {
+                                if let Some(api_error) = response.error_message.clone() {
+                                    emit_toast(ToastLevel::Error, "分析失败", &api_error);
                                 }
-                                Err(err) => {
-                                    emit_toast(ToastLevel::Error, "分析失败", &err);
-                                }
+                                state.analysis_result.set(Some(response));
                             }
-                            polling.set(false);
-                        });
-                    },
-                    Duration::from_secs(2),
-                );
-            }
+                            Err(err) => {
+                                emit_toast(ToastLevel::Error, "分析失败", &err);
+                            }
+                        }
+                        polling.set(false);
+                    });
+                },
+                Duration::from_secs(delay_secs),
+            );
         }
     });
 
@@ -565,14 +580,33 @@ pub fn ResultPage() -> impl IntoView {
                                             {remaining
                                                 .iter()
                                                 .cloned()
-                                                .map(|item| view! {
-                                                    <div class="analysis-item">
-                                                        <div class="analysis-header">
-                                                            <span class="analysis-name">{item.name}</span>
-                                                            <RiskBadge level={item.risk_level} />
+                                                .map(|item| {
+                                                    let name = item.name.clone();
+                                                    let name_for_click = name.clone();
+                                                    let is_selected = selected_rule
+                                                        .get()
+                                                        .map(|value| value == name)
+                                                        .unwrap_or(false);
+                                                    view! {
+                                                        <div
+                                                            role="button"
+                                                            tabindex="0"
+                                                            class="analysis-item"
+                                                            class:selected-item=is_selected
+                                                            on:click=move |_| {
+                                                                selected_rule.set(Some(name_for_click.clone()));
+                                                            }
+                                                        >
+                                                            <div class="analysis-header">
+                                                                <span class="analysis-name">{item.name}</span>
+                                                                <RiskBadge level={item.risk_level} />
+                                                            </div>
+                                                            <p class="analysis-desc">{item.description}</p>
+                                                            <Show when=move || is_selected>
+                                                                <p class="analysis-summary">"已定位到规则命中"</p>
+                                                            </Show>
                                                         </div>
-                                                        <p class="analysis-desc">{item.description}</p>
-                                                    </div>
+                                                    }
                                                 })
                                                 .collect_view()}
                                         </div>
@@ -584,14 +618,33 @@ pub fn ResultPage() -> impl IntoView {
                                     {primary
                                         .iter()
                                         .cloned()
-                                        .map(|item| view! {
-                                            <div class="analysis-item">
-                                                <div class="analysis-header">
-                                                    <span class="analysis-name">{item.name}</span>
-                                                    <RiskBadge level={item.risk_level} />
+                                        .map(|item| {
+                                            let name = item.name.clone();
+                                            let name_for_click = name.clone();
+                                            let is_selected = selected_rule
+                                                .get()
+                                                .map(|value| value == name)
+                                                .unwrap_or(false);
+                                            view! {
+                                                <div
+                                                    role="button"
+                                                    tabindex="0"
+                                                    class="analysis-item"
+                                                    class:selected-item=is_selected
+                                                    on:click=move |_| {
+                                                        selected_rule.set(Some(name_for_click.clone()));
+                                                    }
+                                                >
+                                                    <div class="analysis-header">
+                                                        <span class="analysis-name">{item.name}</span>
+                                                        <RiskBadge level={item.risk_level} />
+                                                    </div>
+                                                    <p class="analysis-desc">{item.description}</p>
+                                                    <Show when=move || is_selected>
+                                                        <p class="analysis-summary">"已定位到规则命中"</p>
+                                                    </Show>
                                                 </div>
-                                                <p class="analysis-desc">{item.description}</p>
-                                            </div>
+                                            }
                                         })
                                         .collect_view()}
                                 </div>
@@ -628,6 +681,7 @@ pub fn ResultPage() -> impl IntoView {
                             view! {
                                 <div class="surface-card result-section">
                                     <h2 class="card-title">"可信度"</h2>
+                                    <p class="hint">"可信度分数越高，结果越可靠"</p>
                                     <p class="analysis-summary">
                                         {format!("可信度：{}", confidence_label(&confidence.level))}
                                     </p>
@@ -695,6 +749,7 @@ pub fn ResultPage() -> impl IntoView {
                             .map(|items| view! {
                                 <div class="surface-card result-section">
                                     <h2 class="card-title">"风险维度"</h2>
+                                    <p class="hint">"评分仅用于相对参考"</p>
                                     <div class="analysis-list">
                                         {items.iter().map(|item| {
                                             let label = format_dimension_label(&item.dimension);
@@ -749,12 +804,20 @@ pub fn ResultPage() -> impl IntoView {
                                         let evidence = format_rule_evidence(&item.evidence, &item.source);
                                         let evidence_text = evidence.clone().unwrap_or_default();
                                         let evidence_for_check = evidence_text.clone();
+                                        let name = item.name.clone();
+                                        let is_selected = selected_rule
+                                            .get()
+                                            .map(|value| value == name)
+                                            .unwrap_or(false);
                                         view! {
-                                            <details class="analysis-item">
+                                            <details class="analysis-item" open=is_selected>
                                                 <summary class="analysis-header">
                                                     <span class="analysis-name">{item.name}</span>
                                                     <RiskBadge level={item.risk_level} />
                                                 </summary>
+                                                <Show when=move || is_selected>
+                                                    <p class="analysis-summary">"来自关键风险定位"</p>
+                                                </Show>
                                                 <p class="analysis-desc">{item.description}</p>
                                                 <Show when=move || !group_tags_for_check.is_empty()>
                                                     <p class="analysis-summary">
