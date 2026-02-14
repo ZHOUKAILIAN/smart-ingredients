@@ -3,9 +3,10 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::components::ConfirmModal;
+use crate::components::{ConfirmModal, ExportPreviewModal};
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
+use crate::utils::export_image::{ExportData, ExportIngredient};
 use crate::utils::{emit_toast, local_history};
 use shared::{AnalysisResponse, AnalysisStatus, LlmStatus, OcrStatus};
 
@@ -64,6 +65,9 @@ pub fn HistoryPage() -> impl IntoView {
     let show_confirm = RwSignal::new(false);
     let pending_delete_id = RwSignal::new(None::<uuid::Uuid>);
     let pending_delete_local_id = RwSignal::new(None::<String>);
+
+    // Export preview modal state
+    let export_preview_url = RwSignal::new(None::<String>);
 
     let load_page = Callback::new(move |page_number: i64| {
         if loading.get_untracked() {
@@ -198,6 +202,11 @@ pub fn HistoryPage() -> impl IntoView {
         }
     };
 
+    let on_close_preview = Callback::new(move |_: ()| {
+        export_preview_url.set(None);
+    });
+    let export_preview_signal = Signal::derive(move || export_preview_url.get());
+
     view! {
         <section class="page page-history">
             <ConfirmModal
@@ -208,6 +217,11 @@ pub fn HistoryPage() -> impl IntoView {
                 cancel_text="取消".to_string()
                 on_confirm=on_confirm_delete
                 on_cancel=on_cancel_delete
+            />
+
+            <ExportPreviewModal
+                image_url=export_preview_signal
+                on_close=on_close_preview
             />
 
             <div class="page-scrollable-content">
@@ -289,6 +303,35 @@ pub fn HistoryPage() -> impl IntoView {
                                                 <div class="history-actions">
                                                     <button class="history-action-btn" on:click=move |_| on_view_local(item_clone.clone())>
                                                         "查看"
+                                                    </button>
+                                                    <button class="history-action-btn export" on:click={
+                                                        let result = item.result.clone();
+                                                        move |_: web_sys::MouseEvent| {
+                                                            let result = result.clone();
+                                                            spawn_local(async move {
+                                                                let data = ExportData {
+                                                                    health_score: result.health_score,
+                                                                    recommendation: result.recommendation.clone(),
+                                                                    ingredients: result.ingredients.iter().map(|i| {
+                                                                        ExportIngredient {
+                                                                            name: i.name.clone(),
+                                                                            risk_level: i.risk_level.clone(),
+                                                                            description: i.description.clone().unwrap_or_default(),
+                                                                            is_focus: false,
+                                                                        }
+                                                                    }).collect(),
+                                                                    warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
+                                                                    summary: result.summary.clone(),
+                                                                    preference_label: String::new(),
+                                                                };
+                                                                match crate::utils::export_image::export_to_data_url(&data) {
+                                                                    Ok(url) => export_preview_url.set(Some(url)),
+                                                                    Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
+                                                                }
+                                                            });
+                                                        }
+                                                    }>
+                                                        "📤"
                                                     </button>
                                                     <button class="history-action-btn delete" on:click=move |_| on_delete_local(id.clone())>
                                                         "删除"
@@ -373,6 +416,43 @@ pub fn HistoryPage() -> impl IntoView {
                                                 <div class="history-actions">
                                                     <button class="history-action-btn" on:click=move |_| on_view_cloud(item_clone.clone())>
                                                         "查看"
+                                                    </button>
+                                                    <button class="history-action-btn export" on:click=move |_: web_sys::MouseEvent| {
+                                                        let analysis_id = id;
+                                                        spawn_local(async move {
+                                                            match services::fetch_analysis(analysis_id).await {
+                                                                Ok(response) => {
+                                                                    if let Some(result) = response.result {
+                                                                        let data = ExportData {
+                                                                            health_score: result.health_score,
+                                                                            recommendation: result.recommendation.clone(),
+                                                                            ingredients: result.ingredients.iter().map(|i| {
+                                                                                ExportIngredient {
+                                                                                    name: i.name.clone(),
+                                                                                    risk_level: i.risk_level.clone(),
+                                                                                    description: i.description.clone().unwrap_or_default(),
+                                                                                    is_focus: false,
+                                                                                }
+                                                                            }).collect(),
+                                                                            warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
+                                                                            summary: result.summary.clone(),
+                                                                            preference_label: String::new(),
+                                                                        };
+                                                                        match crate::utils::export_image::export_to_data_url(&data) {
+                                                                            Ok(url) => export_preview_url.set(Some(url)),
+                                                                            Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
+                                                                        }
+                                                                    } else {
+                                                                        emit_toast(ToastLevel::Error, "导出失败", "该记录没有分析结果");
+                                                                    }
+                                                                }
+                                                                Err(err) => {
+                                                                    emit_toast(ToastLevel::Error, "导出失败", &err);
+                                                                }
+                                                            }
+                                                        });
+                                                    }>
+                                                        "📤"
                                                     </button>
                                                     <button class="history-action-btn delete" on:click=move |_| on_delete(id)>
                                                         "删除"

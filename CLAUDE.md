@@ -213,6 +213,7 @@ smart-ingredients/
 - **`docs/design/figma-design-system.md`** - Complete design system rules for Figma integration
 
 This document provides:
+
 - Design token definitions (colors, shadows, transitions)
 - Component library architecture and patterns
 - CSS methodology and naming conventions
@@ -221,6 +222,7 @@ This document provides:
 - Best practices and common UI patterns
 
 **When to use:**
+
 - Implementing new UI components from Figma designs
 - Creating new pages or screens
 - Adding icons or updating visual styles
@@ -295,6 +297,42 @@ See `docs/standards/coding-standards.md` for detailed testing patterns.
 - **Backend**: Docker + K8s
 - **Database**: RDS PostgreSQL
 - **Cache**: Redis Cluster
+
+---
+
+## 🚨 Post-Implementation Verification (MANDATORY)
+
+Every feature implementation MUST pass the following verification before it is considered complete:
+
+### Frontend Verification
+
+```bash
+# MUST run cargo check to ensure zero compilation errors
+cd frontend && cargo check --target wasm32-unknown-unknown
+```
+
+- ❌ **DO NOT** skip `cargo check` — compilation errors must be fixed before moving on.
+
+### Backend Verification
+
+```bash
+# Start backend service locally
+cd backend && cargo run
+
+# Verify related API endpoints work end-to-end
+# Use curl, httpie, or the frontend itself to exercise the flow
+```
+
+- ❌ **DO NOT** skip the local service run — the API flow must be confirmed working.
+
+### Full Checklist
+
+- [ ] `cargo check` passes for frontend (wasm target)
+- [ ] `cargo check` passes for backend (if modified)
+- [ ] Local backend service starts successfully (if modified)
+- [ ] End-to-end API flow verified (if API changes involved)
+- [ ] `cargo fmt` applied
+- [ ] `cargo clippy` warnings addressed
 
 ---
 

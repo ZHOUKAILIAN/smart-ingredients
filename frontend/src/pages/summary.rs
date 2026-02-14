@@ -7,7 +7,11 @@ use leptos_router::hooks::use_navigate;
 use std::time::Duration;
 use wasm_bindgen::JsCast;
 
-use crate::components::{HealthScoreCard, IconArrowLeft, SummaryCard};
+use crate::components::{
+    get_preference_label, HealthScoreCard, IconArrowLeft, ShareButton, ShareExportProps,
+    SummaryCard,
+};
+use crate::utils::export_image::ExportIngredient;
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
 use crate::utils::{emit_toast, local_history};
@@ -223,6 +227,31 @@ pub fn SummaryPage() -> impl IntoView {
                         <span class="btn-title">"查看详细配料表"</span>
                         <span class="btn-arrow">"→"</span>
                     </button>
+
+                    {move || {
+                        state.analysis_result.get()
+                            .and_then(|r| r.result)
+                            .map(|result| {
+                                let pref = state.analysis_preference.get()
+                                    .unwrap_or_else(|| "none".to_string());
+                                let props = ShareExportProps {
+                                    health_score: result.health_score,
+                                    recommendation: result.recommendation.clone(),
+                                    ingredients: result.ingredients.iter().map(|i| {
+                                        ExportIngredient {
+                                            name: i.name.clone(),
+                                            risk_level: i.risk_level.clone(),
+                                            description: i.description.clone().unwrap_or_default(),
+                                            is_focus: false,
+                                        }
+                                    }).collect(),
+                                    warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
+                                    summary: result.summary.clone(),
+                                    preference_label: get_preference_label(&pref).to_string(),
+                                };
+                                view! { <ShareButton props=props /> }
+                            })
+                    }}
                 </div>
             </div>
         </section>
