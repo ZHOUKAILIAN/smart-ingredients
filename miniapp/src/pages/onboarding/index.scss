@@ -1,0 +1,58 @@
+.intro-card {
+  margin-bottom: 16px;
+}
+
+.steps-card {
+  margin-bottom: 16px;
+}
+
+.step {
+  margin-top: 12px;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.step-desc {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.options-card {
+  margin-bottom: 16px;
+}
+
+.option {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-top: 10px;
+}
+
+.option.selected {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.option-label {
+  font-weight: 600;
+  display: block;
+}
+
+.option-desc {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.actions {
+  display: grid;
+  gap: 12px;
+}
+
+.tips {
+  text-align: center;
+}
