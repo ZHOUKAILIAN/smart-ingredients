@@ -16,12 +16,31 @@ pub fn ExportPreviewModal(
 ) -> impl IntoView {
     let on_download = move |_: web_sys::MouseEvent| {
         if let Some(url) = image_url.get() {
-            match crate::utils::export_image::download_from_data_url(&url) {
-                Ok(()) => {
-                    emit_toast(ToastLevel::Success, "保存成功", "图片已开始下载");
-                }
-                Err(e) => {
-                    emit_toast(ToastLevel::Error, "保存失败", &e);
+            if crate::utils::export_image::is_tauri_available() {
+                // Tauri (Android/desktop app): async save via native IPC
+                wasm_bindgen_futures::spawn_local(async move {
+                    match crate::utils::export_image::save_via_tauri(&url).await {
+                        Ok(path) => {
+                            emit_toast(
+                                ToastLevel::Success,
+                                "保存成功",
+                                &format!("图片已保存: {}", path),
+                            );
+                        }
+                        Err(e) => {
+                            emit_toast(ToastLevel::Error, "保存失败", &e);
+                        }
+                    }
+                });
+            } else {
+                // Browser fallback: <a download>
+                match crate::utils::export_image::download_from_data_url(&url) {
+                    Ok(()) => {
+                        emit_toast(ToastLevel::Success, "保存成功", "图片已开始下载");
+                    }
+                    Err(e) => {
+                        emit_toast(ToastLevel::Error, "保存失败", &e);
+                    }
                 }
             }
         }

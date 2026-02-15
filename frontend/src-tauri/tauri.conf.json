@@ -10,6 +10,7 @@
     "devUrl": "http://localhost:8080"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Smart Ingredients",
