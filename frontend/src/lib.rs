@@ -17,7 +17,7 @@ use leptos_router::path;
 use crate::components::{MainLayout, ToastHost};
 use crate::pages::{
     AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage,
-    PreferencePage, ProfilePage, RegisterPage, ResultPage, SummaryPage,
+    OnboardingPage, ProfilePage, RegisterPage, ResultPage, SummaryPage,
 };
 use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute};
 use crate::utils::preference::save_preference;
@@ -115,9 +115,9 @@ pub fn App() -> impl IntoView {
                             <ProfilePage />
                         </MainLayout>
                     } />
-                    <Route path=path!("/preference") view=move || view! {
+                    <Route path=path!("/onboarding") view=move || view! {
                         <MainLayout>
-                            <PreferencePage />
+                            <OnboardingPage />
                         </MainLayout>
                     } />
                     <Route path=path!("/ocr") view=move || view! {

@@ -3,25 +3,27 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use serde_json::json;
 
-use crate::components::{
-    get_preference_icon, get_preference_label, ConfirmModal, IconArrowLeft, PreferenceCard,
-};
+use crate::components::{get_preference_label, ConfirmModal, PreferenceCard};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
-use crate::utils::preference::{load_preference, save_preference};
+use crate::utils::preference::save_preference;
+
+const ONBOARDING_STEPS: &[(&str, &str)] = &[
+    ("选人群", "告诉我们你更在意哪类风险"),
+    ("拍配料表", "上传清晰配料表，AI 自动识别"),
+    ("看识别结果", "先拿到文本，再决定下一步"),
+];
 
 #[component]
-pub fn PreferencePage() -> impl IntoView {
+pub fn OnboardingPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = StoredValue::new(use_navigate());
 
-    // 加载当前偏好设置
     let initial_preference = state
         .analysis_preference
         .get()
-        .or_else(|| load_preference())
-        .unwrap_or_else(|| "none".to_string());
+        .unwrap_or_else(|| "normal".to_string());
 
     let preference = RwSignal::new(initial_preference);
     let show_confirm = RwSignal::new(false);
@@ -36,13 +38,12 @@ pub fn PreferencePage() -> impl IntoView {
         save_preference(&pref_value);
         state.analysis_preference.set(Some(pref_value.clone()));
 
-        // 如果已登录，同步到服务器
         if state.auth_user.get().is_some() {
             let val_clone = pref_value.clone();
             spawn_local(async move {
                 match services::update_preferences(json!({ "selection": val_clone })).await {
                     Ok(_) => {
-                        emit_toast(ToastLevel::Success, "已保存", "偏好设置已保存");
+                        emit_toast(ToastLevel::Success, "已保存", "人群设置已保存");
                     }
                     Err(err) => {
                         emit_toast(ToastLevel::Error, "保存失败", &err);
@@ -50,16 +51,16 @@ pub fn PreferencePage() -> impl IntoView {
                 }
             });
         } else {
-            emit_toast(ToastLevel::Success, "已保存", "偏好设置已保存到本地");
+            emit_toast(ToastLevel::Success, "已保存", "人群设置已保存到本地");
         }
 
         let nav = navigate.get_value();
-        nav("/profile", Default::default());
+        nav("/?view=scan", Default::default());
     };
 
-    let on_cancel = move |_| {
-        let nav = navigate.get_value();
-        nav("/profile", Default::default());
+    let on_skip = move |_| {
+        preference.set("normal".to_string());
+        on_confirm_save(());
     };
 
     let on_cancel_confirm = Callback::new(move |_| {
@@ -67,29 +68,41 @@ pub fn PreferencePage() -> impl IntoView {
     });
 
     let confirm_message = Signal::derive(move || {
-        format!(
-            "确定保存为「{}」吗？",
-            get_preference_label(&preference.get())
-        )
+        format!("确定选择「{}」吗？", get_preference_label(&preference.get()))
     });
 
     view! {
         <section class="page page-preference">
             <ConfirmModal
                 show=show_confirm.into()
-                title="保存偏好设置".to_string()
+                title="确认人群定位".to_string()
                 message=confirm_message
-                confirm_text="保存".to_string()
-                cancel_text="取消".to_string()
+                confirm_text="确认".to_string()
+                cancel_text="返回修改".to_string()
                 on_confirm=Callback::new(move |_| on_confirm_save(()))
                 on_cancel=on_cancel_confirm
             />
 
             <div class="page-scrollable-content">
-                <button class="preference-back-btn" on:click=on_cancel aria-label="返回">
-                    <IconArrowLeft />
-                </button>
                 <div class="preference-page-container">
+                    <div class="preference-intro">
+                        <h2>"先选人群定位"</h2>
+                        <p>"只做最关键的判断，把结果对准你的关注点"</p>
+                        <p class="analysis-desc">"随时可在个人中心修改"</p>
+                    </div>
+
+                    <div class="analysis-list">
+                        {ONBOARDING_STEPS
+                            .iter()
+                            .map(|(title, desc)| view! {
+                                <div class="analysis-item">
+                                    <p class="analysis-summary">{*title}</p>
+                                    <p class="analysis-desc">{*desc}</p>
+                                </div>
+                            })
+                            .collect_view()}
+                    </div>
+
                     <PreferenceCard
                         value=Signal::derive(move || preference.get())
                         on_change=Callback::new(move |value: String| {
@@ -98,16 +111,16 @@ pub fn PreferencePage() -> impl IntoView {
                     />
 
                     <div class="preference-actions">
-                        <button class="secondary-cta" on:click=on_cancel>
-                            "取消"
+                        <button class="secondary-cta" on:click=on_skip>
+                            "先体验，后设置"
                         </button>
                         <button class="primary-cta" on:click=on_save_click>
-                            "保存设置"
+                            "确认人群并开始"
                         </button>
                     </div>
 
                     <div class="preference-hint">
-                        "💡 AI 将重点分析您关注的成分（如糖分、添加剂等），并提供针对性建议"
+                        "💡 识别到配料文本后，你可以继续深入分析"
                     </div>
                 </div>
             </div>

@@ -65,6 +65,47 @@ pub struct AnalysisResult {
     /// Scoring breakdown for stable scoring
     #[serde(default)]
     pub score_breakdown: Option<Vec<ScoreBreakdown>>,
+    /// Rule hits for explainability
+    #[serde(default)]
+    pub rule_hits: Vec<RuleHit>,
+    /// Confidence level and reasons
+    #[serde(default)]
+    pub confidence: Option<ConfidenceInfo>,
+}
+
+/// Rule hit info
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuleHit {
+    pub name: String,
+    pub category: String,
+    pub risk_level: String,
+    pub description: String,
+    #[serde(default)]
+    pub group_tags: Vec<String>,
+    #[serde(default)]
+    pub evidence: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
+}
+
+/// Confidence factor
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfidenceFactor {
+    pub key: String,
+    pub label: String,
+    pub score: i32,
+    #[serde(default)]
+    pub detail: Option<String>,
+}
+
+/// Confidence info
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfidenceInfo {
+    pub level: String,
+    #[serde(default)]
+    pub reasons: Vec<String>,
+    #[serde(default)]
+    pub factors: Vec<ConfidenceFactor>,
 }
 
 /// Information about a single ingredient

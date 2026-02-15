@@ -1590,6 +1590,18 @@ body {
   overflow: hidden;
 }
 
+.progress-bar.score-good {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.progress-bar.score-mid {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progress-bar.score-bad {
+  background: linear-gradient(90deg, #ef4444, #f97316);
+}
+
 .progress-bar-fill {
   height: 100%;
   width: 45%;

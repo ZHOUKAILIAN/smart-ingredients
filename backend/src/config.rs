@@ -9,6 +9,8 @@ pub struct AppConfig {
     pub llm: LlmConfig,
     pub ocr: OcrConfig,
     pub auth: AuthConfig,
+    pub rules_path: String,
+    pub rules_refresh_seconds: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -113,12 +115,26 @@ impl AppConfig {
                 .unwrap_or(900),
         };
 
+        let rules_path = env::var("RULES_PATH").unwrap_or_else(|_| {
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("rules.json")
+                .to_string_lossy()
+                .to_string()
+        });
+
+        let rules_refresh_seconds = env::var("RULES_REFRESH_SECONDS")
+            .ok()
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(300);
+
         Ok(Self {
             database_url,
             upload_dir,
             llm,
             ocr,
             auth,
+            rules_path,
+            rules_refresh_seconds,
         })
     }
 }

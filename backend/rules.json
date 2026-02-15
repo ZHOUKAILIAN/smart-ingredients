@@ -1,0 +1,347 @@
+[
+  {
+    "id": "allergen-peanut",
+    "name": "花生",
+    "aliases": ["花生碎", "花生仁"],
+    "category": "allergen",
+    "risk_level": "high",
+    "groups": ["allergy", "kids"],
+    "description": "常见致敏原，过敏人群需严格避免。"
+  },
+  {
+    "id": "allergen-milk",
+    "name": "牛奶",
+    "aliases": ["乳粉", "奶粉", "乳制品"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy", "kids"],
+    "description": "常见致敏原，乳糖不耐受人群需注意。"
+  },
+  {
+    "id": "allergen-egg",
+    "name": "鸡蛋",
+    "aliases": ["蛋白", "蛋黄", "全蛋粉"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy", "kids"],
+    "description": "常见致敏原，过敏人群需注意。"
+  },
+  {
+    "id": "allergen-gluten",
+    "name": "小麦",
+    "aliases": ["麸质", "谷蛋白"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy"],
+    "description": "含麸质成分，乳糜泻或麸质敏感人群需注意。"
+  },
+  {
+    "id": "additive-sodium-benzoate",
+    "name": "苯甲酸钠",
+    "aliases": ["安息香酸钠"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "常见防腐剂，部分人群可能引起敏感反应。"
+  },
+  {
+    "id": "additive-potassium-sorbate",
+    "name": "山梨酸钾",
+    "aliases": ["山梨酸"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": ["kids"],
+    "description": "常见防腐剂，需控制摄入量。"
+  },
+  {
+    "id": "additive-sodium-nitrite",
+    "name": "亚硝酸钠",
+    "aliases": [],
+    "category": "additive",
+    "risk_level": "high",
+    "groups": ["kids"],
+    "description": "肉制品常见防腐剂，摄入过量可能带来健康风险。"
+  },
+  {
+    "id": "additive-sodium-nitrate",
+    "name": "硝酸钠",
+    "aliases": [],
+    "category": "additive",
+    "risk_level": "high",
+    "groups": ["kids"],
+    "description": "肉制品常见防腐剂，需控制摄入。"
+  },
+  {
+    "id": "additive-tartrazine",
+    "name": "柠檬黄",
+    "aliases": ["日落黄", "色素"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工合成色素，儿童建议减少摄入。"
+  },
+  {
+    "id": "additive-sunset-yellow",
+    "name": "日落黄",
+    "aliases": ["橙黄"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工合成色素，儿童建议减少摄入。"
+  },
+  {
+    "id": "additive-aspartame",
+    "name": "阿斯巴甜",
+    "aliases": [],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工甜味剂，儿童建议适量。"
+  },
+  {
+    "id": "additive-acesulfame",
+    "name": "安赛蜜",
+    "aliases": ["乙酰磺胺酸钾"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工甜味剂，儿童建议减少摄入。"
+  },
+  {
+    "id": "additive-sucralose",
+    "name": "三氯蔗糖",
+    "aliases": ["蔗糖素"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工甜味剂，儿童建议适量。"
+  },
+  {
+    "id": "additive-monosodium-glutamate",
+    "name": "谷氨酸钠",
+    "aliases": ["味精"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见增鲜剂，适量摄入。"
+  },
+  {
+    "id": "additive-disodium-inosinate",
+    "name": "5'-肌苷酸二钠",
+    "aliases": ["呈味核苷酸二钠"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见增鲜剂，通常与味精配合使用。"
+  },
+  {
+    "id": "additive-disodium-guanylate",
+    "name": "5'-鸟苷酸二钠",
+    "aliases": [],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见增鲜剂，通常与味精配合使用。"
+  },
+  {
+    "id": "additive-phosphates",
+    "name": "磷酸盐",
+    "aliases": ["磷酸二氢钠", "磷酸三钠"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": [],
+    "description": "保水剂/稳定剂，过量摄入需注意。"
+  },
+  {
+    "id": "additive-sodium-cyclamate",
+    "name": "甜蜜素",
+    "aliases": ["环己基氨基磺酸钠"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工甜味剂，儿童建议减少摄入。"
+  },
+  {
+    "id": "additive-saccharin",
+    "name": "糖精钠",
+    "aliases": ["糖精"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "人工甜味剂，儿童建议减少摄入。"
+  },
+  {
+    "id": "additive-sodium-carboxymethyl-cellulose",
+    "name": "羧甲基纤维素钠",
+    "aliases": ["CMC"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见增稠剂/稳定剂，通常安全。"
+  },
+  {
+    "id": "additive-xanthan-gum",
+    "name": "黄原胶",
+    "aliases": ["黄原胶", "三赞胶"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见增稠剂，适量使用一般安全。"
+  },
+  {
+    "id": "additive-lecithin",
+    "name": "大豆卵磷脂",
+    "aliases": ["卵磷脂"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": ["allergy"],
+    "description": "常见乳化剂，含大豆来源时需注意过敏。"
+  },
+  {
+    "id": "additive-citric-acid",
+    "name": "柠檬酸",
+    "aliases": [],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见酸度调节剂，通常安全。"
+  },
+  {
+    "id": "additive-lactic-acid",
+    "name": "乳酸",
+    "aliases": [],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": [],
+    "description": "酸度调节剂，通常安全。"
+  },
+  {
+    "id": "other-caffeine",
+    "name": "咖啡因",
+    "aliases": [],
+    "category": "other",
+    "risk_level": "medium",
+    "groups": ["kids"],
+    "description": "刺激性成分，儿童/敏感人群需控制摄入。"
+  },
+  {
+    "id": "other-high-fructose",
+    "name": "果葡糖浆",
+    "aliases": ["高果糖浆"],
+    "category": "other",
+    "risk_level": "medium",
+    "groups": ["weight_loss"],
+    "description": "高糖成分，需注意摄入量。"
+  },
+  {
+    "id": "other-vegetable-oil",
+    "name": "植物油",
+    "aliases": ["植物油脂"],
+    "category": "other",
+    "risk_level": "low",
+    "groups": [],
+    "description": "常见油脂原料，注意总体脂肪摄入。"
+  },
+  {
+    "id": "allergen-soy",
+    "name": "大豆",
+    "aliases": ["大豆制品", "豆粉", "黄豆"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy", "kids"],
+    "description": "常见致敏原，大豆过敏人群需避免。",
+    "evidence": "常见过敏原成分",
+    "source": "食安常识"
+  },
+  {
+    "id": "allergen-shellfish",
+    "name": "甲壳类",
+    "aliases": ["虾", "蟹", "贝类"],
+    "category": "allergen",
+    "risk_level": "high",
+    "groups": ["allergy"],
+    "description": "高致敏性海鲜类成分，过敏人群需严格避免。",
+    "evidence": "常见高致敏原",
+    "source": "食安常识"
+  },
+  {
+    "id": "allergen-fish",
+    "name": "鱼类",
+    "aliases": ["鱼粉", "鱼油"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy"],
+    "description": "鱼类蛋白可引发过敏反应。"
+  },
+  {
+    "id": "allergen-tree-nuts",
+    "name": "坚果",
+    "aliases": ["核桃", "杏仁", "腰果", "榛子", "开心果", "山核桃"],
+    "category": "allergen",
+    "risk_level": "high",
+    "groups": ["allergy"],
+    "description": "坚果类为高致敏原之一，过敏人群需避免。",
+    "evidence": "常见过敏原成分",
+    "source": "食安常识"
+  },
+  {
+    "id": "allergen-sesame",
+    "name": "芝麻",
+    "aliases": ["芝麻酱", "芝麻粉"],
+    "category": "allergen",
+    "risk_level": "medium",
+    "groups": ["allergy"],
+    "description": "芝麻可能引发过敏反应，敏感人群需注意。"
+  },
+  {
+    "id": "other-alcohol",
+    "name": "酒精",
+    "aliases": ["乙醇"],
+    "category": "other",
+    "risk_level": "high",
+    "groups": ["pregnancy", "kids"],
+    "description": "含酒精成分，孕妇与儿童应避免。",
+    "evidence": "特定人群不宜",
+    "source": "食安常识"
+  },
+  {
+    "id": "other-trans-fat",
+    "name": "反式脂肪酸",
+    "aliases": ["氢化植物油", "部分氢化"],
+    "category": "other",
+    "risk_level": "high",
+    "groups": ["health"],
+    "description": "与心血管风险相关，建议尽量避免。",
+    "evidence": "高风险脂肪类型",
+    "source": "营养常识"
+  },
+  {
+    "id": "other-high-sodium",
+    "name": "食盐",
+    "aliases": ["钠"],
+    "category": "other",
+    "risk_level": "medium",
+    "groups": ["health"],
+    "description": "高钠摄入不利于心血管健康，需控制。"
+  },
+  {
+    "id": "other-msg",
+    "name": "谷氨酸钠",
+    "aliases": ["味精"],
+    "category": "additive",
+    "risk_level": "low",
+    "groups": ["kids"],
+    "description": "常见增鲜剂，儿童建议适量。"
+  },
+  {
+    "id": "additive-sulfites",
+    "name": "二氧化硫",
+    "aliases": ["亚硫酸盐", "焦亚硫酸钠"],
+    "category": "additive",
+    "risk_level": "medium",
+    "groups": ["allergy", "kids"],
+    "description": "可能引发敏感反应，哮喘人群需注意。",
+    "evidence": "敏感人群可能反应",
+    "source": "食安常识"
+  }
+]

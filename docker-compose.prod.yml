@@ -35,6 +35,8 @@ services:
       OCR_LANG: ${OCR_LANG:-chi_sim+eng}
       OCR_TIMEOUT: ${OCR_TIMEOUT:-30}
       OCR_PADDLE_URL: ${OCR_PADDLE_URL:-http://ocr:8000/ocr}
+      RULES_PATH: /app/rules.json
+      RULES_REFRESH_SECONDS: 300
       SERVICE_NAME: ${SERVICE_NAME:-backend}
       DEPLOY_ENV: ${DEPLOY_ENV:-prod}
       RUST_LOG: ${RUST_LOG:-info}
@@ -56,6 +58,11 @@ services:
     container_name: smart-ingredients-ocr
     environment:
       PADDLE_OCR_LANG: ch
+      OCR_PREPROCESS_ENABLED: ${OCR_PREPROCESS_ENABLED:-true}
+      OCR_RETRY_MAX: ${OCR_RETRY_MAX:-1}
+      OCR_MIN_TEXT_LEN: ${OCR_MIN_TEXT_LEN:-2}
+      OCR_PREPROCESS_THRESHOLD: ${OCR_PREPROCESS_THRESHOLD:-180}
+      OCR_PREPROCESS_SCALE: ${OCR_PREPROCESS_SCALE:-1.5}
     restart: unless-stopped
 
 volumes:

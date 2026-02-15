@@ -13,7 +13,8 @@ mod state;
 
 use anyhow::Result;
 use std::net::SocketAddr;
-use tracing::info;
+use std::time::Duration;
+use tracing::{info, warn};
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::{fmt, EnvFilter};
 
@@ -42,11 +43,41 @@ async fn main() -> Result<()> {
 
     let http = reqwest::Client::new();
     let llm = services::llm::build_llm_client(&config.llm, http.clone());
+
+    let rules = match services::rules::RuleEngine::try_load_from_db(&pool).await {
+        Ok(engine) => engine,
+        Err(err) => {
+            warn!("failed to load rules from db: {}", err);
+            services::rules::RuleEngine::load_from_path(&config.rules_path)
+        }
+    };
+    let rules = std::sync::Arc::new(tokio::sync::RwLock::new(rules));
+
+    let refresh_interval = Duration::from_secs(config.rules_refresh_seconds);
+    let rules_for_refresh = rules.clone();
+    let pool_for_refresh = pool.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(refresh_interval);
+        loop {
+            interval.tick().await;
+            match services::rules::RuleEngine::try_load_from_db(&pool_for_refresh).await {
+                Ok(engine) => {
+                    let mut guard = rules_for_refresh.write().await;
+                    *guard = engine;
+                }
+                Err(err) => {
+                    warn!("failed to refresh rules from db: {}", err);
+                }
+            }
+        }
+    });
+
     let state = state::AppState {
         pool,
         redis,
         config,
         llm: std::sync::Arc::from(llm),
+        rules,
     };
 
     // Build application
