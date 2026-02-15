@@ -72,22 +72,112 @@ pub fn export_to_data_url(data: &ExportData) -> Result<String, String> {
         .map_err(|_| "生成图片数据失败".to_string())
 }
 
-/// Download from a data URL string (preview modal → save).
-/// Converts data URL → Blob → Object URL for proper image file.
-pub fn download_from_data_url(data_url: &str) -> Result<(), String> {
-    use js_sys::{Array, Uint8Array};
+/// Check if running inside Tauri (Android or desktop app).
+pub fn is_tauri_available() -> bool {
+    let result = js_sys::eval(
+        r#"(function() {
+            var has = typeof window.__TAURI__ !== 'undefined';
+            console.log('[SI] is_tauri_available:', has);
+            return has;
+        })()"#,
+    )
+    .ok()
+    .and_then(|v| v.as_bool())
+    .unwrap_or(false);
+    web_sys::console::log_1(&format!("[SI-WASM] is_tauri_available = {}", result).into());
+    result
+}
 
-    let filename = generate_filename();
+/// Save image via Tauri IPC command (async). Returns the saved file path.
+pub async fn save_via_tauri(data_url: &str) -> Result<String, String> {
+    web_sys::console::log_1(&"[SI-WASM] save_via_tauri called".into());
 
-    // Split "data:image/png;base64,<payload>"
     let parts: Vec<&str> = data_url.splitn(2, ',').collect();
     if parts.len() != 2 {
         return Err("无效的图片数据".to_string());
     }
 
+    let base64_payload = parts[1];
+    let filename = generate_filename();
     let window = web_sys::window().ok_or("无法获取 window")?;
+
+    web_sys::console::log_1(
+        &format!("[SI-WASM] saving as: {}, payload len: {}", filename, base64_payload.len()).into(),
+    );
+
+    // Store args as temporary window properties for JS eval access
+    let _ = js_sys::Reflect::set(
+        &window,
+        &JsValue::from_str("__si_b64"),
+        &JsValue::from_str(base64_payload),
+    );
+    let _ = js_sys::Reflect::set(
+        &window,
+        &JsValue::from_str("__si_fname"),
+        &JsValue::from_str(&filename),
+    );
+
+    let promise = js_sys::eval(
+        r#"(function() {
+            console.log('[SI] invoking save_image_file via Tauri IPC');
+            var b64 = window.__si_b64;
+            var fname = window.__si_fname;
+            delete window.__si_b64;
+            delete window.__si_fname;
+            return window.__TAURI__.core.invoke('save_image_file', {
+                base64Data: b64,
+                filename: fname
+            });
+        })()"#,
+    )
+    .map_err(|e| {
+        let msg = format!("JS 调用失败: {:?}", e);
+        web_sys::console::error_1(&msg.clone().into());
+        msg
+    })?;
+
+    let promise: js_sys::Promise = promise
+        .dyn_into()
+        .map_err(|_| {
+            let msg = "invoke 返回值不是 Promise".to_string();
+            web_sys::console::error_1(&msg.clone().into());
+            msg
+        })?;
+
+    let result = wasm_bindgen_futures::JsFuture::from(promise)
+        .await
+        .map_err(|e| {
+            let msg = e
+                .as_string()
+                .unwrap_or_else(|| format!("{:?}", e));
+            let err = format!("保存失败: {}", msg);
+            web_sys::console::error_1(&err.clone().into());
+            err
+        })?;
+
+    let path = result
+        .as_string()
+        .ok_or_else(|| "返回路径格式错误".to_string())?;
+    web_sys::console::log_1(&format!("[SI-WASM] save success: {}", path).into());
+    Ok(path)
+}
+
+/// Download from a data URL string (browser fallback via `<a download>`).
+pub fn download_from_data_url(data_url: &str) -> Result<(), String> {
+    use js_sys::{Array, Uint8Array};
+
+    let filename = generate_filename();
+
+    let parts: Vec<&str> = data_url.splitn(2, ',').collect();
+    if parts.len() != 2 {
+        return Err("无效的图片数据".to_string());
+    }
+
+    let base64_payload = parts[1];
+    let window = web_sys::window().ok_or("无法获取 window")?;
+
     let decoded = window
-        .atob(parts[1])
+        .atob(base64_payload)
         .map_err(|_| "base64 解码失败".to_string())?;
 
     let len = decoded.len();
