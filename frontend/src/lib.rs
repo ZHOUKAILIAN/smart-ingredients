@@ -19,15 +19,25 @@ use crate::pages::{
     AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage,
     OnboardingPage, ProfilePage, RegisterPage, ResultPage, SummaryPage,
 };
-use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute};
-use crate::utils::preference::save_preference;
+use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute, ToastLevel};
+use crate::utils::preference::{load_preference, save_preference};
+use crate::utils::emit_toast;
+use serde_json::json;
 
 /// Main App component
 #[component]
 pub fn App() -> impl IntoView {
     let analysis_id = RwSignal::new(None);
     let analysis_result = RwSignal::new(None);
-    let analysis_preference = RwSignal::new(None);
+    let initial_preference = match load_preference() {
+        Some(value) => value,
+        None => {
+            let value = "normal".to_string();
+            save_preference(&value);
+            value
+        }
+    };
+    let analysis_preference = RwSignal::new(Some(initial_preference));
     let error_message = RwSignal::new(None);
     let ocr_text = RwSignal::new(None);
     let confirmed_text = RwSignal::new(None);
@@ -81,6 +91,14 @@ pub fn App() -> impl IntoView {
                         {
                             save_preference(value);
                             auth_state.analysis_preference.set(Some(value.to_string()));
+                        } else if let Some(local_value) = auth_state.analysis_preference.get() {
+                            if let Err(err) = services::update_preferences(json!({
+                                "selection": local_value
+                            }))
+                            .await
+                            {
+                                emit_toast(ToastLevel::Error, "同步失败", &err);
+                            }
                         }
                     }
                 }
