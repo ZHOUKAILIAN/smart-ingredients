@@ -45,3 +45,4 @@ uploads/
 # Temporary files
 tmp/
 temp/
+.worktrees/
