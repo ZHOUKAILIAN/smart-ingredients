@@ -1,6 +1,7 @@
 use crate::components::{IconHistory, IconHome, IconUser};
 use crate::stores::{AppState, TabRoute};
 use crate::utils::local_storage;
+use crate::utils::navigation::build_full_path;
 use leptos::prelude::*;
 use leptos_router::hooks::{use_location, use_navigate};
 
@@ -40,11 +41,7 @@ pub fn BottomNav() -> impl IntoView {
             return;
         }
         let search = location.search.get();
-        let full_path = if search.is_empty() {
-            path.clone()
-        } else {
-            format!("{}{}", path, search)
-        };
+        let full_path = build_full_path(path.as_str(), search.as_str());
         match tab_for_path(path.as_str()) {
             TabRoute::Home => state.last_home_path.set(full_path),
             TabRoute::History => state.last_history_path.set(full_path),
