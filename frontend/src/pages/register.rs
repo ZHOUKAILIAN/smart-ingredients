@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
-use crate::utils::preference::load_preference;
+use crate::utils::preference::{load_preference, save_preference};
 use crate::utils::{emit_toast, local_history};
 
 fn validate_username(username: &str) -> Result<(), &'static str> {
@@ -106,12 +106,18 @@ pub fn RegisterPage() -> impl IntoView {
                     }
                 }
             }
-            if let Some(pref) = load_preference() {
-                let _ = services::update_preferences(json!({ "selection": pref })).await;
-                navigate.get_value()("/", Default::default());
-            } else {
-                navigate.get_value()("/onboarding", Default::default());
+            let pref = match load_preference() {
+                Some(value) => value,
+                None => {
+                    let value = "normal".to_string();
+                    save_preference(&value);
+                    value
+                }
+            };
+            if let Err(err) = services::update_preferences(json!({ "selection": pref })).await {
+                emit_toast(ToastLevel::Error, "同步失败", &err);
             }
+            navigate.get_value()("/", Default::default());
         }
     };
 
