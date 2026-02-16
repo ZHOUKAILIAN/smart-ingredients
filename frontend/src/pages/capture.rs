@@ -4,7 +4,6 @@ use crate::components::{
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
-use crate::utils::preference::load_preference;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
@@ -37,10 +36,6 @@ pub fn CapturePage() -> impl IntoView {
                     show_scan.set(true);
                 }
             }
-        }
-        if state.analysis_preference.get().is_none() && load_preference().is_none() {
-            let nav = navigate.get_value();
-            nav("/onboarding", Default::default());
         }
     });
 

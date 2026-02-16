@@ -55,7 +55,7 @@ pub fn OnboardingPage() -> impl IntoView {
         }
 
         let nav = navigate.get_value();
-        nav("/?view=scan", Default::default());
+        nav("/", Default::default());
     };
 
     let on_skip = move |_| {
