@@ -1168,6 +1168,25 @@ body {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
 }
 
+.analysis-list.compact {
+  gap: 8px;
+}
+
+.analysis-list.compact .analysis-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.analysis-list.compact .analysis-summary {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.analysis-list.compact .analysis-desc {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
 .analysis-header {
   display: flex;
   justify-content: space-between;

@@ -91,7 +91,7 @@ pub fn OnboardingPage() -> impl IntoView {
                         <p class="analysis-desc">"随时可在个人中心修改"</p>
                     </div>
 
-                    <div class="analysis-list">
+                    <div class="analysis-list compact">
                         {ONBOARDING_STEPS
                             .iter()
                             .map(|(title, desc)| view! {
