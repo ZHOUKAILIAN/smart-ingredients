@@ -17,27 +17,22 @@
 
 ## 技术架构
 
-- 技术架构图与详细说明见 `docs/`。
-- 该图用于整体理解前后端、OCR 与 LLM 分析链路的交互关系。
+- 技术架构图与详细说明见 `docs/design/technical-design.md`。
 
-## 文档导航（更详细的问题请走 docs）
+## 路由与页面
 
-- 架构与设计：`docs/`
-- 路由/页面与交互细节：`docs/`
-- 规则与可信度说明：`docs/`
-- 部署/运行细节：`docs/`
+- 前端路由定义与维护方式见 `docs/design/routing.md`。
 
 ## Claude/Agents 使用说明
 
-- `CLAUDE.md`：用于提示 AI 助手的协作约定与项目上下文，适用于需要 LLM 协作时。
-- `AGENTS.md`：记录工作流与协作规范，适用于需要多人/多智能体协作时。
+- 使用时机与维护规范见 `docs/standards/ai-collaboration.md`。
 
 ## 启动文档（两种方式）
 
-- **方式一：Docker 一键启动**：详见 `docs/`
-- **方式二：本地开发启动**：详见 `docs/`
+- **方式一：Docker 一键启动**：`docs/run/backend-startup.md`
+- **方式二：本地开发启动**：`docs/run/local-dev-startup.md`
 
-> 具体命令、环境变量与端口说明，请以 `docs/` 内的启动文档为准。
+> 具体命令、环境变量与端口说明，请以对应文档为准。
 
 ## License
 
