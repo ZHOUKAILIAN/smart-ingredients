@@ -532,25 +532,21 @@ pub fn ResultPage() -> impl IntoView {
             }
         }
     };
-    let on_back_home_bottom = {
-        let state = state.clone();
-        let navigate = navigate.clone();
-        move |_| {
-            state.analysis_id.set(None);
-            state.analysis_result.set(None);
-            state.analysis_preference.set(None);
-            navigate("/", Default::default());
-        }
+    // Reset per-analysis state so the next scan starts fresh.
+    // Note: analysis_preference is a user-level setting and is NOT cleared here.
+    let clear_analysis = move || {
+        state.analysis_id.set(None);
+        state.analysis_result.set(None);
     };
-    let on_new_analysis = {
-        let state = state.clone();
-        let navigate = navigate.clone();
-        move |_| {
-            state.analysis_id.set(None);
-            state.analysis_result.set(None);
-            state.analysis_preference.set(None);
-            navigate("/?view=scan", Default::default());
-        }
+    let nav_home = navigate.clone();
+    let on_back_home_bottom = move |_| {
+        clear_analysis();
+        nav_home("/", Default::default());
+    };
+    let on_new_analysis = move |_| {
+        clear_analysis();
+        state.open_in_scan_mode.set(true);
+        navigate("/", Default::default());
     };
 
     view! {

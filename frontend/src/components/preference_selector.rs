@@ -81,6 +81,14 @@ pub fn get_preference_icon(value: &str) -> &'static str {
         .unwrap_or("🙂")
 }
 
+pub fn get_preference_description(value: &str) -> &'static str {
+    PREFERENCE_OPTIONS
+        .iter()
+        .find(|opt| opt.value == value)
+        .map(|opt| opt.description)
+        .unwrap_or("适合大多数人，综合查看风险与建议")
+}
+
 #[component]
 pub fn PreferenceSelector(
     #[prop(into)] value: Signal<String>,

@@ -10,6 +10,26 @@ use crate::utils::export_image::{ExportData, ExportIngredient};
 use crate::utils::{emit_toast, local_history};
 use shared::{AnalysisResponse, AnalysisStatus, LlmStatus, OcrStatus};
 
+/// Empty state placeholder shown when no history records exist.
+/// The entire dashed area is clickable to navigate to scan.
+#[component]
+fn EmptyHistoryState(
+    children: Children,
+    #[prop(into)] on_scan: Callback<()>,
+) -> impl IntoView {
+    view! {
+        <div class="empty-state-card" on:click=move |_| on_scan.run(()) role="button" tabindex="0">
+            <div class="empty-state-inner">
+                <div class="empty-state-icon">
+                    {children()}
+                </div>
+                <h3 class="empty-state-title">"还没有分析记录"</h3>
+                <p class="empty-state-desc">"快去拍一张配料表吧"</p>
+            </div>
+        </div>
+    }
+}
+
 fn format_timestamp(timestamp: i64) -> String {
     let date = js_sys::Date::new(&JsValue::from_f64(timestamp as f64));
     let iso = date.to_iso_string().as_string().unwrap_or_default();
@@ -207,6 +227,12 @@ pub fn HistoryPage() -> impl IntoView {
     });
     let export_preview_signal = Signal::derive(move || export_preview_url.get());
 
+    let on_go_scan = Callback::new(move |_: ()| {
+        state.open_in_scan_mode.set(true);
+        let nav = navigate.get_value();
+        nav("/", Default::default());
+    });
+
     view! {
         <section class="page page-history">
             <ConfirmModal
@@ -229,9 +255,12 @@ pub fn HistoryPage() -> impl IntoView {
                 view! {
                     <div>
                         <Show when=move || !local_items.get().is_empty() fallback=move || view! {
-                            <div class="empty-state">
-                                <p class="hint">"暂无本地记录"</p>
-                            </div>
+                            <EmptyHistoryState on_scan=on_go_scan>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </EmptyHistoryState>
                         }>
                             <ul class="history-list">
                                 {move || local_items.get().into_iter().map(|item| {
@@ -331,7 +360,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                             });
                                                         }
                                                     }>
-                                                        "📤"
+                                                        "导出"
                                                     </button>
                                                     <button class="history-action-btn delete" on:click=move |_| on_delete_local(id.clone())>
                                                         "删除"
@@ -347,10 +376,53 @@ pub fn HistoryPage() -> impl IntoView {
                 }
             }>
                 <div>
-                    <Show when=move || !items.get().is_empty() fallback=move || view! {
-                        <div class="empty-state">
-                            <p class="hint">"暂无历史记录"</p>
+                    <Show when=move || !loading.get() fallback=move || view! {
+                        <div class="history-skeleton">
+                            <div class="skeleton-card">
+                                <div class="skeleton-row">
+                                    <div class="skeleton-thumb"></div>
+                                    <div class="skeleton-lines">
+                                        <div class="skeleton-line wide"></div>
+                                        <div class="skeleton-line narrow"></div>
+                                    </div>
+                                </div>
+                                <div class="skeleton-line full"></div>
+                                <div class="skeleton-line medium"></div>
+                            </div>
+                            <div class="skeleton-card">
+                                <div class="skeleton-row">
+                                    <div class="skeleton-thumb"></div>
+                                    <div class="skeleton-lines">
+                                        <div class="skeleton-line wide"></div>
+                                        <div class="skeleton-line narrow"></div>
+                                    </div>
+                                </div>
+                                <div class="skeleton-line full"></div>
+                                <div class="skeleton-line medium"></div>
+                            </div>
+                            <div class="skeleton-card">
+                                <div class="skeleton-row">
+                                    <div class="skeleton-thumb"></div>
+                                    <div class="skeleton-lines">
+                                        <div class="skeleton-line wide"></div>
+                                        <div class="skeleton-line narrow"></div>
+                                    </div>
+                                </div>
+                                <div class="skeleton-line full"></div>
+                                <div class="skeleton-line medium"></div>
+                            </div>
                         </div>
+                    }>
+                    <Show when=move || !items.get().is_empty() fallback=move || view! {
+                        <EmptyHistoryState on_scan=on_go_scan>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </EmptyHistoryState>
                     }>
                         <ul class="history-list">
                             {move || items.get().into_iter().map(|item| {
@@ -452,7 +524,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                             }
                                                         });
                                                     }>
-                                                        "📤"
+                                                        "导出"
                                                     </button>
                                                     <button class="history-action-btn delete" on:click=move |_| on_delete(id)>
                                                         "删除"
@@ -488,6 +560,7 @@ pub fn HistoryPage() -> impl IntoView {
                             </button>
                         </div>
                     </Show>
+                </Show>
                 </div>
             </Show>
             </div>

@@ -4,14 +4,14 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50px;
+  height: clamp(48px, 6.2vh, 60px);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   border-top: 1px solid rgba(226, 232, 240, 0.9);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 2px env(safe-area-inset-right) env(safe-area-inset-bottom)
+  padding: 0.25vh env(safe-area-inset-right) env(safe-area-inset-bottom)
     env(safe-area-inset-left);
   z-index: 100;
   box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);

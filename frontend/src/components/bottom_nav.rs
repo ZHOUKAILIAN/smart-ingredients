@@ -19,7 +19,7 @@ fn tab_for_path(path: &str) -> TabRoute {
 }
 
 fn should_record_last_path(path: &str) -> bool {
-    path != "/login" && path != "/register"
+    !matches!(path, "/login" | "/register" | "/onboarding")
 }
 
 #[component]
@@ -36,16 +36,17 @@ pub fn BottomNav() -> impl IntoView {
 
     create_effect(move |_| {
         let path = location.pathname.get();
-        if !should_record_last_path(path.as_str()) {
+        if !should_record_last_path(&path) {
             return;
         }
+        let tab = tab_for_path(&path);
         let search = location.search.get();
         let full_path = if search.is_empty() {
-            path.clone()
+            path
         } else {
             format!("{}{}", path, search)
         };
-        match tab_for_path(path.as_str()) {
+        match tab {
             TabRoute::Home => state.last_home_path.set(full_path),
             TabRoute::History => state.last_history_path.set(full_path),
             TabRoute::Profile => state.last_profile_path.set(full_path),

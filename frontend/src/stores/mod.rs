@@ -107,4 +107,8 @@ pub struct AppState {
     pub last_home_path: RwSignal<String>,
     pub last_history_path: RwSignal<String>,
     pub last_profile_path: RwSignal<String>,
+
+    /// When `true`, the capture page opens directly in scan mode
+    /// (bypassing the home hero view). Set by onboarding, result, or history pages.
+    pub open_in_scan_mode: RwSignal<bool>,
 }
