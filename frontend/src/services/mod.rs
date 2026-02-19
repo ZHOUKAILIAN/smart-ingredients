@@ -8,6 +8,10 @@ use crate::stores::ToastLevel;
 use crate::utils::auth_storage;
 use crate::utils::emit_toast;
 use crate::utils::error_messages::{map_api_error, map_client_error};
+use shared::{
+    CommunityCreatePayload, CommunityDeleteRequest, CommunityPostCreated, CommunityPostDetail,
+    CommunityPostListResponse,
+};
 
 const API_BASE: &str = env!("API_BASE");
 
@@ -47,6 +51,117 @@ pub async fn upload_image(file: web_sys::File) -> Result<shared::UploadResponse,
     let response = send_request(request).await?;
     let body = read_response_text(&response).await?;
     serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn create_community_post(
+    payload: &CommunityCreatePayload,
+    card_image: Option<web_sys::Blob>,
+) -> Result<CommunityPostCreated, String> {
+    let form = FormData::new().map_err(|_| map_client_error("form_data"))?;
+    let payload_text =
+        serde_json::to_string(payload).map_err(|_| map_client_error("serialize_request"))?;
+    form.append_with_str("payload", &payload_text)
+        .map_err(|_| map_client_error("append_payload"))?;
+
+    if let Some(image) = card_image {
+        form.append_with_blob_and_filename("card_image", &image, "community-card.png")
+            .map_err(|_| map_client_error("append_file"))?;
+    }
+
+    let mut opts = web_sys::RequestInit::new();
+    opts.set_method("POST");
+    opts.set_mode(web_sys::RequestMode::Cors);
+    opts.set_body(&form);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    opts.set_headers(&headers);
+
+    let request = web_sys::Request::new_with_str_and_init(
+        &format!("{}/api/v1/community/posts", API_BASE),
+        &opts,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn fetch_community_posts(
+    page: i64,
+    limit: i64,
+) -> Result<CommunityPostListResponse, String> {
+    let mut init = RequestInit::new();
+    init.set_method("GET");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!(
+            "{}/api/v1/community/posts?page={}&limit={}",
+            API_BASE, page, limit
+        ),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn fetch_community_post(id: uuid::Uuid) -> Result<CommunityPostDetail, String> {
+    let mut init = RequestInit::new();
+    init.set_method("GET");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/community/posts/{}", API_BASE, id),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let response = send_request(request).await?;
+    let body = read_response_text(&response).await?;
+    serde_json::from_str(&body).map_err(|_| map_client_error("invalid_response"))
+}
+
+pub async fn delete_community_post(
+    id: uuid::Uuid,
+    share_token: Option<String>,
+) -> Result<(), String> {
+    let payload = CommunityDeleteRequest { share_token };
+    let body =
+        serde_json::to_string(&payload).map_err(|_| map_client_error("serialize_request"))?;
+
+    let mut init = RequestInit::new();
+    init.set_method("DELETE");
+    init.set_mode(RequestMode::Cors);
+
+    let headers = Headers::new().map_err(|_| map_client_error("build_headers"))?;
+    headers
+        .set("Content-Type", "application/json")
+        .map_err(|_| map_client_error("content_type"))?;
+    apply_auth_header(&headers)?;
+    init.set_headers(&headers);
+    init.set_body(&JsValue::from_str(&body));
+
+    let request = Request::new_with_str_and_init(
+        &format!("{}/api/v1/community/posts/{}", API_BASE, id),
+        &init,
+    )
+    .map_err(|_| map_client_error("build_request"))?;
+
+    let _ = send_request(request).await?;
+    Ok(())
 }
 
 pub async fn confirm_and_analyze(
