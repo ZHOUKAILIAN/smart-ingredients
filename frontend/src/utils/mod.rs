@@ -1,6 +1,8 @@
 //! Utility functions
 
 pub mod auth_storage;
+pub mod community_share;
+pub mod community_share_storage;
 pub mod error_messages;
 pub mod export_image;
 pub mod local_history;

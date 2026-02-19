@@ -522,6 +522,175 @@ body {
   padding: 24px 20px 28px;
 }
 
+.page.page-community,
+.page.page-community-detail {
+  background: linear-gradient(
+    135deg,
+    rgba(236, 253, 245, 0.6) 0%,
+    #ffffff 45%,
+    rgba(240, 253, 250, 0.6) 100%
+  );
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.page.page-community .page-scrollable-content,
+.page.page-community-detail .page-scrollable-content {
+  padding: 24px 20px 28px;
+}
+
+.page.page-community .page-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.community-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.community-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  cursor: pointer;
+}
+
+.community-card-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.community-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.community-card-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+}
+
+.community-summary {
+  font-size: 14px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.community-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.community-thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.community-thumb-placeholder {
+  font-size: 20px;
+}
+
+.community-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.community-score-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.community-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.community-detail-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.community-detail-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.community-detail-image {
+  width: 100%;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.community-detail-score {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #374151;
+}
+
+.community-detail-score strong {
+  font-size: 20px;
+  color: #10b981;
+}
+
+.community-detail-summary {
+  font-size: 14px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.community-detail-ingredients h3 {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.community-detail-ingredients p {
+  font-size: 13px;
+  color: #475569;
+  margin: 0;
+  line-height: 1.6;
+}
+
 .page.page-result.figma {
   padding-bottom: 120px;
 }

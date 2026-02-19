@@ -72,6 +72,35 @@ pub fn export_to_data_url(data: &ExportData) -> Result<String, String> {
         .map_err(|_| "生成图片数据失败".to_string())
 }
 
+/// Convert a data URL (base64) into a Blob for upload.
+pub fn data_url_to_blob(data_url: &str) -> Result<web_sys::Blob, String> {
+    use js_sys::{Array, Uint8Array};
+
+    let parts: Vec<&str> = data_url.splitn(2, ',').collect();
+    if parts.len() != 2 {
+        return Err("无效的图片数据".to_string());
+    }
+
+    let base64_payload = parts[1];
+    let window = web_sys::window().ok_or("无法获取 window")?;
+    let decoded = window
+        .atob(base64_payload)
+        .map_err(|_| "base64 解码失败".to_string())?;
+
+    let len = decoded.len();
+    let u8_array = Uint8Array::new_with_length(len as u32);
+    for (i, ch) in decoded.chars().enumerate() {
+        u8_array.set_index(i as u32, ch as u8);
+    }
+
+    let blob_parts = Array::new();
+    blob_parts.push(&u8_array.buffer());
+    let mut opts = web_sys::BlobPropertyBag::new();
+    opts.set_type("image/png");
+    web_sys::Blob::new_with_buffer_source_sequence_and_options(&blob_parts, &opts)
+        .map_err(|_| "创建 Blob 失败".to_string())
+}
+
 /// Check if running inside Tauri (Android or desktop app).
 pub fn is_tauri_available() -> bool {
     let result = js_sys::eval(

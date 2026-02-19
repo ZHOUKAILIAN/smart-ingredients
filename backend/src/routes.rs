@@ -5,7 +5,7 @@ use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer, services::ServeD
 
 use crate::state::AppState;
 use crate::{
-    handlers::{analysis, auth, users},
+    handlers::{analysis, auth, community, users},
     middleware,
 };
 
@@ -16,6 +16,7 @@ pub fn create_routes(state: AppState) -> Router {
         .nest("/api/v1/analysis", analysis::routes())
         .nest("/api/v1/auth", auth::routes())
         .nest("/api/v1/users", users::routes())
+        .nest("/api/v1/community", community::routes())
         .nest_service("/uploads", ServeDir::new(upload_dir))
         .layer(CorsLayer::permissive())
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024))

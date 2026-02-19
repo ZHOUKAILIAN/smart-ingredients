@@ -1,6 +1,6 @@
 use crate::components::{
-    get_preference_icon, get_preference_label, HealthScoreCard, IconArrowLeft, RiskBadge,
-    ShareButton, ShareExportProps,
+    get_preference_icon, get_preference_label, CommunityShareButton, HealthScoreCard,
+    IconArrowLeft, RiskBadge, ShareButton, ShareExportProps,
 };
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
@@ -1053,6 +1053,32 @@ pub fn ResultPage() -> impl IntoView {
                                 preference_label: get_preference_label(&pref).to_string(),
                             };
                             view! { <ShareButton props=props /> }
+                        })
+                }}
+                {move || {
+                    let analysis_id = state.analysis_id.get();
+                    let response = state.analysis_result.get();
+                    let confirmed_text = response
+                        .as_ref()
+                        .and_then(|r| r.confirmed_text.clone())
+                        .or_else(|| state.confirmed_text.get());
+                    let ocr_text = response
+                        .as_ref()
+                        .and_then(|r| r.ocr_text.clone())
+                        .or_else(|| state.ocr_text.get());
+                    response
+                        .and_then(|r| r.result)
+                        .map(|result| {
+                            let preference_label = Some(get_preference_label(&current_preference()).to_string());
+                            view! {
+                                <CommunityShareButton
+                                    analysis_id=analysis_id
+                                    analysis_result=result
+                                    confirmed_text=confirmed_text
+                                    ocr_text=ocr_text
+                                    preference_label=preference_label
+                                />
+                            }
                         })
                 }}
                 <button class="primary-cta" on:click=on_new_analysis>
