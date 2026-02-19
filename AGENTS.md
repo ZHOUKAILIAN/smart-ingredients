@@ -5,7 +5,6 @@
 - 设计/代码变更必须走 "小周调研 → 小周计划 → 小周执行 → 小周验证"；验证通过后再汇报。
 - 简单需求可直接执行。
 - Write requirements and technical plan first; get user confirmation before implementation.
-- Branch names must be `feat/*` and open a PR after pushing.
 
 ## Execution Finish Checklist
 
@@ -19,6 +18,7 @@ After any implementation work completes:
 
 - Prioritize rules-based conclusions and explainability.
 - Keep changes minimal and documented.
+
 # Agent Instructions - Smart Ingredients
 
 ## Project Overview
@@ -39,7 +39,7 @@ After any implementation work completes:
 
 **ABSOLUTE RULE**: This project enforces strict documentation-driven development.
 
-#### You MUST:
+#### You MUST
 
 1. ✅ **NEVER write code without prior documentation**
 2. ✅ **ALWAYS create/update docs before implementing features**
@@ -47,7 +47,7 @@ After any implementation work completes:
 4. ✅ **STOP and ask if documentation is unclear or missing**
 5. ✅ **UPDATE docs immediately when implementation deviates from design**
 
-#### You MUST NOT:
+#### You MUST NOT
 
 1. ❌ **Start coding without reading relevant docs first**
 2. ❌ **Skip documentation "to save time"**
@@ -162,7 +162,7 @@ Before writing ANY code, you MUST verify:
 
 ### Example: Adding a New Feature
 
-#### ❌ WRONG (do not do this):
+#### ❌ WRONG (do not do this)
 
 ```
 User: "Add user authentication"
@@ -172,7 +172,7 @@ Assistant: "I'll add JWT authentication to the backend..."
 
 **Why wrong**: No requirements documented, no design decisions made, no API contracts defined.
 
-#### ✅ CORRECT (do this instead):
+#### ✅ CORRECT (do this instead)
 
 ```
 User: "Add user authentication"
@@ -234,6 +234,7 @@ smart-ingredients/
 - **`docs/design/figma-design-system.md`** - Complete design system rules for Figma integration
 
 This document provides:
+
 - Design token definitions (colors, shadows, transitions)
 - Component library architecture and patterns
 - CSS methodology and naming conventions
@@ -242,6 +243,7 @@ This document provides:
 - Best practices and common UI patterns
 
 **When to use:**
+
 - Implementing new UI components from Figma designs
 - Creating new pages or screens
 - Adding icons or updating visual styles

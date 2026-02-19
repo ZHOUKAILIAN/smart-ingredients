@@ -32,6 +32,7 @@ pub use ingredient_table::{IngredientRow, IngredientTable};
 pub use loading_spinner::LoadingSpinner;
 pub use preference_selector::{
     get_preference_icon, get_preference_label, PreferenceCard, PreferenceSelector,
+    PREFERENCE_OPTIONS,
 };
 pub use risk_badge::RiskBadge;
 pub use share_button::{ShareButton, ShareExportProps};

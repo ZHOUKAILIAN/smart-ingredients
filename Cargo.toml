@@ -41,3 +41,9 @@ redis = { version = "0.26", features = ["tokio-comp", "connection-manager"] }
 tauri = { version = "2" }
 leptos = { version = "0.7", features = ["csr"] }
 leptos-use = "0.15"
+
+# Only optimize dependencies for size (compiled once, then cached)
+# App code stays at opt-level 0 for fast incremental builds
+[profile.dev.package."*"]
+opt-level = "s"
+debug = false

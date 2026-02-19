@@ -3,17 +3,11 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use serde_json::json;
 
-use crate::components::{get_preference_label, ConfirmModal, PreferenceCard};
+use crate::components::{get_preference_label, ConfirmModal, PREFERENCE_OPTIONS};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
 use crate::utils::preference::save_preference;
-
-const ONBOARDING_STEPS: &[(&str, &str)] = &[
-    ("选人群", "告诉我们你更在意哪类风险"),
-    ("拍配料表", "上传清晰配料表，AI 自动识别"),
-    ("看识别结果", "先拿到文本，再决定下一步"),
-];
 
 #[component]
 pub fn OnboardingPage() -> impl IntoView {
@@ -84,43 +78,43 @@ pub fn OnboardingPage() -> impl IntoView {
             />
 
             <div class="page-scrollable-content">
-                <div class="preference-page-container">
-                    <div class="preference-intro">
-                        <h2>"先选人群定位"</h2>
-                        <p>"只做最关键的判断，把结果对准你的关注点"</p>
-                        <p class="analysis-desc">"随时可在个人中心修改"</p>
+                <div class="onboarding-compact">
+                    <div class="onboarding-header">
+                        <h2>"选人群，对准你的关注点"</h2>
+                        <p class="onboarding-flow-hint">
+                            "📋 选人群 → 📸 拍配料表 → ✅ 看结果"
+                        </p>
                     </div>
 
-                    <div class="analysis-list">
-                        {ONBOARDING_STEPS
+                    <div class="onboarding-grid">
+                        {PREFERENCE_OPTIONS
                             .iter()
-                            .map(|(title, desc)| view! {
-                                <div class="analysis-item">
-                                    <p class="analysis-summary">{*title}</p>
-                                    <p class="analysis-desc">{*desc}</p>
-                                </div>
+                            .map(|opt| {
+                                let value = opt.value;
+                                let is_selected = move || preference.get() == value;
+                                view! {
+                                    <button
+                                        class="onboarding-option"
+                                        class:selected=is_selected
+                                        on:click=move |_| {
+                                            preference.set(value.to_string());
+                                        }
+                                    >
+                                        <span class="onboarding-option-icon">{opt.icon}</span>
+                                        <span class="onboarding-option-label">{opt.label}</span>
+                                    </button>
+                                }
                             })
                             .collect_view()}
                     </div>
 
-                    <PreferenceCard
-                        value=Signal::derive(move || preference.get())
-                        on_change=Callback::new(move |value: String| {
-                            preference.set(value);
-                        })
-                    />
-
-                    <div class="preference-actions">
+                    <div class="onboarding-actions">
                         <button class="secondary-cta" on:click=on_skip>
-                            "先体验，后设置"
+                            "跳过"
                         </button>
                         <button class="primary-cta" on:click=on_save_click>
-                            "确认人群并开始"
+                            "确认并开始"
                         </button>
-                    </div>
-
-                    <div class="preference-hint">
-                        "💡 识别到配料文本后，你可以继续深入分析"
                     </div>
                 </div>
             </div>
