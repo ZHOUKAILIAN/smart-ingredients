@@ -3,7 +3,7 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::components::{ConfirmModal, ExportPreviewModal};
+use crate::components::{ConfirmModal, ExportPreviewModal, LoadingSpinner};
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
 use crate::utils::export_image::{ExportData, ExportIngredient};
@@ -60,6 +60,11 @@ pub fn HistoryPage() -> impl IntoView {
     let items = RwSignal::new(Vec::<shared::HistoryItem>::new());
     let local_items = RwSignal::new(Vec::<local_history::LocalHistoryItem>::new());
     let last_load_key = RwSignal::new(None::<(uuid::Uuid, i64)>);
+    let viewing_id = RwSignal::new(None::<uuid::Uuid>);
+    let exporting_id = RwSignal::new(None::<uuid::Uuid>);
+    let deleting_id = RwSignal::new(None::<uuid::Uuid>);
+    let exporting_local_id = RwSignal::new(None::<String>);
+    let deleting_local_id = RwSignal::new(None::<String>);
 
     // Confirm modal state
     let show_confirm = RwSignal::new(false);
@@ -127,6 +132,8 @@ pub fn HistoryPage() -> impl IntoView {
 
         // Delete cloud record
         if let Some(id) = pending_delete_id.get() {
+            deleting_id.set(Some(id));
+            let deleting_id = deleting_id.clone();
             spawn_local(async move {
                 match services::delete_history(id).await {
                     Ok(()) => {
@@ -138,11 +145,13 @@ pub fn HistoryPage() -> impl IntoView {
                         emit_toast(ToastLevel::Error, "删除失败", &err);
                     }
                 }
+                deleting_id.set(None);
             });
         }
 
         // Delete local record
         if let Some(id) = pending_delete_local_id.get() {
+            deleting_local_id.set(Some(id.clone()));
             match local_history::delete_local_history(&id) {
                 Ok(()) => {
                     local_items.set(local_history::load_local_history());
@@ -152,6 +161,7 @@ pub fn HistoryPage() -> impl IntoView {
                     emit_toast(ToastLevel::Error, "删除失败", &err);
                 }
             }
+            deleting_local_id.set(None);
         }
 
         pending_delete_id.set(None);
@@ -181,12 +191,18 @@ pub fn HistoryPage() -> impl IntoView {
 
     let on_view_cloud = {
         let navigate = navigate.clone();
+        let viewing_id = viewing_id.clone();
         move |item: shared::HistoryItem| {
             let id = item.id;
+            if viewing_id.get() == Some(id) {
+                return;
+            }
+            viewing_id.set(Some(id));
             state.analysis_id.set(Some(id));
             state.analysis_source.set(AnalysisSource::History);
 
             // 异步获取完整的分析结果
+            let viewing_id = viewing_id.clone();
             spawn_local(async move {
                 match services::fetch_analysis(id).await {
                     Ok(response) => {
@@ -198,6 +214,7 @@ pub fn HistoryPage() -> impl IntoView {
                         emit_toast(ToastLevel::Error, "加载失败", &err);
                     }
                 }
+                viewing_id.set(None);
             });
         }
     };
@@ -236,6 +253,7 @@ pub fn HistoryPage() -> impl IntoView {
                             <ul class="history-list">
                                 {move || local_items.get().into_iter().map(|item| {
                                     let id = item.id.clone();
+                                    let id_value = StoredValue::new(id.clone());
                                     let summary = item.summary.clone();
                                     let score = item.health_score;
                                     let timestamp = format_timestamp(item.timestamp);
@@ -304,37 +322,53 @@ pub fn HistoryPage() -> impl IntoView {
                                                     <button class="history-action-btn" on:click=move |_| on_view_local(item_clone.clone())>
                                                         "查看"
                                                     </button>
-                                                    <button class="history-action-btn export" on:click={
-                                                        let result = item.result.clone();
-                                                        move |_: web_sys::MouseEvent| {
-                                                            let result = result.clone();
-                                                            spawn_local(async move {
-                                                                let data = ExportData {
-                                                                    health_score: result.health_score,
-                                                                    recommendation: result.recommendation.clone(),
-                                                                    ingredients: result.ingredients.iter().map(|i| {
-                                                                        ExportIngredient {
-                                                                            name: i.name.clone(),
-                                                                            risk_level: i.risk_level.clone(),
-                                                                            description: i.description.clone().unwrap_or_default(),
-                                                                            is_focus: false,
-                                                                        }
-                                                                    }).collect(),
-                                                                    warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
-                                                                    summary: result.summary.clone(),
-                                                                    preference_label: String::new(),
-                                                                };
-                                                                match crate::utils::export_image::export_to_data_url(&data) {
-                                                                    Ok(url) => export_preview_url.set(Some(url)),
-                                                                    Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
+                                                    <button
+                                                        class="history-action-btn export"
+                                                        disabled=move || exporting_local_id.get() == Some(id_value.get_value())
+                                                        on:click={
+                                                            let result = item.result.clone();
+                                                            let exporting_local_id = exporting_local_id.clone();
+                                                            move |_: web_sys::MouseEvent| {
+                                                                let export_id = id_value.get_value();
+                                                                if exporting_local_id.get() == Some(export_id.clone()) {
+                                                                    return;
                                                                 }
-                                                            });
+                                                                exporting_local_id.set(Some(export_id.clone()));
+                                                                let result = result.clone();
+                                                                let exporting_local_id = exporting_local_id.clone();
+                                                                spawn_local(async move {
+                                                                    let data = ExportData {
+                                                                        health_score: result.health_score,
+                                                                        recommendation: result.recommendation.clone(),
+                                                                        ingredients: result.ingredients.iter().map(|i| {
+                                                                            ExportIngredient {
+                                                                                name: i.name.clone(),
+                                                                                risk_level: i.risk_level.clone(),
+                                                                                description: i.description.clone().unwrap_or_default(),
+                                                                                is_focus: false,
+                                                                            }
+                                                                        }).collect(),
+                                                                        warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
+                                                                        summary: result.summary.clone(),
+                                                                        preference_label: String::new(),
+                                                                    };
+                                                                    match crate::utils::export_image::export_to_data_url(&data) {
+                                                                        Ok(url) => export_preview_url.set(Some(url)),
+                                                                        Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
+                                                                    }
+                                                                    exporting_local_id.set(None);
+                                                                });
+                                                            }
                                                         }
-                                                    }>
-                                                        "📤"
+                                                    >
+                                                        {move || if exporting_local_id.get() == Some(id_value.get_value()) { "导出中" } else { "📤" }}
                                                     </button>
-                                                    <button class="history-action-btn delete" on:click=move |_| on_delete_local(id.clone())>
-                                                        "删除"
+                                                    <button
+                                                        class="history-action-btn delete"
+                                                        disabled=move || deleting_local_id.get() == Some(id_value.get_value())
+                                                        on:click=move |_| on_delete_local(id_value.get_value())
+                                                    >
+                                                        {move || if deleting_local_id.get() == Some(id_value.get_value()) { "删除中" } else { "删除" }}
                                                     </button>
                                                 </div>
                                             </div>
@@ -347,145 +381,169 @@ pub fn HistoryPage() -> impl IntoView {
                 }
             }>
                 <div>
-                    <Show when=move || !items.get().is_empty() fallback=move || view! {
-                        <div class="empty-state">
-                            <p class="hint">"暂无历史记录"</p>
-                        </div>
-                    }>
-                        <ul class="history-list">
-                            {move || items.get().into_iter().map(|item| {
-                                let id = item.id;
-                                let item_clone = item.clone();
-                                let summary = item.summary.clone().unwrap_or_default();
-                                let formatted_time = format_iso_datetime(&item.created_at);
-                                let image_url = StoredValue::new(item.image_url.clone());
-                                let resolved_image_url =
-                                    StoredValue::new(services::resolve_media_url(&image_url.get_value()));
-                                    view! {
-                                        <li class="history-item-card">
-                                            <div class="history-card-main">
-                                                <div class="history-card-content">
-                                                    <div class="history-badges">
-                                                        <span class="history-badge cloud">"云端记录"</span>
+                    <Show when=move || loading.get() fallback=move || view! {
+                        <Show when=move || !items.get().is_empty() fallback=move || view! {
+                            <div class="empty-state">
+                                <p class="hint">"暂无历史记录"</p>
+                            </div>
+                        }>
+                            <ul class="history-list">
+                                {move || items.get().into_iter().map(|item| {
+                                    let id = item.id;
+                                    let item_clone = item.clone();
+                                    let summary = item.summary.clone().unwrap_or_default();
+                                    let formatted_time = format_iso_datetime(&item.created_at);
+                                    let image_url = StoredValue::new(item.image_url.clone());
+                                    let resolved_image_url =
+                                        StoredValue::new(services::resolve_media_url(&image_url.get_value()));
+                                        view! {
+                                            <li class="history-item-card">
+                                                <div class="history-card-main">
+                                                    <div class="history-card-content">
+                                                        <div class="history-badges">
+                                                            <span class="history-badge cloud">"云端记录"</span>
+                                                        </div>
+
+                                                        <div class="history-meta-row">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <circle cx="12" cy="12" r="10"></circle>
+                                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                                            </svg>
+                                                            <span>{formatted_time}</span>
+                                                        </div>
                                                     </div>
 
-                                                    <div class="history-meta-row">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                            <circle cx="12" cy="12" r="10"></circle>
-                                                            <polyline points="12 6 12 12 16 14"></polyline>
-                                                        </svg>
-                                                        <span>{formatted_time}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="history-thumb-wrapper">
-                                                    <Show when=move || !resolved_image_url.get_value().is_empty() fallback=move || view! {
-                                                        <div class="history-thumb-img">"📷"</div>
-                                                    }>
-                                                        <img
-                                                            src={resolved_image_url.get_value()}
-                                                            alt="缩略图"
-                                                            class="history-thumb-img"
-                                                            on:error=move |ev| {
-                                                                if let Some(target) = ev.target() {
-                                                                    if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
-                                                                        img.set_attribute("data-error", "true").ok();
-                                                                    }
-                                                                }
-                                                            }
-                                                        />
-                                                    </Show>
-                                                </div>
-                                            </div>
-
-                                            <p class="history-description">{summary}</p>
-
-                                            <div class="history-divider"></div>
-
-                                            <div class="history-footer">
-                                                <div class="history-score-display">
-                                                    "健康评分 "
-                                                    <span class={format!("history-score-value {}",
-                                                        if item.health_score.unwrap_or(0) >= 80 { "score-high" }
-                                                        else if item.health_score.unwrap_or(0) >= 60 { "score-medium" }
-                                                        else { "score-low" }
-                                                    )}>
-                                                        {item.health_score.unwrap_or(0)}
-                                                    </span>
-                                                </div>
-                                                <div class="history-actions">
-                                                    <button class="history-action-btn" on:click=move |_| on_view_cloud(item_clone.clone())>
-                                                        "查看"
-                                                    </button>
-                                                    <button class="history-action-btn export" on:click=move |_: web_sys::MouseEvent| {
-                                                        let analysis_id = id;
-                                                        spawn_local(async move {
-                                                            match services::fetch_analysis(analysis_id).await {
-                                                                Ok(response) => {
-                                                                    if let Some(result) = response.result {
-                                                                        let data = ExportData {
-                                                                            health_score: result.health_score,
-                                                                            recommendation: result.recommendation.clone(),
-                                                                            ingredients: result.ingredients.iter().map(|i| {
-                                                                                ExportIngredient {
-                                                                                    name: i.name.clone(),
-                                                                                    risk_level: i.risk_level.clone(),
-                                                                                    description: i.description.clone().unwrap_or_default(),
-                                                                                    is_focus: false,
-                                                                                }
-                                                                            }).collect(),
-                                                                            warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
-                                                                            summary: result.summary.clone(),
-                                                                            preference_label: String::new(),
-                                                                        };
-                                                                        match crate::utils::export_image::export_to_data_url(&data) {
-                                                                            Ok(url) => export_preview_url.set(Some(url)),
-                                                                            Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
+                                                    <div class="history-thumb-wrapper">
+                                                        <Show when=move || !resolved_image_url.get_value().is_empty() fallback=move || view! {
+                                                            <div class="history-thumb-img">"📷"</div>
+                                                        }>
+                                                            <img
+                                                                src={resolved_image_url.get_value()}
+                                                                alt="缩略图"
+                                                                class="history-thumb-img"
+                                                                on:error=move |ev| {
+                                                                    if let Some(target) = ev.target() {
+                                                                        if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
+                                                                            img.set_attribute("data-error", "true").ok();
                                                                         }
-                                                                    } else {
-                                                                        emit_toast(ToastLevel::Error, "导出失败", "该记录没有分析结果");
                                                                     }
                                                                 }
-                                                                Err(err) => {
-                                                                    emit_toast(ToastLevel::Error, "导出失败", &err);
-                                                                }
-                                                            }
-                                                        });
-                                                    }>
-                                                        "📤"
-                                                    </button>
-                                                    <button class="history-action-btn delete" on:click=move |_| on_delete(id)>
-                                                        "删除"
-                                                    </button>
+                                                            />
+                                                        </Show>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </li>
-                                    }                          }).collect_view()}
-                        </ul>
-                    </Show>
-                    <Show when=move || { total.get() > 20 }>
-                        <div class="history-pagination">
-                            <button
-                                class="secondary-cta"
-                                disabled=move || page.get() <= 1
-                                on:click=move |_| {
-                                    let new_page = page.get() - 1;
-                                    page.set(new_page);
-                                }
-                            >
-                                "上一页"
-                            </button>
-                            <span>{move || format!("第 {} 页 / 共 {} 条", page.get(), total.get())}</span>
-                            <button
-                                class="secondary-cta"
-                                disabled=move || page.get() * 20 >= total.get()
-                                on:click=move |_| {
-                                    let new_page = page.get() + 1;
-                                    page.set(new_page);
-                                }
-                            >
-                                "下一页"
-                            </button>
+
+                                                <p class="history-description">{summary}</p>
+
+                                                <div class="history-divider"></div>
+
+                                                <div class="history-footer">
+                                                    <div class="history-score-display">
+                                                        "健康评分 "
+                                                        <span class={format!("history-score-value {}",
+                                                            if item.health_score.unwrap_or(0) >= 80 { "score-high" }
+                                                            else if item.health_score.unwrap_or(0) >= 60 { "score-medium" }
+                                                            else { "score-low" }
+                                                        )}>
+                                                            {item.health_score.unwrap_or(0)}
+                                                        </span>
+                                                    </div>
+                                                    <div class="history-actions">
+                                                        <button
+                                                            class="history-action-btn"
+                                                            disabled=move || viewing_id.get() == Some(id)
+                                                            on:click=move |_| on_view_cloud(item_clone.clone())
+                                                        >
+                                                            {move || if viewing_id.get() == Some(id) { "加载中" } else { "查看" }}
+                                                        </button>
+                                                        <button
+                                                            class="history-action-btn export"
+                                                            disabled=move || exporting_id.get() == Some(id)
+                                                            on:click=move |_: web_sys::MouseEvent| {
+                                                                if exporting_id.get() == Some(id) {
+                                                                    return;
+                                                                }
+                                                                exporting_id.set(Some(id));
+                                                                let analysis_id = id;
+                                                                let exporting_id = exporting_id.clone();
+                                                                spawn_local(async move {
+                                                                    match services::fetch_analysis(analysis_id).await {
+                                                                        Ok(response) => {
+                                                                            if let Some(result) = response.result {
+                                                                                let data = ExportData {
+                                                                                    health_score: result.health_score,
+                                                                                    recommendation: result.recommendation.clone(),
+                                                                                    ingredients: result.ingredients.iter().map(|i| {
+                                                                                        ExportIngredient {
+                                                                                            name: i.name.clone(),
+                                                                                            risk_level: i.risk_level.clone(),
+                                                                                            description: i.description.clone().unwrap_or_default(),
+                                                                                            is_focus: false,
+                                                                                        }
+                                                                                    }).collect(),
+                                                                                    warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
+                                                                                    summary: result.summary.clone(),
+                                                                                    preference_label: String::new(),
+                                                                                };
+                                                                                match crate::utils::export_image::export_to_data_url(&data) {
+                                                                                    Ok(url) => export_preview_url.set(Some(url)),
+                                                                                    Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
+                                                                                }
+                                                                            } else {
+                                                                                emit_toast(ToastLevel::Error, "导出失败", "该记录没有分析结果");
+                                                                            }
+                                                                        }
+                                                                        Err(err) => {
+                                                                            emit_toast(ToastLevel::Error, "导出失败", &err);
+                                                                        }
+                                                                    }
+                                                                    exporting_id.set(None);
+                                                                });
+                                                            }
+                                                        >
+                                                            {move || if exporting_id.get() == Some(id) { "导出中" } else { "📤" }}
+                                                        </button>
+                                                        <button
+                                                            class="history-action-btn delete"
+                                                            disabled=move || deleting_id.get() == Some(id)
+                                                            on:click=move |_| on_delete(id)
+                                                        >
+                                                            {move || if deleting_id.get() == Some(id) { "删除中" } else { "删除" }}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        }                          }).collect_view()}
+                            </ul>
+                        </Show>
+                        <Show when=move || { total.get() > 20 }>
+                            <div class="history-pagination">
+                                <button
+                                    class="secondary-cta"
+                                    disabled=move || page.get() <= 1 || loading.get()
+                                    on:click=move |_| {
+                                        let new_page = page.get() - 1;
+                                        page.set(new_page);
+                                    }
+                                >
+                                    {move || if loading.get() { "加载中..." } else { "上一页" }}
+                                </button>
+                                <span>{move || format!("第 {} 页 / 共 {} 条", page.get(), total.get())}</span>
+                                <button
+                                    class="secondary-cta"
+                                    disabled=move || page.get() * 20 >= total.get() || loading.get()
+                                    on:click=move |_| {
+                                        let new_page = page.get() + 1;
+                                        page.set(new_page);
+                                    }
+                                >
+                                    {move || if loading.get() { "加载中..." } else { "下一页" }}
+                                </button>
+                            </div>
+                        </Show>
+                    }>
+                        <div class="history-loading">
+                            <LoadingSpinner message="加载历史记录中..." />
                         </div>
                     </Show>
                 </div>

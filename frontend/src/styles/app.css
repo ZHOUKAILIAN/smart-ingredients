@@ -37,6 +37,11 @@
 
   /* Safe-area top space for status bar */
   --statusbar-height: max(20px, env(safe-area-inset-top, 20px));
+  --space-page-x: clamp(16px, 4vw, 24px);
+  --space-page-y: clamp(16px, 3.5vh, 28px);
+  --space-section-gap: clamp(12px, 2.6vh, 20px);
+  --space-hero-top: clamp(32px, 8vh, 56px);
+  --space-cta-bottom: calc(clamp(12px, 3vh, 22px) + env(safe-area-inset-bottom, 0px));
 }
 
 body {
@@ -498,7 +503,7 @@ body {
 
 .page.page-history .page-scrollable-content,
 .page.page-profile .page-scrollable-content {
-  padding: 24px 20px 28px;
+  padding: var(--space-page-y) var(--space-page-x) var(--space-cta-bottom);
 }
 
 .page.page-result.figma {
@@ -523,12 +528,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 24px 20px;
+  padding: var(--space-page-y) var(--space-page-x);
 }
 
 .home-hero {
   text-align: center;
-  padding: 52px 24px 20px;
+  padding: var(--space-hero-top) var(--space-page-x) var(--space-section-gap);
 }
 
 .brand-mark {
@@ -618,11 +623,11 @@ body {
 }
 
 .steps-card {
-  margin: 0 30px 16px;
-  padding: 16px 25px;
+  margin: 0 var(--space-page-x) var(--space-section-gap);
+  padding: var(--space-section-gap) var(--space-page-x);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-section-gap);
 }
 
 .card-title {
@@ -777,10 +782,10 @@ body {
 }
 
 .home-actions {
-  padding: 12px 30px 0;
+  padding: var(--space-section-gap) var(--space-page-x) 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-section-gap);
 }
 
 .primary-cta {
@@ -2952,8 +2957,8 @@ body {
 .login-form {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 24px;
-  padding: 22px;
-  margin: 0 20px;
+  padding: calc(var(--space-section-gap) + 6px);
+  margin: 0 var(--space-page-x);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
   display: flex;
   flex-direction: column;
@@ -2966,7 +2971,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 52px 24px 20px;
+  padding: var(--space-hero-top) var(--space-page-x) var(--space-section-gap);
 }
 
 .input-field-group {
@@ -3197,6 +3202,15 @@ body {
   color: #dc2626;
 }
 
+.history-action-btn:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.history-loading {
+  padding: var(--space-section-gap) var(--space-page-x);
+}
+
 .history-score-value {
   font-weight: 700;
   font-size: 16px;
@@ -3255,6 +3269,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  padding-bottom: var(--space-cta-bottom);
   /* 平滑滚动 */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;

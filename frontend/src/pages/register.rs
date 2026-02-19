@@ -6,7 +6,8 @@ use uuid::Uuid;
 
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
-use crate::utils::preference::{load_preference, save_preference};
+use crate::utils::local_storage;
+use crate::utils::preference::{load_preference, merge_preferences, save_preference};
 use crate::utils::{emit_toast, local_history};
 
 fn validate_username(username: &str) -> Result<(), &'static str> {
@@ -114,8 +115,57 @@ pub fn RegisterPage() -> impl IntoView {
                     value
                 }
             };
-            if let Err(err) = services::update_preferences(json!({ "selection": pref })).await {
-                emit_toast(ToastLevel::Error, "同步失败", &err);
+            let local_seen = local_storage::get_has_seen_onboarding();
+            if local_seen {
+                state.has_seen_onboarding.set(true);
+            }
+            match services::fetch_preferences().await {
+                Ok(prefs) => {
+                    let mut base = prefs.preferences;
+                    if !base.is_object() {
+                        base = json!({});
+                    }
+                    let mut selection_to_set: Option<String> = None;
+                    let mut seen_to_set: Option<bool> = None;
+
+                    if let Some(value) = base.get("selection").and_then(|v| v.as_str()) {
+                        save_preference(value);
+                        state.analysis_preference.set(Some(value.to_string()));
+                    } else {
+                        selection_to_set = Some(pref.clone());
+                    }
+
+                    if let Some(flag) =
+                        base.get("has_seen_onboarding").and_then(|v| v.as_bool())
+                    {
+                        local_storage::set_has_seen_onboarding(flag);
+                        state.has_seen_onboarding.set(flag);
+                    } else if local_seen {
+                        seen_to_set = Some(true);
+                    }
+
+                    if selection_to_set.is_some() || seen_to_set.is_some() {
+                        let merged = merge_preferences(
+                            base,
+                            selection_to_set.as_deref(),
+                            seen_to_set,
+                        );
+                        if let Err(err) = services::update_preferences(merged).await {
+                            emit_toast(ToastLevel::Error, "同步失败", &err);
+                        }
+                    }
+                }
+                Err(err) => {
+                    emit_toast(ToastLevel::Warning, "读取偏好失败", &err);
+                    let merged = merge_preferences(
+                        json!({}),
+                        Some(pref.as_str()),
+                        if local_seen { Some(true) } else { None },
+                    );
+                    if let Err(update_err) = services::update_preferences(merged).await {
+                        emit_toast(ToastLevel::Error, "同步失败", &update_err);
+                    }
+                }
             }
             navigate.get_value()("/", Default::default());
         }

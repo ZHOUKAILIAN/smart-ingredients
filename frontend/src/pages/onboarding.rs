@@ -7,7 +7,8 @@ use crate::components::{get_preference_label, ConfirmModal, PreferenceCard};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
-use crate::utils::preference::save_preference;
+use crate::utils::local_storage;
+use crate::utils::preference::{merge_preferences, save_preference};
 
 const ONBOARDING_STEPS: &[(&str, &str)] = &[
     ("选人群", "告诉我们你更在意哪类风险"),
@@ -37,11 +38,18 @@ pub fn OnboardingPage() -> impl IntoView {
         let pref_value = preference.get();
         save_preference(&pref_value);
         state.analysis_preference.set(Some(pref_value.clone()));
+        local_storage::set_has_seen_onboarding(true);
+        state.has_seen_onboarding.set(true);
 
         if state.auth_user.get().is_some() {
             let val_clone = pref_value.clone();
             spawn_local(async move {
-                match services::update_preferences(json!({ "selection": val_clone })).await {
+                let base = services::fetch_preferences()
+                    .await
+                    .map(|prefs| prefs.preferences)
+                    .unwrap_or_else(|_| json!({}));
+                let merged = merge_preferences(base, Some(val_clone.as_str()), Some(true));
+                match services::update_preferences(merged).await {
                     Ok(_) => {
                         emit_toast(ToastLevel::Success, "已保存", "人群设置已保存");
                     }
