@@ -37,6 +37,26 @@
 
   /* Safe-area top space for status bar */
   --statusbar-height: max(20px, env(safe-area-inset-top, 20px));
+
+  /* Responsive font sizes — clamped so text stays readable on any width */
+  --fs-xs: clamp(11px, 3.2vw, 14px);
+  --fs-sm: clamp(12px, 3.47vw, 15px);
+  --fs-md: clamp(13px, 3.73vw, 16px);
+  --fs-base: clamp(14px, 4vw, 17px);
+  --fs-lg: clamp(15px, 4.27vw, 18px);
+  --fs-xl: clamp(16px, 4.8vw, 20px);
+  --fs-2xl: clamp(19px, 5.87vw, 24px);
+  --fs-3xl: clamp(21px, 6.4vw, 27px);
+  --fs-hero: clamp(24px, 7.47vw, 32px);
+
+  /* Responsive spacing — clamped so elements don't collapse on narrow viewports */
+  --sp-xs: max(4px, 1.07vw);
+  --sp-sm: max(8px, 2.13vw);
+  --sp-md: max(12px, 3.2vw);
+  --sp-lg: max(16px, 4.27vw);
+  --sp-xl: max(20px, 5.33vw);
+  --sp-2xl: max(24px, 6.4vw);
+  --sp-3xl: max(30px, 8vw);
 }
 
 body {
@@ -59,7 +79,7 @@ body {
   padding-bottom: 0;
   padding-left: env(safe-area-inset-left, 0);
   /* 顶部状态栏区域使用更深的绿色背景,提高系统状态栏文字对比度 */
-  background: linear-gradient(to bottom, #a7f3d0 0, var(--bg) 120px);
+  background: linear-gradient(to bottom, #a7f3d0 0, var(--bg) 14.78vh);
   /* 确保 padding 包含在 100vh 内 */
   box-sizing: border-box;
   /* 防止内容溢出 - 禁止整体滚动 */
@@ -94,7 +114,7 @@ body {
 
 .title {
   margin: 0;
-  font-size: 24px;
+  font-size: var(--fs-3xl);
   font-weight: 700;
   letter-spacing: -0.02em; /* Modern tight spacing for headings */
 }
@@ -102,7 +122,7 @@ body {
 .subtitle {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--fs-md);
   letter-spacing: -0.01em;
 }
 
@@ -269,8 +289,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 32px 20px;
+  gap: var(--sp-lg);
+  padding: var(--sp-3xl) var(--sp-xl);
+  margin: 0 var(--sp-xl);
 }
 
 .gauge-container {
@@ -345,8 +366,8 @@ body {
 .summary-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin: 0 16px 16px 16px;
+  gap: var(--sp-lg);
+  margin: 0 var(--sp-xl) var(--sp-lg) var(--sp-xl);
 }
 
 .summary-card > summary {
@@ -528,43 +549,43 @@ body {
 
 .home-hero {
   text-align: center;
-  padding: 52px 24px 20px;
+  padding: 6.4vh var(--sp-2xl) 2.46vh;
 }
 
 .brand-mark {
   position: relative;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 16px auto;
+  width: 21.3vw;
+  height: 21.3vw;
+  margin: 0 auto var(--sp-lg) auto;
 }
 
 .brand-icon {
   width: 100%;
   height: 100%;
-  border-radius: 28px;
+  border-radius: 7.47vw;
   background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 22px;
+  font-size: var(--fs-2xl);
   box-shadow: 0 18px 30px rgba(16, 185, 129, 0.35);
 }
 
 .brand-ai {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 32px;
-  height: 32px;
+  top: -2.13vw;
+  right: -2.13vw;
+  width: 8.53vw;
+  height: 8.53vw;
   border-radius: 50%;
   background: linear-gradient(135deg, #fbbf24, #fb923c);
   color: #1f2937;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   box-shadow: 0 10px 18px rgba(251, 191, 36, 0.45);
 }
@@ -589,40 +610,40 @@ body {
 
 .hero-title {
   margin: 0 0 6px 0;
-  font-size: 28px;
+  font-size: var(--fs-hero);
   font-weight: 700;
   color: #111827;
 }
 
 .hero-subtitle {
   margin: 0 0 10px 0;
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: #059669;
 }
 
 .hero-description {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: #6b7280;
   line-height: 1.6;
-  padding: 0 12px;
+  padding: 0 var(--sp-md);
 }
 
 .surface-card {
   background: rgba(255, 255, 255, 0.92);
-  border-radius: 24px;
-  padding: 20px;
+  border-radius: 6.4vw;
+  padding: var(--sp-xl);
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(14px);
 }
 
 .steps-card {
-  margin: 0 30px 16px;
-  padding: 16px 25px;
+  margin: 0 var(--sp-3xl) 1.97vh;
+  padding: var(--sp-lg) 6.67vw;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-lg);
 }
 
 .card-title {
@@ -777,19 +798,20 @@ body {
 }
 
 .home-actions {
-  padding: 12px 30px 0;
+  padding: 1.48vh var(--sp-3xl) 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 3.73vw;
 }
 
 .primary-cta {
   width: 100%;
-  height: 48px;
-  border-radius: 16px;
+  height: 5.91vh;
+  min-height: 44px;
+  border-radius: 4.27vw;
   border: none;
   color: #ffffff;
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
   background: linear-gradient(135deg, #10b981, #059669);
   box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
@@ -812,12 +834,13 @@ body {
 
 .secondary-cta {
   width: 100%;
-  height: 44px;
-  border-radius: 14px;
+  height: 5.42vh;
+  min-height: 42px;
+  border-radius: 3.73vw;
   border: 1px solid #d7e2eb;
   background: #ffffff;
   color: #111827;
-  font-size: 14px;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: transform var(--transition-fast);
@@ -1067,11 +1090,11 @@ body {
 }
 
 .score-card {
-  margin: 16px;
+  margin: var(--sp-lg) var(--sp-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-md);
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.95),
@@ -2316,19 +2339,19 @@ body {
 .summary-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 0 16px 20px 16px;
+  gap: var(--sp-md);
+  padding: 0 var(--sp-xl) var(--sp-xl) var(--sp-xl);
 }
 
 .btn-view-detail {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 2.67vw;
   width: 100%;
-  height: 56px;
-  padding: 0 20px;
-  border-radius: 14px;
+  height: 5.91vh;
+  padding: 0 var(--sp-xl);
+  border-radius: 3.73vw;
   background: var(--primary);
   color: #ffffff;
   border: none;
@@ -2350,7 +2373,7 @@ body {
 }
 
 .btn-title {
-  font-size: 16px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   line-height: 1;
 }
@@ -2834,9 +2857,8 @@ body {
   gap: 12px;
   font-size: 12px;
   padding: 16px;
-  margin-top: 8px;
-  color: #6b7280;
   margin-top: 12px;
+  color: #6b7280;
 }
 
 .profile-actions {
@@ -3176,24 +3198,6 @@ body {
   overflow: hidden;
 }
 
-/* Button Size Responsive Optimization */
-@media (max-width: 375px) {
-  .primary-cta {
-    height: 44px;
-    font-size: 14px;
-  }
-
-  .secondary-cta {
-    height: 42px;
-    font-size: 13px;
-  }
-
-  .primary-button {
-    height: 44px;
-    font-size: 14px;
-  }
-}
-
 /* Scrollable Content Area - 只有这个区域可以滚动 */
 .page-scrollable-content {
   flex: 1;
@@ -3519,11 +3523,11 @@ body {
 
 /* ── Compact Onboarding Page ── */
 .onboarding-compact {
-  padding: 16px;
-  padding-top: 60px;
+  padding: var(--sp-lg);
+  padding-top: 7.39vh;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-lg);
   max-width: 420px;
   margin: 0 auto;
 }
@@ -3534,14 +3538,14 @@ body {
 
 .onboarding-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: #111827;
 }
 
 .onboarding-flow-hint {
   margin: 6px 0 0 0;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: #9ca3af;
   letter-spacing: 0.5px;
 }
@@ -3549,7 +3553,7 @@ body {
 .onboarding-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 3.73vw;
 }
 
 .onboarding-option {
@@ -3557,10 +3561,10 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 16px 6px;
+  padding: var(--sp-lg) 1.6vw;
   background: #ffffff;
   border: 2px solid #e5e7eb;
-  border-radius: 14px;
+  border-radius: 3.73vw;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: center;
@@ -3578,12 +3582,12 @@ body {
 }
 
 .onboarding-option-icon {
-  font-size: 28px;
+  font-size: var(--fs-hero);
   line-height: 1;
 }
 
 .onboarding-option-label {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: #374151;
   line-height: 1.3;
@@ -3591,10 +3595,116 @@ body {
 
 .onboarding-actions {
   display: flex;
-  gap: 10px;
+  gap: 2.67vw;
   padding-top: 4px;
 }
 
 .onboarding-actions button {
   flex: 1;
+}
+
+/* ── Empty State Card (History) ── */
+.empty-state-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3xl) var(--sp-lg);
+  cursor: pointer;
+}
+
+.empty-state-card:active .empty-state-inner {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.04);
+  transform: scale(0.98);
+}
+
+.empty-state-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-2xl);
+  border: 2px dashed #e5e7eb;
+  border-radius: var(--sp-lg);
+  width: 100%;
+  max-width: 80vw;
+  transition: all var(--transition-fast);
+}
+
+.empty-state-icon {
+  width: 50px;
+  height: 50px;
+  color: #d1d5db;
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.empty-state-desc {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: #9ca3af;
+}
+
+/* ── History Skeleton Loading ── */
+.history-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  padding: var(--sp-md);
+}
+
+.skeleton-card {
+  background: #ffffff;
+  border-radius: 4.27vw;
+  padding: var(--sp-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.skeleton-row {
+  display: flex;
+  gap: var(--sp-md);
+  align-items: center;
+}
+
+.skeleton-thumb {
+  width: 21.3vw;
+  height: 21.3vw;
+  border-radius: var(--sp-md);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.skeleton-line {
+  height: 3.2vw;
+  border-radius: 1.07vw;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+.skeleton-line.wide { width: 80%; }
+.skeleton-line.narrow { width: 50%; }
+.skeleton-line.full { width: 100%; }
+.skeleton-line.medium { width: 65%; }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

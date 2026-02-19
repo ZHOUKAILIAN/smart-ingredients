@@ -225,7 +225,6 @@ pub fn SummaryPage() -> impl IntoView {
                     <button class="btn-view-detail" on:click=on_view_detail>
                         <span class="btn-icon">"📋"</span>
                         <span class="btn-title">"查看详细配料表"</span>
-                        <span class="btn-arrow">"→"</span>
                     </button>
 
                     {move || {

@@ -3,7 +3,7 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use wasm_bindgen::JsCast;
 
-use crate::components::{get_preference_label, IconArrowLeft};
+use crate::components::{get_preference_description, get_preference_label, IconArrowLeft};
 use crate::services;
 use crate::stores::{AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
@@ -113,7 +113,10 @@ pub fn ConfirmPage() -> impl IntoView {
 
                 <div class="preference-container">
                     <p class="preference-tips">
-                        {move || format!("💡 当前人群定位：{}", get_preference_label(&preference.get()))}
+                        {move || format!(
+                            "💡 当前分析更注重：{}。如需修改请前往「我的」页面",
+                            get_preference_description(&preference.get()),
+                        )}
                     </p>
                 </div>
 

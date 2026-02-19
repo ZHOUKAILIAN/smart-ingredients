@@ -10,7 +10,6 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 
 use wasm_bindgen::JsCast;
-use web_sys::window;
 use web_sys::{HtmlInputElement, Url};
 
 #[component]
@@ -22,23 +21,22 @@ pub fn CapturePage() -> impl IntoView {
     let camera_input_ref = NodeRef::<leptos::html::Input>::new();
     let album_input_ref = NodeRef::<leptos::html::Input>::new();
 
-    // 使用 LocalStorage 持久化 show_scan 状态
     let show_scan: RwSignal<bool, LocalStorage> = RwSignal::new_local(false);
-    let initialized = RwSignal::new(false);
 
+    // Reactively consume the open_in_scan_mode flag (may be set after mount)
     create_effect(move |_| {
-        if initialized.get() {
+        if state.open_in_scan_mode.get() {
+            show_scan.set(true);
+            state.open_in_scan_mode.set(false);
+        }
+    });
+
+    // Run once on mount: redirect to onboarding if no preference is set
+    create_effect(move |prev: Option<()>| {
+        if prev.is_some() {
             return;
         }
-        initialized.set(true);
-        if let Some(win) = window() {
-            if let Ok(search) = win.location().search() {
-                if search.contains("view=scan") {
-                    show_scan.set(true);
-                }
-            }
-        }
-        if state.analysis_preference.get().is_none() && load_preference().is_none() {
+        if state.analysis_preference.get_untracked().is_none() && load_preference().is_none() {
             let nav = navigate.get_value();
             nav("/onboarding", Default::default());
         }
@@ -117,7 +115,6 @@ pub fn CapturePage() -> impl IntoView {
                     state.selected_image_path.set(Some(response.image_url));
                     state.analysis_source.set(AnalysisSource::NewAnalysis);
                     state.loading_state.set(LoadingState::Idle);
-                    // 清除 show_scan 状态
                     show_scan.set(false);
                     navigate("/ocr", Default::default());
                 }

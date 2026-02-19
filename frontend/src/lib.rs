@@ -46,6 +46,7 @@ pub fn App() -> impl IntoView {
     let last_home_path = RwSignal::new("/".to_string());
     let last_history_path = RwSignal::new("/history".to_string());
     let last_profile_path = RwSignal::new("/profile".to_string());
+    let open_in_scan_mode = RwSignal::new(false);
 
     provide_context(AppState {
         analysis_id,
@@ -66,6 +67,7 @@ pub fn App() -> impl IntoView {
         last_home_path,
         last_history_path,
         last_profile_path,
+        open_in_scan_mode,
     });
 
     let auth_state = use_context::<AppState>().expect("AppState not found");

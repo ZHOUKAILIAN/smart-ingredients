@@ -7,7 +7,7 @@ use crate::components::{get_preference_label, ConfirmModal, PREFERENCE_OPTIONS};
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
-use crate::utils::preference::save_preference;
+use crate::utils::preference::{load_preference, save_preference};
 
 #[component]
 pub fn OnboardingPage() -> impl IntoView {
@@ -18,6 +18,9 @@ pub fn OnboardingPage() -> impl IntoView {
         .analysis_preference
         .get()
         .unwrap_or_else(|| "normal".to_string());
+
+    // If user already has a preference, they're re-visiting from profile settings
+    let is_returning = state.analysis_preference.get().is_some() || load_preference().is_some();
 
     let preference = RwSignal::new(initial_preference);
     let show_confirm = RwSignal::new(false);
@@ -48,8 +51,18 @@ pub fn OnboardingPage() -> impl IntoView {
             emit_toast(ToastLevel::Success, "已保存", "人群设置已保存到本地");
         }
 
-        let nav = navigate.get_value();
-        nav("/?view=scan", Default::default());
+        // Reset tab memory so bottom-nav doesn't return to /onboarding
+        state.last_home_path.set("/".to_string());
+        state.last_profile_path.set("/profile".to_string());
+
+        if is_returning {
+            // Came from profile settings — go back to profile
+            navigate.get_value()("/profile", Default::default());
+        } else {
+            // First-time onboarding — go to scan mode
+            state.open_in_scan_mode.set(true);
+            navigate.get_value()("/", Default::default());
+        }
     };
 
     let on_skip = move |_| {
