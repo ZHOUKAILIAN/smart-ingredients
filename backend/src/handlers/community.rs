@@ -63,6 +63,8 @@ async fn create_post(
                 payload = Some(parsed);
             }
             Some("card_image") => {
+                let content_type = field.content_type().map(|ct| ct.to_string());
+                let filename = field.file_name().map(|name| name.to_string());
                 let bytes = field
                     .bytes()
                     .await
@@ -75,8 +77,8 @@ async fn create_post(
                     )));
                 }
                 image_bytes = Some(bytes.to_vec());
-                image_content_type = field.content_type().map(|ct| ct.to_string());
-                image_filename = field.file_name().map(|name| name.to_string());
+                image_content_type = content_type;
+                image_filename = filename;
             }
             _ => {}
         }
