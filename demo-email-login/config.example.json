@@ -1,9 +1,0 @@
-{
-  "smtp_host": "smtp.qq.com",
-  "smtp_port": 587,
-  "smtp_user": "2415699291@qq.com",
-  "smtp_pass": "replace-with-app-password",
-  "smtp_from": "2415699291@qq.com",
-  "smtp_ssl": false,
-  "smtp_starttls": true
-}
