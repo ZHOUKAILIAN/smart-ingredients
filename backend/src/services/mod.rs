@@ -1,6 +1,7 @@
 //! Business logic services
 
 pub mod auth;
+pub mod community;
 pub mod image_converter;
 pub mod llm;
 pub mod llm_deepseek;
