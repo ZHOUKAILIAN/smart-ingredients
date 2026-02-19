@@ -2,8 +2,7 @@
 
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use leptos_router::hooks::use_navigate;
-use leptos_router::params::use_params_map;
+use leptos_router::hooks::{use_navigate, use_params_map};
 
 use crate::services;
 use crate::stores::ToastLevel;
@@ -17,12 +16,11 @@ pub fn CommunityDetailPage() -> impl IntoView {
     let loading = RwSignal::new(false);
 
     let on_back = move |_| {
-        let nav = navigate.get_value();
-        nav("/community", Default::default());
+        navigate("/community", Default::default());
     };
 
     create_effect(move |_| {
-        let Some(id_raw) = params.get().get("id").cloned() else {
+        let Some(id_raw) = params.get().get("id") else {
             return;
         };
         let Ok(id) = uuid::Uuid::parse_str(&id_raw) else {
@@ -62,32 +60,52 @@ pub fn CommunityDetailPage() -> impl IntoView {
                     fallback=move || view! { <p class="hint">"加载中…"</p> }
                 >
                     {move || detail.get().map(|item| {
+                        let author_label = item.author_label.clone();
+                        let created_at = item.created_at.clone();
+                        let summary_text = item.summary_text.clone();
+                        let ingredients_raw = item.ingredients_raw.clone();
+                        let card_summary = item.card_payload.summary.clone();
+                        let card_score = item.card_payload.health_score;
+                        let health_score = item.health_score;
                         let image_url = item
                             .card_image_url
                             .clone()
                             .map(|url| services::resolve_media_url(&url))
                             .unwrap_or_default();
+                        let has_image = !image_url.is_empty();
+                        let image_url_for_view = image_url.clone();
                         view! {
                             <div class="community-detail-card">
                                 <div class="community-detail-meta">
-                                    <span>{item.author_label}</span>
-                                    <span>{item.created_at}</span>
+                                    <span>{author_label}</span>
+                                    <span>{created_at}</span>
                                 </div>
 
-                                <Show when=move || !image_url.is_empty()>
-                                    <img src={image_url} alt="社区分享图片" class="community-detail-image" />
+                                <Show
+                                    when=move || has_image
+                                    fallback=move || view! {
+                                        <div class="community-detail-score">
+                                            <span>"健康评分"</span>
+                                            <strong>{card_score}</strong>
+                                        </div>
+                                        <p class="community-detail-summary">{card_summary.clone()}</p>
+                                    }
+                                >
+                                    <img src={image_url_for_view.clone()} alt="社区分享图片" class="community-detail-image" />
                                 </Show>
 
-                                <div class="community-detail-score">
-                                    <span>"健康评分"</span>
-                                    <strong>{item.health_score}</strong>
-                                </div>
+                                <Show when=move || has_image>
+                                    <div class="community-detail-score">
+                                        <span>"健康评分"</span>
+                                        <strong>{health_score}</strong>
+                                    </div>
 
-                                <p class="community-detail-summary">{item.summary_text}</p>
+                                    <p class="community-detail-summary">{summary_text.clone()}</p>
+                                </Show>
 
                                 <div class="community-detail-ingredients">
                                     <h3>"配料表"</h3>
-                                    <p>{item.ingredients_raw}</p>
+                                    <p>{ingredients_raw}</p>
                                 </div>
                             </div>
                         }

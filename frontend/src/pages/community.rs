@@ -42,13 +42,13 @@ pub fn CommunityPage() -> impl IntoView {
         fetch_page(current);
     });
 
-    let on_open_detail = {
+    let on_open_detail = Callback::new({
         let nav = navigate.clone();
         move |id: uuid::Uuid| {
-            let nav = nav.get_value();
             nav(&format!("/community/{}", id), Default::default());
         }
-    };
+    });
+    let has_pages = move || total.get() > 20;
 
     view! {
         <section class="page page-community">
@@ -64,15 +64,18 @@ pub fn CommunityPage() -> impl IntoView {
                             let summary = item.summary_text.clone();
                             let author = item.author_label.clone();
                             let created_at = item.created_at.clone();
+                            let on_open_detail = on_open_detail;
                             let image_url = item
                                 .card_image_url
                                 .clone()
                                 .map(|url| services::resolve_media_url(&url))
                                 .unwrap_or_default();
+                            let has_image = !image_url.is_empty();
+                            let image_url_for_view = image_url.clone();
                             let score = item.health_score;
 
                             view! {
-                                <li class="community-card" on:click=move |_| on_open_detail(id)>
+                                <li class="community-card" on:click=move |_| on_open_detail.run(id)>
                                     <div class="community-card-main">
                                         <div class="community-card-content">
                                             <div class="community-card-meta">
@@ -82,11 +85,11 @@ pub fn CommunityPage() -> impl IntoView {
                                             <p class="community-summary">{summary}</p>
                                         </div>
                                         <div class="community-thumb">
-                                            <Show when=move || !image_url.is_empty() fallback=move || view! {
+                                            <Show when=move || has_image fallback=move || view! {
                                                 <div class="community-thumb-placeholder">"📷"</div>
                                             }>
                                                 <img
-                                                    src={image_url.clone()}
+                                                    src={image_url_for_view.clone()}
                                                     alt="社区分享图片"
                                                     class="community-thumb-image"
                                                 />
@@ -103,7 +106,7 @@ pub fn CommunityPage() -> impl IntoView {
                     </ul>
                 </Show>
 
-                <Show when=move || total.get() > 20>
+                <Show when=has_pages>
                     <div class="community-pagination">
                         <button
                             class="secondary-cta"
