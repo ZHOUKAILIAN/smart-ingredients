@@ -38,6 +38,7 @@ pub use risk_badge::RiskBadge;
 pub use share_button::{ShareButton, ShareExportProps};
 pub use summary_card::SummaryCard;
 pub use tab_icons::{IconHistory, IconHome, IconUser};
+pub use tab_icons::IconCommunity;
 pub use toast::ToastHost;
 pub use usage_tips::UsageTips;
 
