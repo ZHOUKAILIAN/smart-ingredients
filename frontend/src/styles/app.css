@@ -652,6 +652,18 @@ body {
   margin-top: 16px;
 }
 
+.community-share-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .community-detail-card {
   background: #ffffff;
   border-radius: 18px;
