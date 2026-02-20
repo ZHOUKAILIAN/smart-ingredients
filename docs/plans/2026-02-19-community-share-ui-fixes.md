@@ -16,7 +16,7 @@
 - [x] Task 2: Fix community list fetch loop + add delete action
 - [x] Task 3: Fix community detail fetch loop + add delete action
 - [x] Task 4: Hide share button after sharing (show status only)
-- [ ] Task 5: Documentation update (API reference alignment)
+- [x] Task 5: Documentation update (API reference alignment - verified, no change needed)
 
 ---
 
