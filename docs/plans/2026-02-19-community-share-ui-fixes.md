@@ -10,6 +10,16 @@
 
 ---
 
+## Status
+
+- [x] Task 1: Add UI helper module with tests
+- [x] Task 2: Fix community list fetch loop + add delete action
+- [x] Task 3: Fix community detail fetch loop + add delete action
+- [x] Task 4: Hide share button after sharing (show status only)
+- [ ] Task 5: Documentation update (API reference alignment)
+
+---
+
 ### Task 1: Add UI helper module with tests (@superpowers:test-driven-development)
 
 **Files:**
