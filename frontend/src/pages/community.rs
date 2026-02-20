@@ -6,7 +6,7 @@ use leptos_router::hooks::use_navigate;
 
 use crate::services;
 use crate::stores::ToastLevel;
-use crate::utils::emit_toast;
+use crate::utils::{community_share_storage, community_ui, emit_toast};
 
 #[component]
 pub fn CommunityPage() -> impl IntoView {
@@ -15,12 +15,18 @@ pub fn CommunityPage() -> impl IntoView {
     let total = RwSignal::new(0i64);
     let page = RwSignal::new(1i64);
     let loading = RwSignal::new(false);
+    let last_requested_page = RwSignal::new(None::<i64>);
+    let share_records = RwSignal::new(community_share_storage::load_share_records());
 
     let fetch_page = move |page_number: i64| {
-        if loading.get() {
+        if loading.get_untracked() {
+            return;
+        }
+        if !community_ui::should_fetch_page(page_number, last_requested_page.get_untracked()) {
             return;
         }
         loading.set(true);
+        last_requested_page.set(Some(page_number));
         let items_signal = items;
         let total_signal = total;
         spawn_local(async move {
@@ -49,6 +55,9 @@ pub fn CommunityPage() -> impl IntoView {
         }
     });
     let has_pages = move || total.get() > 20;
+    let refresh_share_records = move || {
+        share_records.set(community_share_storage::load_share_records());
+    };
 
     view! {
         <section class="page page-community">
@@ -73,6 +82,16 @@ pub fn CommunityPage() -> impl IntoView {
                             let has_image = !image_url.is_empty();
                             let image_url_for_view = image_url.clone();
                             let score = item.health_score;
+                            let can_delete = community_ui::should_show_delete_button(
+                                community_ui::find_share_record_by_post_id(
+                                    &share_records.get(),
+                                    &id.to_string(),
+                                )
+                                .is_some(),
+                            );
+                            let items_signal = items;
+                            let total_signal = total;
+                            let refresh_share_records = refresh_share_records;
 
                             view! {
                                 <li class="community-card" on:click=move |_| on_open_detail.run(id)>
@@ -99,6 +118,50 @@ pub fn CommunityPage() -> impl IntoView {
                                     <div class="community-card-footer">
                                         <span class="community-score-label">"健康评分"</span>
                                         <span class="community-score-value">{score}</span>
+                                        <Show when=move || can_delete>
+                                            <button
+                                                class="community-delete-button"
+                                                on:click=move |ev| {
+                                                    ev.stop_propagation();
+                                                    let records = community_share_storage::load_share_records();
+                                                    let Some(record) = community_ui::find_share_record_by_post_id(
+                                                        &records,
+                                                        &id.to_string(),
+                                                    ) else {
+                                                        emit_toast(ToastLevel::Error, "删除失败", "无效的分享记录");
+                                                        return;
+                                                    };
+                                                    let Ok(post_id) = uuid::Uuid::parse_str(&record.post_id) else {
+                                                        emit_toast(ToastLevel::Error, "删除失败", "无效的分享记录");
+                                                        return;
+                                                    };
+                                                    let analysis_id = record.analysis_id.clone();
+                                                    let share_token = record.share_token.clone();
+                                                    spawn_local(async move {
+                                                        match services::delete_community_post(post_id, share_token).await {
+                                                            Ok(()) => {
+                                                                let _ = community_share_storage::remove_share_record(&analysis_id);
+                                                                items_signal.update(|list| {
+                                                                    list.retain(|item| item.id != id);
+                                                                });
+                                                                total_signal.update(|value| {
+                                                                    if *value > 0 {
+                                                                        *value -= 1;
+                                                                    }
+                                                                });
+                                                                refresh_share_records();
+                                                                emit_toast(ToastLevel::Success, "删除成功", "已从社区移除");
+                                                            }
+                                                            Err(err) => {
+                                                                emit_toast(ToastLevel::Error, "删除失败", &err);
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            >
+                                                "删除"
+                                            </button>
+                                        </Show>
                                     </div>
                                 </li>
                             }
