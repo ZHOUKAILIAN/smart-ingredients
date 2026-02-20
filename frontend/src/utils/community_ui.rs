@@ -10,6 +10,13 @@ pub fn should_fetch_page(requested_page: i64, last_requested: Option<i64>) -> bo
     Some(requested_page) != last_requested
 }
 
+pub fn should_fetch_key<T: PartialEq>(requested: &T, last_requested: Option<&T>) -> bool {
+    match last_requested {
+        Some(last) => last != requested,
+        None => true,
+    }
+}
+
 pub fn share_button_state(has_record: bool) -> ShareButtonState {
     if has_record {
         ShareButtonState::Shared
@@ -42,6 +49,18 @@ mod tests {
     #[test]
     fn should_fetch_page_allows_new_page() {
         assert!(should_fetch_page(2, Some(1)));
+    }
+
+    #[test]
+    fn should_fetch_key_skips_when_same() {
+        let last = Some("same".to_string());
+        assert!(!should_fetch_key(&"same".to_string(), last.as_ref()));
+    }
+
+    #[test]
+    fn should_fetch_key_allows_when_different() {
+        let last = Some("one".to_string());
+        assert!(should_fetch_key(&"two".to_string(), last.as_ref()));
     }
 
     #[test]
