@@ -129,7 +129,7 @@ pub fn AnalyzingPage() -> impl IntoView {
                     <div class="progress-bar" aria-hidden="true">
                         <div class="progress-bar-fill"></div>
                     </div>
-                    <h2 class="status-title">"AI 分析中..."</h2>
+                    <h2 class="status-title">"AI 分析中…"</h2>
                     <p class="status-text">"请稍候，通常需要5-10秒"</p>
                 </div>
 

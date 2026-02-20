@@ -243,7 +243,7 @@ pub fn CapturePage() -> impl IntoView {
                             >
                                 {move || {
                                     if state.loading_state.get() == LoadingState::OcrProcessing {
-                                        "上传图片中..."
+                                        "上传图片中…"
                                     } else {
                                         "开始分析"
                                     }
