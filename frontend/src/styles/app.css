@@ -1,3 +1,35 @@
+@font-face {
+  font-family: "Source Han Serif SC";
+  src: url("/assets/fonts/SourceHanSerifSC-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Han Serif SC";
+  src: url("/assets/fonts/SourceHanSerifSC-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/assets/fonts/CormorantGaramond-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/assets/fonts/CormorantGaramond-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 *,
 *::before,
 *::after {
@@ -6,6 +38,8 @@
 
 :root {
   color-scheme: light;
+  --font-display: "Source Han Serif SC", "Cormorant Garamond", serif;
+  --font-body: "Source Han Serif SC", serif;
   --bg: #f5f7f7;
   --text: #1f2d2d;
   --muted: #5f6b6b;
