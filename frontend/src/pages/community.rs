@@ -58,11 +58,14 @@ pub fn CommunityPage() -> impl IntoView {
     let refresh_share_records = move || {
         share_records.set(community_share_storage::load_share_records());
     };
+    let page_title = community_ui::community_page_title();
 
     view! {
         <section class="page page-community">
             <div class="page-scrollable-content">
-                <h2 class="page-title">"社区"</h2>
+                <Show when=move || page_title.is_some() fallback=move || ()>
+                    <h2 class="page-title">{page_title.unwrap_or_default()}</h2>
+                </Show>
                 <Show
                     when=move || !items.get().is_empty()
                     fallback=move || view! { <p class="hint">"暂无社区分享"</p> }
@@ -72,7 +75,7 @@ pub fn CommunityPage() -> impl IntoView {
                             let id = item.id;
                             let summary = item.summary_text.clone();
                             let author = item.author_label.clone();
-                            let created_at = item.created_at.clone();
+                            let created_at = community_ui::format_community_datetime(&item.created_at);
                             let on_open_detail = on_open_detail;
                             let image_url = item
                                 .card_image_url

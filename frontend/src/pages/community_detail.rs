@@ -82,7 +82,7 @@ pub fn CommunityDetailPage() -> impl IntoView {
                             .is_some(),
                         );
                         let author_label = item.author_label.clone();
-                        let created_at = item.created_at.clone();
+                        let created_at = community_ui::format_community_datetime(&item.created_at);
                         let summary_text = item.summary_text.clone();
                         let ingredients_raw = item.ingredients_raw.clone();
                         let card_summary = item.card_payload.summary.clone();

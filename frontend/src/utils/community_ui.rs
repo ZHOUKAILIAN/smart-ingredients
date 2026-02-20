@@ -36,6 +36,17 @@ pub fn find_share_record_by_post_id(
     records.iter().find(|item| item.post_id == post_id).cloned()
 }
 
+pub fn format_community_datetime(iso_string: &str) -> String {
+    let base = iso_string.split('.').next().unwrap_or(iso_string);
+    let base = base.split('+').next().unwrap_or(base);
+    let base = base.strip_suffix('Z').unwrap_or(base);
+    base.replace('T', " ")
+}
+
+pub fn community_page_title() -> Option<&'static str> {
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -91,5 +102,22 @@ mod tests {
         ];
         let found = find_share_record_by_post_id(&records, "p2").expect("record");
         assert_eq!(found.analysis_id, "a2");
+    }
+
+    #[test]
+    fn format_community_datetime_removes_fractional_and_offset() {
+        let input = "2026-02-19T12:00:00.123456+00:00";
+        assert_eq!(format_community_datetime(input), "2026-02-19 12:00:00");
+    }
+
+    #[test]
+    fn format_community_datetime_removes_z_suffix() {
+        let input = "2026-02-19T12:00:00Z";
+        assert_eq!(format_community_datetime(input), "2026-02-19 12:00:00");
+    }
+
+    #[test]
+    fn community_page_title_is_hidden() {
+        assert!(community_page_title().is_none());
     }
 }
