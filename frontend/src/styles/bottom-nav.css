@@ -30,7 +30,7 @@
   color: #94a3b8;
   padding: 4px 0;
   gap: 4px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-item.active {
@@ -44,7 +44,7 @@
 .tab-icon {
   font-size: 20px;
   line-height: 1;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
   position: relative;
   display: flex;
   align-items: center;
