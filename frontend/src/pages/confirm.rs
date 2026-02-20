@@ -100,7 +100,8 @@ pub fn ConfirmPage() -> impl IntoView {
                     <textarea
                         class="text-editor"
                         rows="10"
-                        placeholder="OCR识别的文本..."
+                        name="ocr-text"
+                        placeholder="OCR识别的文本…"
                         prop:value=move || edited_text.get()
                         on:input=move |ev| {
                             set_edited_text.set(event_target_value(&ev));
@@ -135,7 +136,7 @@ pub fn ConfirmPage() -> impl IntoView {
                     >
                         {move || {
                             if state.loading_state.get() == LoadingState::LlmAnalyzing {
-                                "提交中..."
+                                "提交中…"
                             } else {
                                 "确认并分析"
                             }

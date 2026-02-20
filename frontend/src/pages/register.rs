@@ -174,36 +174,46 @@ pub fn RegisterPage() -> impl IntoView {
 
             <div class="login-form">
                 <div class="input-field-group">
-                    <label class="input-label">"账号"</label>
+                    <label class="input-label" for="register-username">"账号"</label>
                     <div class="input-wrapper">
                         <input
+                            id="register-username"
                             class="custom-input"
                             type="text"
-                            placeholder="4-20 位字母/数字/下划线"
+                            name="username"
+                            autocomplete="username"
+                            spellcheck="false"
+                            placeholder="4-20 位字母/数字/下划线…"
                             on:input=move |ev| username.set(event_target_value(&ev))
                         />
                     </div>
                 </div>
 
                 <div class="input-field-group">
-                    <label class="input-label">"密码"</label>
+                    <label class="input-label" for="register-password">"密码"</label>
                     <div class="input-wrapper">
                         <input
+                            id="register-password"
                             class="custom-input"
                             type="password"
-                            placeholder="至少 6 位"
+                            name="new-password"
+                            autocomplete="new-password"
+                            placeholder="至少 6 位…"
                             on:input=move |ev| password.set(event_target_value(&ev))
                         />
                     </div>
                 </div>
 
                 <div class="input-field-group">
-                    <label class="input-label">"确认密码"</label>
+                    <label class="input-label" for="register-confirm-password">"确认密码"</label>
                     <div class="input-wrapper">
                         <input
+                            id="register-confirm-password"
                             class="custom-input"
                             type="password"
-                            placeholder="注册时需确认"
+                            name="confirm-password"
+                            autocomplete="new-password"
+                            placeholder="再次输入密码…"
                             on:input=move |ev| confirm_password.set(event_target_value(&ev))
                         />
                     </div>
@@ -219,7 +229,7 @@ pub fn RegisterPage() -> impl IntoView {
                     on:click=on_register
                     disabled=move || registering.get()
                 >
-                    {move || if registering.get() { "注册中..." } else { "注册账号" }}
+                    {move || if registering.get() { "注册中…" } else { "注册账号" }}
                 </button>
 
                 <button

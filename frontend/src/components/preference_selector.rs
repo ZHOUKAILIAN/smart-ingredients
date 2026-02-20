@@ -100,9 +100,11 @@ pub fn PreferenceSelector(
 
     view! {
         <div class="preference-selector">
-            <label class="preference-label">{label_text}</label>
+            <label class="preference-label" for="preference-select">{label_text}</label>
             <select
+                id="preference-select"
                 class="preference-select"
+                name="preference"
                 prop:value=move || value.get()
                 on:change=move |ev| {
                     let new_value = event_target_value(&ev);
