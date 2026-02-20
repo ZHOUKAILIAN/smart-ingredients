@@ -40,30 +40,27 @@
   color-scheme: light;
   --font-display: "Source Han Serif SC", "Cormorant Garamond", serif;
   --font-body: "Source Han Serif SC", serif;
-  --bg: #f5f7f7;
-  --text: #1f2d2d;
-  --muted: #5f6b6b;
-  --primary: #26a36a;
-  --primary-dark: #1f8a59;
+  --bg: #f7f5f2;
+  --text: #1a1a1a;
+  --muted: #5c5c5c;
+  --primary: #1f8a59;
+  --primary-dark: #166947;
   --card: #ffffff;
-  --border: #e3e8e7;
+  --border: #e8e4df;
 
   /* Risk level colors */
-  --risk-low: #10b981;
-  --risk-low-bg: #d1fae5;
-  --risk-medium: #f59e0b;
-  --risk-medium-bg: #fef3c7;
-  --risk-high: #ef4444;
-  --risk-high-bg: #fee2e2;
+  --risk-low: #1f8a59;
+  --risk-low-bg: #e7f3ee;
+  --risk-medium: #b76b0b;
+  --risk-medium-bg: #f6ede2;
+  --risk-high: #a13333;
+  --risk-high-bg: #f4e6e6;
 
   /* Shadows */
   /* Shadows - Smooth, layered shadows for depth */
-  --shadow-sm:
-    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.08);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -73,29 +70,33 @@
   --statusbar-height: max(20px, env(safe-area-inset-top, 20px));
 
   /* Responsive font sizes — clamped so text stays readable on any width */
-  --fs-xs: clamp(11px, 3.2vw, 14px);
-  --fs-sm: clamp(12px, 3.47vw, 15px);
-  --fs-md: clamp(13px, 3.73vw, 16px);
-  --fs-base: clamp(14px, 4vw, 17px);
-  --fs-lg: clamp(15px, 4.27vw, 18px);
-  --fs-xl: clamp(16px, 4.8vw, 20px);
-  --fs-2xl: clamp(19px, 5.87vw, 24px);
-  --fs-3xl: clamp(21px, 6.4vw, 27px);
-  --fs-hero: clamp(24px, 7.47vw, 32px);
+  --fs-display: clamp(1.75rem, 6vw, 2.75rem);
+  --fs-h1: clamp(1.25rem, 4vw, 1.75rem);
+  --fs-body: clamp(0.875rem, 2.6vw, 1rem);
+  --fs-xs: clamp(0.6875rem, 3.2vw, 0.875rem);
+  --fs-sm: clamp(0.75rem, 3.47vw, 0.9375rem);
+  --fs-md: clamp(0.8125rem, 3.73vw, 1rem);
+  --fs-base: clamp(0.875rem, 4vw, 1.0625rem);
+  --fs-lg: clamp(0.9375rem, 4.27vw, 1.125rem);
+  --fs-xl: clamp(1rem, 4.8vw, 1.25rem);
+  --fs-2xl: clamp(1.1875rem, 5.87vw, 1.5rem);
+  --fs-3xl: clamp(1.3125rem, 6.4vw, 1.6875rem);
+  --fs-hero: clamp(1.5rem, 7.47vw, 2rem);
 
   /* Responsive spacing — clamped so elements don't collapse on narrow viewports */
-  --sp-xs: max(4px, 1.07vw);
-  --sp-sm: max(8px, 2.13vw);
-  --sp-md: max(12px, 3.2vw);
-  --sp-lg: max(16px, 4.27vw);
-  --sp-xl: max(20px, 5.33vw);
-  --sp-2xl: max(24px, 6.4vw);
-  --sp-3xl: max(30px, 8vw);
+  --sp-xs: clamp(0.25rem, 1vw, 0.4rem);
+  --sp-sm: clamp(0.5rem, 2vw, 0.75rem);
+  --sp-md: clamp(0.75rem, 3vw, 1rem);
+  --sp-lg: clamp(1rem, 3.5vw, 1.25rem);
+  --sp-xl: clamp(1.25rem, 4vw, 1.5rem);
+  --sp-2xl: clamp(1.5rem, 5vw, 2rem);
+  --sp-3xl: clamp(1.75rem, 6vw, 2.5rem);
 }
 
 body {
   margin: 0;
-  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
   background: var(--bg);
   color: var(--text);
 }
@@ -150,6 +151,7 @@ body {
   margin: 0;
   font-size: var(--fs-3xl);
   font-weight: 700;
+  font-family: var(--font-display);
   letter-spacing: -0.02em; /* Modern tight spacing for headings */
 }
 
@@ -815,6 +817,7 @@ body {
   margin: 0 0 6px 0;
   font-size: var(--fs-hero);
   font-weight: 700;
+  font-family: var(--font-display);
   color: #111827;
 }
 
