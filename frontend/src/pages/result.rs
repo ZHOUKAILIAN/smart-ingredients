@@ -5,6 +5,7 @@ use crate::components::{
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
+use crate::utils::presentation::conclusion_label;
 use crate::utils::preference::load_preference;
 use leptos::either::Either;
 use leptos::leptos_dom::helpers::set_timeout;
@@ -190,14 +191,6 @@ fn build_strong_alerts(rule_hits: &[RuleHit]) -> Vec<String> {
     }
 
     alerts
-}
-
-fn conclusion_label(score: i32) -> &'static str {
-    match score {
-        75..=100 => "可吃",
-        50..=74 => "谨慎",
-        _ => "不推荐",
-    }
 }
 
 fn split_key_risks(rule_hits: &[RuleHit], max_items: usize) -> (Vec<RuleHit>, Vec<RuleHit>) {
