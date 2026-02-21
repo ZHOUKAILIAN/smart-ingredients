@@ -4187,6 +4187,77 @@ body {
 .skeleton-line.full { width: 100%; }
 .skeleton-line.medium { width: 65%; }
 
+/* ========================================
+   Figma Page Overrides
+   ======================================== */
+.page.page-ocr.figma .status-card,
+.page.page-analyzing.figma .status-card {
+  background: var(--figma-glass-bg);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: var(--figma-glass-shadow);
+  backdrop-filter: blur(var(--figma-glass-blur));
+  -webkit-backdrop-filter: blur(var(--figma-glass-blur));
+}
+
+.page.page-ocr.figma .status-icon,
+.page.page-analyzing.figma .status-icon {
+  background: linear-gradient(135deg, var(--figma-emerald-500), var(--figma-teal-500));
+  color: #ffffff;
+  border: none;
+  box-shadow: var(--figma-cta-shadow);
+}
+
+.page.page-ocr.figma .progress-bar,
+.page.page-analyzing.figma .progress-bar {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.page.page-ocr.figma .progress-bar-fill,
+.page.page-analyzing.figma .progress-bar-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0) 0%,
+    var(--figma-emerald-500) 50%,
+    rgba(20, 184, 166, 0) 100%
+  );
+}
+
+.page.page-ocr.figma .primary-cta,
+.page.page-analyzing.figma .primary-cta {
+  background: linear-gradient(135deg, var(--figma-emerald-500), var(--figma-teal-500));
+  box-shadow: var(--figma-cta-shadow);
+}
+
+.page.page-ocr.figma .secondary-cta,
+.page.page-analyzing.figma .secondary-cta {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.page.page-confirm.figma .text-editor {
+  background: var(--figma-input-bg);
+  border-color: var(--figma-input-border);
+  box-shadow: var(--figma-input-shadow);
+}
+
+.page.page-confirm.figma .text-editor:focus-visible {
+  border-color: var(--figma-emerald-600);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+.page.page-confirm.figma .btn-primary {
+  background: linear-gradient(135deg, var(--figma-emerald-500), var(--figma-teal-500));
+  box-shadow: var(--figma-cta-shadow);
+}
+
+.page.page-confirm.figma .btn-secondary {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+
 @keyframes skeleton-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
