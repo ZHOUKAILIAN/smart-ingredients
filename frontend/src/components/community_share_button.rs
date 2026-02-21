@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::services;
 use crate::stores::ToastLevel;
-use crate::utils::{community_share, community_share_storage, emit_toast};
+use crate::utils::{community_share, community_share_storage, community_ui, emit_toast};
 use crate::utils::export_image::{data_url_to_blob, ExportData, ExportIngredient};
 
 #[component]
@@ -99,42 +99,12 @@ pub fn CommunityShareButton(
         });
     });
 
-    let on_delete = Callback::new(move |_: web_sys::MouseEvent| {
-        if publishing.get() {
-            return;
-        }
-        let Some(record) = share_state.get() else {
-            return;
-        };
-        let Ok(post_id) = Uuid::parse_str(&record.post_id) else {
-            emit_toast(ToastLevel::Error, "取消失败", "无效的分享记录");
-            return;
-        };
-        publishing.set(true);
-        spawn_local(async move {
-            let share_token = record.share_token.clone();
-            match services::delete_community_post(post_id, share_token).await {
-                Ok(()) => {
-                    if let Err(err) =
-                        community_share_storage::remove_share_record(&record.analysis_id)
-                    {
-                        emit_toast(ToastLevel::Warning, "已取消分享", &err);
-                    } else {
-                        emit_toast(ToastLevel::Success, "已取消分享", "分享已删除");
-                    }
-                    share_state.set(None);
-                }
-                Err(err) => {
-                    emit_toast(ToastLevel::Error, "取消失败", &err);
-                }
-            }
-            publishing.set(false);
-        });
-    });
-
     view! {
         <Show
-            when=move || share_state.get().is_some()
+            when=move || matches!(
+                community_ui::share_button_state(share_state.get().is_some()),
+                community_ui::ShareButtonState::Shared
+            )
             fallback=move || {
                 let on_publish = on_publish;
                 view! {
@@ -144,14 +114,7 @@ pub fn CommunityShareButton(
                 }
             }
         >
-            {move || {
-                let on_delete = on_delete;
-                view! {
-                    <button class="secondary-cta" on:click=move |ev| on_delete.run(ev) disabled=move || publishing.get()>
-                        <span>{move || if publishing.get() { "处理中…" } else { "取消分享" }}</span>
-                    </button>
-                }
-            }}
+            <span class="community-share-status">"已分享"</span>
         </Show>
     }
 }

@@ -6,10 +6,10 @@
 | -------- | ------------------------ |
 | 文档编号 | 025-community-share      |
 | 标题     | 社区分享与浏览技术方案   |
-| 版本     | 1.0                      |
+| 版本     | 1.2                      |
 | 状态     | 草稿                     |
 | 创建日期 | 2026-02-19               |
-| 更新日期 | 2026-02-19               |
+| 更新日期 | 2026-02-20               |
 | 作者     | Claude Code              |
 | 关联需求 | 025-community-share      |
 
@@ -128,6 +128,13 @@ CREATE INDEX idx_community_posts_user_id ON community_posts(user_id);
 4) 删除
 - 匿名：携带 share_token 校验其哈希
 - 登录：校验 user_id
+
+### 交互规则补充
+- 已分享的分析结果在结果页/历史详情页不显示分享按钮（可显示“已分享”文本）
+- 删除入口仅在社区列表与社区详情页展示
+- 社区列表请求只在分页参数变化时触发，避免因 UI 状态变更重复请求
+- 社区列表与社区详情页的时间统一格式化为 `YYYY-MM-DD HH:mm:ss`（与历史页一致）
+- 社区页面标题不显示“社区”字样
 
 ## API 设计
 
@@ -308,6 +315,7 @@ CREATE INDEX idx_community_posts_user_id ON community_posts(user_id);
 - [ ] 新增社区 Tab 页面
 - [ ] 结果页与历史详情页分享入口
 - [ ] 详情页结果卡片渲染
+- [ ] 已分享隐藏分享按钮，删除入口位于社区列表/详情
 
 ### 阶段 3：联调与文档
 - [ ] 补充 api-reference
@@ -342,3 +350,4 @@ CREATE INDEX idx_community_posts_user_id ON community_posts(user_id);
 | 版本 | 日期 | 作者 | 描述 |
 | ---- | ---- | ---- | ---- |
 | 1.0 | 2026-02-19 | Claude Code | 初始版本 |
+| 1.1 | 2026-02-19 | Claude Code | 调整分享/删除入口交互规则 |
