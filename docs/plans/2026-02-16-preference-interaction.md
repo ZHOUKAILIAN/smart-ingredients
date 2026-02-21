@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 修复人群定位强制选择与导航异常，默认“普通人群”可直接体验，并压缩定位页步骤区视觉占比。
+**Goal:** 修复人群定位强制选择与导航异常，默认“普通人群”可直接体验；引导按账号仅展示一次；全局响应式间距适配不同机型；历史页加载与操作有明确反馈。
 
-**Architecture:** 仅前端改动。通过本地偏好初始化 + 已登录时偏好同步，移除强制跳转；新增纯函数修复 query 拼接；调整 Onboarding 页样式与跳转目标。
+**Architecture:** 仅前端改动。通过本地偏好初始化 + 已登录时偏好同步与引导标记合并；新增纯函数修复 query 拼接；调整 Onboarding 页样式与跳转目标；加入全局响应式 spacing tokens；历史页加载态与按钮 loading。
 
 **Tech Stack:** Rust (Leptos + Tauri), LocalStorage, existing preferences API
 
@@ -295,7 +295,90 @@ git commit -m "feat: compact onboarding steps"
 
 ---
 
-### Task 7: Verification (per project checklist)
+### Task 7: Add onboarding seen flag (account-scoped)
+
+**Files:**
+- Modify: `frontend/src/utils/local_storage.rs`
+- Modify: `frontend/src/stores/mod.rs`
+- Modify: `frontend/src/lib.rs`
+- Modify: `frontend/src/pages/onboarding.rs`
+
+**Step 1: Implement local storage helpers**
+
+- Add `KEY_HAS_SEEN_ONBOARDING`.
+- Add `get_has_seen_onboarding()` and `set_has_seen_onboarding(bool)`.
+
+**Step 2: Wire AppState + initialization**
+
+- Add `has_seen_onboarding: RwSignal<bool>` in `AppState`.
+- Initialize from local storage.
+- After `fetch_preferences`, merge `has_seen_onboarding` and `selection` from server.
+- If server flag missing but local is true, update preferences with merged JSON.
+- If neither local nor server has flag, navigate to `/onboarding` (avoid if already on onboarding/login/register).
+
+**Step 3: Update onboarding save/skip**
+
+- On confirm/skip: set local flag true, update state.
+- Logged-in: merge existing preferences, submit `{ selection, has_seen_onboarding: true }`.
+
+**Step 4: Commit**
+
+```bash
+git add frontend/src/utils/local_storage.rs frontend/src/stores/mod.rs frontend/src/lib.rs frontend/src/pages/onboarding.rs
+git commit -m "feat: sync onboarding seen flag"
+```
+
+---
+
+### Task 8: Responsive spacing tokens (vh/vw + clamp)
+
+**Files:**
+- Modify: `frontend/src/styles/app.css`
+
+**Step 1: Define spacing tokens**
+
+- Add `--space-page-x`, `--space-page-y`, `--space-section-gap`, `--space-cta-bottom` in `:root`.
+- Use `clamp()` + `env(safe-area-inset-bottom)`.
+
+**Step 2: Replace fixed spacing**
+
+- Update main page paddings/margins (`home-hero`, `steps-card`, `home-actions`, `page-scrollable-content`, etc.) to use tokens.
+
+**Step 3: Commit**
+
+```bash
+git add frontend/src/styles/app.css
+git commit -m "feat: add responsive spacing tokens"
+```
+
+---
+
+### Task 9: History loading + button loading
+
+**Files:**
+- Modify: `frontend/src/pages/history.rs`
+- Modify: `frontend/src/styles/app.css`
+
+**Step 1: Add list loading**
+
+- Use `loading` signal to show skeleton/loading when fetching list.
+- Show empty-state only when `!loading && items.is_empty()`.
+
+**Step 2: Add action loading**
+
+- Track per-action loading IDs (view/export/delete/pagination).
+- Disable buttons and show loading text/spinner while awaiting.
+
+**Step 3: Commit**
+
+```bash
+git add frontend/src/pages/history.rs frontend/src/styles/app.css
+git commit -m "feat: history loading states"
+```
+
+---
+
+### Task 10: Verification (per project checklist)
 
 **Step 1: Start local services**
 
@@ -318,23 +401,26 @@ Expected: PASS
 - 首页不再强制跳转人群定位页
 - 未选择人群可进入个人中心
 - Onboarding 保存/跳过后回首页
+- 首次进入展示引导，完成后同账号不再展示
 - 个人中心 → 首页不出现 `/view=scan` 404
 - 步骤区字体更小、间距更紧凑
+- 首页 CTA 与底部间距合理（小屏不拥挤）
+- 历史页加载与操作按钮显示 loading
 
 ---
 
-### Task 8: Git workflow
+### Task 11: Git workflow
 
 **Step 1: Create branch**
 
 ```bash
-git checkout -b feat/preference-interaction
+git checkout -b feat/preference-interaction-ui
 ```
 
 **Step 2: Push and open PR**
 
 ```bash
-git push -u origin feat/preference-interaction
+git push -u origin feat/preference-interaction-ui
 ```
 
 Open PR following repo template.
