@@ -61,7 +61,7 @@ pub fn CommunityPage() -> impl IntoView {
     let page_title = community_ui::community_page_title();
 
     view! {
-        <section class="page page-community">
+        <section class="page page-community figma">
             <div class="page-scrollable-content">
                 <Show when=move || page_title.is_some() fallback=move || ()>
                     <h2 class="page-title">{page_title.unwrap_or_default()}</h2>

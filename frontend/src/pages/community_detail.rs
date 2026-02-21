@@ -58,7 +58,7 @@ pub fn CommunityDetailPage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-community-detail">
+        <section class="page page-community-detail figma">
             <div class="page-topbar">
                 <button class="icon-button" on:click=on_back aria-label="返回社区">
                     "←"

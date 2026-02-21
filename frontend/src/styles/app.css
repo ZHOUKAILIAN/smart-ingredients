@@ -4235,6 +4235,12 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+.page.page-community.figma .secondary-cta {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 .page.page-confirm.figma .text-editor {
   background: var(--figma-input-bg);
   border-color: var(--figma-input-border);
@@ -4292,6 +4298,31 @@ body {
   background: rgba(16, 185, 129, 0.14);
   border-color: rgba(16, 185, 129, 0.3);
   color: var(--figma-emerald-600);
+}
+
+.page.page-community.figma .community-card,
+.page.page-community-detail.figma .community-detail-card {
+  background: var(--figma-glass-bg);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: var(--figma-glass-shadow);
+  backdrop-filter: blur(var(--figma-glass-blur));
+  -webkit-backdrop-filter: blur(var(--figma-glass-blur));
+}
+
+.page.page-community.figma .community-thumb {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.page.page-community.figma .community-score-value,
+.page.page-community-detail.figma .community-detail-score strong {
+  color: var(--figma-emerald-600);
+}
+
+.page.page-community.figma .community-delete-button,
+.page.page-community-detail.figma .community-delete-button {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
 }
 
 
