@@ -91,6 +91,26 @@
   --sp-xl: clamp(1.25rem, 4vw, 1.5rem);
   --sp-2xl: clamp(1.5rem, 5vw, 2rem);
   --sp-3xl: clamp(1.75rem, 6vw, 2.5rem);
+
+  /* Figma theme tokens */
+  --figma-emerald-500: #10b981;
+  --figma-emerald-600: #059669;
+  --figma-teal-500: #14b8a6;
+  --figma-teal-600: #0d9488;
+  --figma-amber-400: #fbbf24;
+  --figma-amber-500: #f59e0b;
+  --figma-bg-start: rgba(16, 185, 129, 0.12);
+  --figma-bg-mid: #ffffff;
+  --figma-bg-end: rgba(20, 184, 166, 0.1);
+  --figma-glass-bg: rgba(255, 255, 255, 0.78);
+  --figma-glass-border: rgba(16, 185, 129, 0.16);
+  --figma-glass-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --figma-glass-blur: 18px;
+  --figma-cta-shadow: 0 14px 30px rgba(16, 185, 129, 0.35);
+  --figma-input-bg: rgba(255, 255, 255, 0.92);
+  --figma-input-border: rgba(148, 163, 184, 0.35);
+  --figma-input-shadow: 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 20px rgba(15, 23, 42, 0.06);
 }
 
 body {
@@ -552,9 +572,9 @@ body {
   min-height: 100%;
   background: linear-gradient(
     135deg,
-    rgba(236, 253, 245, 0.7) 0%,
-    #ffffff 45%,
-    rgba(240, 253, 250, 0.7) 100%
+    var(--figma-bg-start) 0%,
+    var(--figma-bg-mid) 45%,
+    var(--figma-bg-end) 100%
   );
   box-shadow: none;
   border-radius: 0;
@@ -567,9 +587,9 @@ body {
 .page.page-profile {
   background: linear-gradient(
     135deg,
-    rgba(236, 253, 245, 0.6) 0%,
-    #ffffff 45%,
-    rgba(240, 253, 250, 0.6) 100%
+    var(--figma-bg-start) 0%,
+    var(--figma-bg-mid) 45%,
+    var(--figma-bg-end) 100%
   );
   border-radius: 0;
   padding: 0;
@@ -585,9 +605,9 @@ body {
 .page.page-community-detail {
   background: linear-gradient(
     135deg,
-    rgba(236, 253, 245, 0.6) 0%,
-    #ffffff 45%,
-    rgba(240, 253, 250, 0.6) 100%
+    var(--figma-bg-start) 0%,
+    var(--figma-bg-mid) 45%,
+    var(--figma-bg-end) 100%
   );
   border-radius: 0;
   padding: 0;
@@ -780,6 +800,67 @@ body {
 
 .page.page-result.figma {
   padding-bottom: 120px;
+}
+
+.figma-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    var(--figma-bg-start) 0%,
+    var(--figma-bg-mid) 45%,
+    var(--figma-bg-end) 100%
+  );
+}
+
+.figma-glass-card {
+  background: var(--figma-glass-bg);
+  border-radius: clamp(0.75rem, 3vw, 1rem);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: var(--figma-glass-shadow);
+  backdrop-filter: blur(var(--figma-glass-blur));
+}
+
+.figma-primary-cta {
+  background: linear-gradient(135deg, var(--figma-emerald-500), var(--figma-teal-500));
+  box-shadow: var(--figma-cta-shadow);
+  color: #ffffff;
+  border: none;
+}
+
+.figma-secondary-cta {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--figma-glass-border);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.figma-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.figma-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.figma-input {
+  width: 100%;
+  border-radius: clamp(0.6rem, 2.6vw, 0.9rem);
+  border: 1px solid var(--figma-input-border);
+  padding: var(--sp-md);
+  font-size: var(--fs-base);
+  background: var(--figma-input-bg);
+  box-shadow: var(--figma-input-shadow);
+}
+
+.figma-input:focus-visible {
+  outline: none;
+  border-color: var(--figma-emerald-600);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
 }
 
 .figma-header {
