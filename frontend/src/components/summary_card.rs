@@ -29,7 +29,7 @@ pub fn SummaryCard(summary: String, warnings: Vec<Warning>) -> impl IntoView {
     };
 
     view! {
-        <details class="card summary-card" open>
+        <details class="card summary-card">
             <summary class="summary-toggle">"摘要"</summary>
             <div class="summary-content">
                 <p class="summary-text">{summary}</p>

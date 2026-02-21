@@ -577,10 +577,10 @@ pub fn ResultPage() -> impl IntoView {
                             let key_tags = build_key_risk_tags(&result.rule_hits, 5);
                             let key_tags_for_check = key_tags.clone();
                             view! {
-                                <div class="surface-card result-section">
+                                <div class="surface-card result-section conclusion-card">
                                     <h2 class="card-title">"结论"</h2>
-                                    <p class="analysis-summary">{format!("综合判断：{}", conclusion)}</p>
-                                    <p class="analysis-desc">{reason}</p>
+                                    <p class="conclusion-label">{conclusion}</p>
+                                    <p class="conclusion-reason">{reason}</p>
                                     <Show when=move || !key_tags_for_check.is_empty()>
                                         <div class="tags-row">
                                             {key_tags
