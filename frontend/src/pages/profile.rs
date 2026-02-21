@@ -51,7 +51,7 @@ pub fn ProfilePage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-profile">
+        <section class="page page-profile figma">
             <div class="page-scrollable-content">
                 <Show when=move || state.auth_user.get().is_some() fallback=move || {
                 view! {
