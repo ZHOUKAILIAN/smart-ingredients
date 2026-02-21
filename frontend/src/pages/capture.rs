@@ -142,14 +142,14 @@ pub fn CapturePage() -> impl IntoView {
                 </div>
 
                 <div class="home-actions">
-                    <button class="primary-cta" on:click=move |_| {
+                    <button class="primary-cta figma-primary-cta" on:click=move |_| {
                         show_scan.set(true);
                     }>
                         "开始分析"
                     </button>
                 </div>
 
-                <details class="surface-card collapse-card">
+                <details class="surface-card collapse-card figma-glass-card">
                     <summary class="collapse-summary">
                         <span>"使用步骤"</span>
                     </summary>
@@ -197,7 +197,7 @@ pub fn CapturePage() -> impl IntoView {
                     </div>
                 </details>
 
-                <details class="surface-card collapse-card">
+                <details class="surface-card collapse-card figma-glass-card">
                     <summary class="collapse-summary">
                         <span>"示例图片"</span>
                     </summary>
@@ -239,7 +239,7 @@ pub fn CapturePage() -> impl IntoView {
                     />
 
                     <Show when=move || preview_url.get().is_some()>
-                        <div class="surface-card preview-card">
+                        <div class="surface-card preview-card figma-glass-card">
                             <ImagePreview
                                 preview_url=preview_url.into()
                                 on_remove=on_remove_preview
@@ -248,7 +248,7 @@ pub fn CapturePage() -> impl IntoView {
                                 "图片已上传，点击分析开始识别"
                             </div>
                             <button
-                                class="primary-cta"
+                                class="primary-cta figma-primary-cta"
                                 on:click=move |ev| on_upload.with_value(|f| f(ev))
                                 disabled=move || state.loading_state.get() != LoadingState::Idle
                             >
@@ -264,7 +264,7 @@ pub fn CapturePage() -> impl IntoView {
                     </Show>
 
                     <Show when=move || preview_url.get().is_none()>
-                        <div class="surface-card upload-card">
+                        <div class="surface-card upload-card figma-glass-card">
                             <div class="upload-hero">
                                 <div class="upload-icon">"CAM"</div>
                                 <div>
@@ -273,17 +273,17 @@ pub fn CapturePage() -> impl IntoView {
                                 </div>
                             </div>
                             <div class="upload-actions">
-                                <button class="primary-cta" on:click=on_select_camera>
+                                <button class="primary-cta figma-primary-cta" on:click=on_select_camera>
                                     "拍照"
                                 </button>
-                                <button class="secondary-cta" on:click=on_select_album>
+                                <button class="secondary-cta figma-secondary-cta" on:click=on_select_album>
                                     "从相册选择"
                                 </button>
                             </div>
                         </div>
                     </Show>
 
-                    <div class="surface-card tips-card">
+                    <div class="surface-card tips-card figma-glass-card">
                         <h3>"拍摄小贴士："</h3>
                         <ul>
                             <li>"确保配料表文字清晰，光线充足"</li>
