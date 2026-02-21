@@ -851,11 +851,54 @@ body {
 }
 
 .steps-card {
-  margin: 0 var(--sp-3xl) 1.97vh;
-  padding: var(--sp-lg) 6.67vw;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: var(--sp-lg);
+}
+
+.collapse-card {
+  margin: 0 var(--sp-3xl) var(--sp-sm);
+  padding: var(--sp-md) var(--sp-lg);
+}
+
+.collapse-card > summary {
+  list-style: none;
+}
+
+.collapse-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapse-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.collapse-summary::after {
+  content: "›";
+  font-size: var(--fs-lg);
+  color: var(--muted);
+  transform: rotate(0deg);
+  transition: transform var(--transition-fast);
+}
+
+.collapse-card[open] .collapse-summary::after {
+  transform: rotate(90deg);
+}
+
+.collapse-body {
+  padding-top: var(--sp-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
 }
 
 .card-title {
