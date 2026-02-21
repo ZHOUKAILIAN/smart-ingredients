@@ -150,7 +150,14 @@ pub fn CommunityDetailPage() -> impl IntoView {
                                         <p class="community-detail-summary">{card_summary.clone()}</p>
                                     }
                                 >
-                                    <img src={image_url_for_view.clone()} alt="社区分享图片" class="community-detail-image" />
+                                    <img
+                                        src={image_url_for_view.clone()}
+                                        alt="社区分享图片"
+                                        class="community-detail-image"
+                                        width="800"
+                                        height="600"
+                                        fetchpriority="high"
+                                    />
                                 </Show>
 
                                 <Show when=move || has_image>

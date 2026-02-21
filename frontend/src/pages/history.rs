@@ -291,6 +291,9 @@ pub fn HistoryPage() -> impl IntoView {
                                                             src={image_url.clone().unwrap_or_default()}
                                                             alt="缩略图"
                                                             class="history-thumb-img"
+                                                            loading="lazy"
+                                                            width="72"
+                                                            height="72"
                                                             on:error=move |ev| {
                                                                 if let Some(target) = ev.target() {
                                                                     if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
@@ -325,6 +328,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                     <button
                                                         class="history-action-btn export"
                                                         disabled=move || exporting_local_id.get() == Some(id_value.get_value())
+                                                        aria-label="导出记录"
                                                         on:click={
                                                             let result = item.result.clone();
                                                             let exporting_local_id = exporting_local_id.clone();
@@ -421,6 +425,9 @@ pub fn HistoryPage() -> impl IntoView {
                                                                 src={resolved_image_url.get_value()}
                                                                 alt="缩略图"
                                                                 class="history-thumb-img"
+                                                                loading="lazy"
+                                                                width="72"
+                                                                height="72"
                                                                 on:error=move |ev| {
                                                                     if let Some(target) = ev.target() {
                                                                         if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
@@ -459,6 +466,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                         <button
                                                             class="history-action-btn export"
                                                             disabled=move || exporting_id.get() == Some(id)
+                                                            aria-label="导出记录"
                                                             on:click=move |_: web_sys::MouseEvent| {
                                                                 if exporting_id.get() == Some(id) {
                                                                     return;

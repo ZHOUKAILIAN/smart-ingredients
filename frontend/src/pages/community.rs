@@ -97,8 +97,12 @@ pub fn CommunityPage() -> impl IntoView {
                             let refresh_share_records = refresh_share_records;
 
                             view! {
-                                <li class="community-card" on:click=move |_| on_open_detail.run(id)>
-                                    <div class="community-card-main">
+                                <li class="community-card">
+                                    <button
+                                        class="community-card-main"
+                                        type="button"
+                                        on:click=move |_| on_open_detail.run(id)
+                                    >
                                         <div class="community-card-content">
                                             <div class="community-card-meta">
                                                 <span>{author}</span>
@@ -114,10 +118,13 @@ pub fn CommunityPage() -> impl IntoView {
                                                     src={image_url_for_view.clone()}
                                                     alt="社区分享图片"
                                                     class="community-thumb-image"
+                                                    loading="lazy"
+                                                    width="72"
+                                                    height="72"
                                                 />
                                             </Show>
                                         </div>
-                                    </div>
+                                    </button>
                                     <div class="community-card-footer">
                                         <span class="community-score-label">"健康评分"</span>
                                         <span class="community-score-value">{score}</span>

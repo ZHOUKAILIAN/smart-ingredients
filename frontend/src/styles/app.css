@@ -648,6 +648,12 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
 }
 
 .community-card-content {
