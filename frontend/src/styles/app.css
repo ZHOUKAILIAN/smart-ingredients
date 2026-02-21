@@ -4257,6 +4257,44 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+.page.page-summary.figma .score-card,
+.page.page-summary.figma .summary-card {
+  background: var(--figma-glass-bg);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: var(--figma-glass-shadow);
+  backdrop-filter: blur(var(--figma-glass-blur));
+  -webkit-backdrop-filter: blur(var(--figma-glass-blur));
+}
+
+.page.page-summary.figma .btn-view-detail {
+  background: linear-gradient(135deg, var(--figma-emerald-500), var(--figma-teal-500));
+  box-shadow: var(--figma-cta-shadow);
+}
+
+.page.page-summary.figma .btn-view-detail:active {
+  filter: brightness(0.96);
+}
+
+.page.page-detail.figma .ingredient-card-compact {
+  background: var(--figma-glass-bg);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: var(--figma-glass-shadow);
+  backdrop-filter: blur(var(--figma-glass-blur));
+  -webkit-backdrop-filter: blur(var(--figma-glass-blur));
+}
+
+.page.page-detail.figma .tag {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.page.page-detail.figma .tag-category {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--figma-emerald-600);
+}
+
+
 
 @keyframes skeleton-shimmer {
   0% { background-position: 200% 0; }
