@@ -225,7 +225,7 @@ pub fn HistoryPage() -> impl IntoView {
     let export_preview_signal = Signal::derive(move || export_preview_url.get());
 
     view! {
-        <section class="page page-history">
+        <section class="page page-history figma">
             <ConfirmModal
                 show=show_confirm.into()
                 title="删除记录".to_string()

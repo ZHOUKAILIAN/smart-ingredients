@@ -4241,6 +4241,12 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+.page.page-history.figma .secondary-cta {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 .page.page-confirm.figma .text-editor {
   background: var(--figma-input-bg);
   border-color: var(--figma-input-border);
@@ -4323,6 +4329,43 @@ body {
 .page.page-community-detail.figma .community-delete-button {
   background: rgba(248, 113, 113, 0.12);
   border-color: rgba(248, 113, 113, 0.35);
+}
+
+.page.page-history.figma .history-item-card {
+  background: var(--figma-glass-bg);
+  border: 1px solid var(--figma-glass-border);
+  box-shadow: var(--figma-glass-shadow);
+  backdrop-filter: blur(var(--figma-glass-blur));
+  -webkit-backdrop-filter: blur(var(--figma-glass-blur));
+}
+
+.page.page-history.figma .history-action-btn {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--figma-glass-border);
+}
+
+.page.page-history.figma .history-action-btn.export {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--figma-emerald-600);
+}
+
+.page.page-history.figma .history-action-btn.delete {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #ef4444;
+}
+
+.page.page-history.figma .history-badge.local {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--figma-emerald-600);
+}
+
+.page.page-history.figma .history-badge.cloud {
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: #0284c7;
 }
 
 
