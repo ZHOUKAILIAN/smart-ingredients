@@ -80,7 +80,7 @@ pub fn OnboardingPage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-preference">
+        <section class="page page-preference figma">
             <ConfirmModal
                 show=show_confirm.into()
                 title="确认人群定位".to_string()
