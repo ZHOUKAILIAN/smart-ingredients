@@ -1,14 +1,13 @@
-use crate::components::{IconCommunity, IconHistory, IconHome, IconUser};
+use crate::components::{IconHistory, IconHome, IconUser};
 use crate::stores::{AppState, TabRoute};
 use crate::utils::local_storage;
+use crate::utils::navigation::build_full_path;
 use leptos::prelude::*;
 use leptos_router::hooks::{use_location, use_navigate};
 
 fn tab_for_path(path: &str) -> TabRoute {
     if path == "/history" || path.starts_with("/history/") {
         TabRoute::History
-    } else if path == "/community" || path.starts_with("/community/") {
-        TabRoute::Community
     } else if path == "/profile"
         || path.starts_with("/profile/")
         || path == "/onboarding"
@@ -21,7 +20,7 @@ fn tab_for_path(path: &str) -> TabRoute {
 }
 
 fn should_record_last_path(path: &str) -> bool {
-    !matches!(path, "/login" | "/register" | "/onboarding")
+    path != "/login" && path != "/register"
 }
 
 #[component]
@@ -38,20 +37,14 @@ pub fn BottomNav() -> impl IntoView {
 
     create_effect(move |_| {
         let path = location.pathname.get();
-        if !should_record_last_path(&path) {
+        if !should_record_last_path(path.as_str()) {
             return;
         }
-        let tab = tab_for_path(&path);
         let search = location.search.get();
-        let full_path = if search.is_empty() {
-            path
-        } else {
-            format!("{}{}", path, search)
-        };
-        match tab {
+        let full_path = build_full_path(path.as_str(), search.as_str());
+        match tab_for_path(path.as_str()) {
             TabRoute::Home => state.last_home_path.set(full_path),
             TabRoute::History => state.last_history_path.set(full_path),
-            TabRoute::Community => state.last_community_path.set(full_path),
             TabRoute::Profile => state.last_profile_path.set(full_path),
         }
     });
@@ -73,7 +66,6 @@ pub fn BottomNav() -> impl IntoView {
             let last_path = match tab {
                 TabRoute::Home => state.last_home_path.get(),
                 TabRoute::History => state.last_history_path.get(),
-                TabRoute::Community => state.last_community_path.get(),
                 TabRoute::Profile => state.last_profile_path.get(),
             };
             if last_path.is_empty() || last_path.starts_with("/login") || last_path.starts_with("/register") {
@@ -89,7 +81,7 @@ pub fn BottomNav() -> impl IntoView {
     view! {
         <nav class="bottom-nav">
             <For
-                each=move || [TabRoute::Home, TabRoute::History, TabRoute::Community, TabRoute::Profile]
+                each=move || [TabRoute::Home, TabRoute::History, TabRoute::Profile]
                 key=|tab| format!("{:?}", tab)
                 children=move |tab| {
                     let is_active = move || current_tab.get() == tab;
@@ -105,12 +97,11 @@ pub fn BottomNav() -> impl IntoView {
                             aria-current=move || if is_active() { "page" } else { "" }
                         >
                             <span class="tab-icon">
-                                    {match tab {
-                                        TabRoute::Home => view! { <IconHome /> }.into_any(),
-                                        TabRoute::History => view! { <IconHistory /> }.into_any(),
-                                        TabRoute::Community => view! { <IconCommunity /> }.into_any(),
-                                        TabRoute::Profile => view! { <IconUser /> }.into_any(),
-                                    }}
+                                {match tab {
+                                    TabRoute::Home => view! { <IconHome /> }.into_any(),
+                                    TabRoute::History => view! { <IconHistory /> }.into_any(),
+                                    TabRoute::Profile => view! { <IconUser /> }.into_any(),
+                                }}
                             </span>
                             <span class="tab-label">{tab.label()}</span>
                         </button>
