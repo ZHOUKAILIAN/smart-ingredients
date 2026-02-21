@@ -10,6 +10,7 @@ pub mod local_history;
 pub mod local_storage;
 pub mod navigation;
 pub mod preference;
+pub mod presentation;
 
 use wasm_bindgen::JsValue;
 use web_sys::{CustomEvent, CustomEventInit};

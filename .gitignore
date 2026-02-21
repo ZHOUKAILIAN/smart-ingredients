@@ -7,7 +7,6 @@ Cargo.lock
 # Tauri
 frontend/src-tauri/target/
 frontend/src-tauri/gen/
-frontend/src-tauri/build.rs
 frontend/dist/
 frontend/dist_tmp/
 
@@ -41,6 +40,12 @@ uploads/
 *.png
 *.jpeg
 *.webp
+
+# Tauri build assets
+!frontend/src-tauri/build.rs
+!frontend/src-tauri/icons/32x32.png
+!frontend/src-tauri/icons/128x128.png
+!frontend/src-tauri/icons/128x128@2x.png
 
 # Temporary files
 tmp/

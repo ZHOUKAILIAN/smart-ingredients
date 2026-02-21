@@ -1,6 +1,25 @@
 {
-  "appid": "touristappid",
-  "projectname": "smart-ingredients-miniapp",
-  "miniprogramRoot": "dist/",
-  "compileType": "miniprogram"
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "uglifyFileName": false,
+    "enhance": true,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": false,
+    "minifyWXML": true
+  },
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "appid": "wx1e48920ed1451eb0",
+  "editorSetting": {}
 }

@@ -137,52 +137,8 @@ pub fn CapturePage() -> impl IntoView {
                     <h1 class="hero-title">"Smart Ingredients"</h1>
                     <p class="hero-subtitle">"AI智能配料表分析"</p>
                     <p class="hero-description">
-                        "拍摄识别配料表，AI分析健康风险，让您吃得更安心"
+                        "拍摄配料表，快速识别并分析健康风险"
                     </p>
-                </div>
-
-                <div class="surface-card steps-card">
-                    <h2 class="card-title centered">"使用步骤"</h2>
-                    <div class="steps-list">
-                        <div class="step-item-wrapper">
-                            <div class="step-item">
-                                <div class="step-icon">
-                                    <IconCamera />
-                                    <span class="step-number">"1"</span>
-                                </div>
-                                <div class="step-content">
-                                    <h3>"拍摄配料表"</h3>
-                                    <p>"对准食品包装上的配料表拍照"</p>
-                                </div>
-                            </div>
-                            <div class="step-connector"></div>
-                        </div>
-                        <div class="step-item-wrapper">
-                            <div class="step-item">
-                                <div class="step-icon">
-                                    <IconCheckBadge />
-                                    <span class="step-number">"2"</span>
-                                </div>
-                                <div class="step-content">
-                                    <h3>"确认识别文本"</h3>
-                                    <p>"AI自动识别配料信息"</p>
-                                </div>
-                            </div>
-                            <div class="step-connector"></div>
-                        </div>
-                        <div class="step-item-wrapper">
-                            <div class="step-item">
-                                <div class="step-icon">
-                                    <IconChart />
-                                    <span class="step-number">"3"</span>
-                                </div>
-                                <div class="step-content">
-                                    <h3>"查看健康报告"</h3>
-                                    <p>"获取详细的成分分析和建议"</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="home-actions">
@@ -192,6 +148,63 @@ pub fn CapturePage() -> impl IntoView {
                         "开始分析"
                     </button>
                 </div>
+
+                <details class="surface-card collapse-card">
+                    <summary class="collapse-summary">
+                        <span>"使用步骤"</span>
+                    </summary>
+                    <div class="collapse-body steps-card">
+                        <div class="steps-list">
+                            <div class="step-item-wrapper">
+                                <div class="step-item">
+                                    <div class="step-icon">
+                                        <IconCamera />
+                                        <span class="step-number">"1"</span>
+                                    </div>
+                                    <div class="step-content">
+                                        <h3>"拍摄配料表"</h3>
+                                        <p>"对准食品包装上的配料表拍照"</p>
+                                    </div>
+                                </div>
+                                <div class="step-connector"></div>
+                            </div>
+                            <div class="step-item-wrapper">
+                                <div class="step-item">
+                                    <div class="step-icon">
+                                        <IconCheckBadge />
+                                        <span class="step-number">"2"</span>
+                                    </div>
+                                    <div class="step-content">
+                                        <h3>"确认识别文本"</h3>
+                                        <p>"AI自动识别配料信息"</p>
+                                    </div>
+                                </div>
+                                <div class="step-connector"></div>
+                            </div>
+                            <div class="step-item-wrapper">
+                                <div class="step-item">
+                                    <div class="step-icon">
+                                        <IconChart />
+                                        <span class="step-number">"3"</span>
+                                    </div>
+                                    <div class="step-content">
+                                        <h3>"查看健康报告"</h3>
+                                        <p>"获取详细的成分分析和建议"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="surface-card collapse-card">
+                    <summary class="collapse-summary">
+                        <span>"示例图片"</span>
+                    </summary>
+                    <div class="collapse-body">
+                        <ExampleImages />
+                    </div>
+                </details>
             </Show>
 
             <Show when=move || show_scan.get()>

@@ -5,6 +5,7 @@ use crate::components::{
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
 use crate::utils::emit_toast;
+use crate::utils::presentation::conclusion_label;
 use crate::utils::preference::load_preference;
 use leptos::either::Either;
 use leptos::leptos_dom::helpers::set_timeout;
@@ -190,14 +191,6 @@ fn build_strong_alerts(rule_hits: &[RuleHit]) -> Vec<String> {
     }
 
     alerts
-}
-
-fn conclusion_label(score: i32) -> &'static str {
-    match score {
-        75..=100 => "可吃",
-        50..=74 => "谨慎",
-        _ => "不推荐",
-    }
 }
 
 fn split_key_risks(rule_hits: &[RuleHit], max_items: usize) -> (Vec<RuleHit>, Vec<RuleHit>) {
@@ -584,10 +577,10 @@ pub fn ResultPage() -> impl IntoView {
                             let key_tags = build_key_risk_tags(&result.rule_hits, 5);
                             let key_tags_for_check = key_tags.clone();
                             view! {
-                                <div class="surface-card result-section">
+                                <div class="surface-card result-section conclusion-card">
                                     <h2 class="card-title">"结论"</h2>
-                                    <p class="analysis-summary">{format!("综合判断：{}", conclusion)}</p>
-                                    <p class="analysis-desc">{reason}</p>
+                                    <p class="conclusion-label">{conclusion}</p>
+                                    <p class="conclusion-reason">{reason}</p>
                                     <Show when=move || !key_tags_for_check.is_empty()>
                                         <div class="tags-row">
                                             {key_tags
