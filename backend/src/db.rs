@@ -408,6 +408,179 @@ pub async fn prune_user_history(
     Ok(result.rows_affected())
 }
 
+#[derive(Debug, Clone, FromRow)]
+pub struct CommunityPostListRow {
+    pub id: Uuid,
+    pub summary_text: String,
+    pub health_score: i32,
+    pub card_image_url: Option<String>,
+    pub author_label: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct CommunityPostDetailRow {
+    pub id: Uuid,
+    pub summary_text: String,
+    pub health_score: i32,
+    pub ingredients_raw: String,
+    pub card_payload: Value,
+    pub card_image_url: Option<String>,
+    pub author_label: String,
+    pub created_at: DateTime<Utc>,
+}
+
+pub async fn insert_community_post(
+    pool: &PgPool,
+    author_type: &str,
+    user_id: Option<Uuid>,
+    share_token_hash: Option<&str>,
+    summary_text: &str,
+    health_score: i32,
+    ingredients_raw: &str,
+    card_payload: Value,
+    card_image_url: Option<&str>,
+    source_analysis_id: Option<Uuid>,
+) -> sqlx::Result<(Uuid, DateTime<Utc>, Option<String>)> {
+    let row = sqlx::query(
+        r#"
+        INSERT INTO community_posts (
+            author_type,
+            user_id,
+            share_token_hash,
+            summary_text,
+            health_score,
+            ingredients_raw,
+            card_payload,
+            card_image_url,
+            source_analysis_id
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id, created_at, card_image_url
+        "#,
+    )
+    .bind(author_type)
+    .bind(user_id)
+    .bind(share_token_hash)
+    .bind(summary_text)
+    .bind(health_score)
+    .bind(ingredients_raw)
+    .bind(card_payload)
+    .bind(card_image_url)
+    .bind(source_analysis_id)
+    .fetch_one(pool)
+    .await?;
+
+    let id = row.try_get::<Uuid, _>("id")?;
+    let created_at = row.try_get::<DateTime<Utc>, _>("created_at")?;
+    let card_image_url = row.try_get::<Option<String>, _>("card_image_url")?;
+    Ok((id, created_at, card_image_url))
+}
+
+pub async fn list_community_posts(
+    pool: &PgPool,
+    limit: i64,
+    offset: i64,
+) -> sqlx::Result<(i64, Vec<CommunityPostListRow>)> {
+    let total: i64 = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*) as count
+        FROM community_posts
+        "#,
+    )
+    .fetch_one(pool)
+    .await?;
+
+    let rows = sqlx::query_as::<_, CommunityPostListRow>(
+        r#"
+        SELECT p.id,
+               p.summary_text,
+               p.health_score,
+               p.card_image_url,
+               p.created_at,
+               CASE
+                   WHEN p.author_type = 'anonymous' THEN '匿名用户'
+                   ELSE COALESCE(u.username, '用户')
+               END AS author_label
+        FROM community_posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        ORDER BY p.created_at DESC
+        LIMIT $1 OFFSET $2
+        "#,
+    )
+    .bind(limit)
+    .bind(offset)
+    .fetch_all(pool)
+    .await?;
+
+    Ok((total, rows))
+}
+
+pub async fn get_community_post(
+    pool: &PgPool,
+    id: Uuid,
+) -> sqlx::Result<Option<CommunityPostDetailRow>> {
+    let row = sqlx::query_as::<_, CommunityPostDetailRow>(
+        r#"
+        SELECT p.id,
+               p.summary_text,
+               p.health_score,
+               p.ingredients_raw,
+               p.card_payload,
+               p.card_image_url,
+               p.created_at,
+               CASE
+                   WHEN p.author_type = 'anonymous' THEN '匿名用户'
+                   ELSE COALESCE(u.username, '用户')
+               END AS author_label
+        FROM community_posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        WHERE p.id = $1
+        "#,
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn delete_community_post_by_user(
+    pool: &PgPool,
+    id: Uuid,
+    user_id: Uuid,
+) -> sqlx::Result<u64> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM community_posts
+        WHERE id = $1 AND user_id = $2
+        "#,
+    )
+    .bind(id)
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected())
+}
+
+pub async fn delete_community_post_by_token(
+    pool: &PgPool,
+    id: Uuid,
+    share_token_hash: &str,
+) -> sqlx::Result<u64> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM community_posts
+        WHERE id = $1 AND share_token_hash = $2
+        "#,
+    )
+    .bind(id)
+    .bind(share_token_hash)
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected())
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, FromRow)]
 pub struct UserRow {

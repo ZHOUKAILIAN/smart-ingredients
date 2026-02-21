@@ -59,13 +59,27 @@ pub fn ExportPreviewModal(
         ev.stop_propagation();
     };
 
+    // Escape 键关闭模态框
+    let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
+        if ev.key() == "Escape" {
+            on_close.run(());
+        }
+    };
+
     view! {
         <Show when=move || image_url.get().is_some()>
-            <div class="export-preview-backdrop" on:click=on_backdrop>
+            <div
+                class="export-preview-backdrop"
+                on:click=on_backdrop
+                on:keydown=on_keydown
+                role="dialog"
+                aria-modal="true"
+                aria-label="导出预览"
+            >
                 <div class="export-preview-modal" on:click=stop_propagation>
                     <div class="export-preview-header">
                         <span class="export-preview-title">"分析结果图片"</span>
-                        <button class="export-preview-close" on:click=on_close_btn>
+                        <button class="export-preview-close" on:click=on_close_btn aria-label="关闭">
                             "✕"
                         </button>
                     </div>
@@ -83,7 +97,7 @@ pub fn ExportPreviewModal(
 
                     <div class="export-preview-footer">
                         <button class="export-preview-download-btn" on:click=on_download>
-                            <span>"💾"</span>
+                            <span aria-hidden="true">"💾"</span>
                             <span>"保存图片"</span>
                         </button>
                     </div>

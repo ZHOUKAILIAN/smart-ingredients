@@ -60,7 +60,7 @@ pub fn ToastHost() -> impl IntoView {
     });
 
     view! {
-        <div class="toast-host">
+        <div class="toast-host" aria-live="polite" role="status">
             <For
                 each=move || toasts.get()
                 key=|toast| toast.id
@@ -81,6 +81,7 @@ pub fn ToastHost() -> impl IntoView {
                             </div>
                             <button
                                 class="toast-close"
+                                aria-label="关闭"
                                 on:click=move |_| {
                                     toasts_for_close.update(|items| {
                                         items.retain(|item| item.id != id);

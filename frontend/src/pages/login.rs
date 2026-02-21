@@ -220,24 +220,31 @@ pub fn LoginPage() -> impl IntoView {
 
             <div class="login-form">
                 <div class="input-field-group">
-                    <label class="input-label">"账号"</label>
+                    <label class="input-label" for="login-username">"账号"</label>
                     <div class="input-wrapper">
                         <input
+                            id="login-username"
                             class="custom-input"
                             type="text"
-                            placeholder="4-20 位字母/数字/下划线"
+                            name="username"
+                            autocomplete="username"
+                            spellcheck="false"
+                            placeholder="4-20 位字母/数字/下划线…"
                             on:input=move |ev| username.set(event_target_value(&ev))
                         />
                     </div>
                 </div>
 
                 <div class="input-field-group">
-                    <label class="input-label">"密码"</label>
+                    <label class="input-label" for="login-password">"密码"</label>
                     <div class="input-wrapper">
                         <input
+                            id="login-password"
                             class="custom-input"
                             type="password"
-                            placeholder="至少 6 位"
+                            name="password"
+                            autocomplete="current-password"
+                            placeholder="至少 6 位…"
                             on:input=move |ev| password.set(event_target_value(&ev))
                         />
                     </div>
@@ -249,7 +256,7 @@ pub fn LoginPage() -> impl IntoView {
                     on:click=on_login
                     disabled=move || logging_in.get()
                 >
-                    {move || if logging_in.get() { "登录中..." } else { "登录" }}
+                    {move || if logging_in.get() { "登录中…" } else { "登录" }}
                 </button>
 
                 <button

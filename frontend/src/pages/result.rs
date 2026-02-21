@@ -1,6 +1,6 @@
 use crate::components::{
-    get_preference_icon, get_preference_label, HealthScoreCard, IconArrowLeft, RiskBadge,
-    ShareButton, ShareExportProps,
+    get_preference_icon, get_preference_label, CommunityShareButton, HealthScoreCard,
+    IconArrowLeft, RiskBadge, ShareButton, ShareExportProps,
 };
 use crate::services;
 use crate::stores::{AppState, ToastLevel};
@@ -532,25 +532,21 @@ pub fn ResultPage() -> impl IntoView {
             }
         }
     };
-    let on_back_home_bottom = {
-        let state = state.clone();
-        let navigate = navigate.clone();
-        move |_| {
-            state.analysis_id.set(None);
-            state.analysis_result.set(None);
-            state.analysis_preference.set(None);
-            navigate("/", Default::default());
-        }
+    // Reset per-analysis state so the next scan starts fresh.
+    // Note: analysis_preference is a user-level setting and is NOT cleared here.
+    let clear_analysis = move || {
+        state.analysis_id.set(None);
+        state.analysis_result.set(None);
     };
-    let on_new_analysis = {
-        let state = state.clone();
-        let navigate = navigate.clone();
-        move |_| {
-            state.analysis_id.set(None);
-            state.analysis_result.set(None);
-            state.analysis_preference.set(None);
-            navigate("/?view=scan", Default::default());
-        }
+    let nav_home = navigate.clone();
+    let on_back_home_bottom = move |_| {
+        clear_analysis();
+        nav_home("/", Default::default());
+    };
+    let on_new_analysis = move |_| {
+        clear_analysis();
+        state.open_in_scan_mode.set(true);
+        navigate("/", Default::default());
     };
 
     view! {
@@ -1057,6 +1053,32 @@ pub fn ResultPage() -> impl IntoView {
                                 preference_label: get_preference_label(&pref).to_string(),
                             };
                             view! { <ShareButton props=props /> }
+                        })
+                }}
+                {move || {
+                    let analysis_id = state.analysis_id.get();
+                    let response = state.analysis_result.get();
+                    let confirmed_text = response
+                        .as_ref()
+                        .and_then(|r| r.confirmed_text.clone())
+                        .or_else(|| state.confirmed_text.get());
+                    let ocr_text = response
+                        .as_ref()
+                        .and_then(|r| r.ocr_text.clone())
+                        .or_else(|| state.ocr_text.get());
+                    response
+                        .and_then(|r| r.result)
+                        .map(|result| {
+                            let preference_label = Some(get_preference_label(&current_preference()).to_string());
+                            view! {
+                                <CommunityShareButton
+                                    analysis_id=analysis_id
+                                    analysis_result=result
+                                    confirmed_text=confirmed_text
+                                    ocr_text=ocr_text
+                                    preference_label=preference_label
+                                />
+                            }
                         })
                 }}
                 <button class="primary-cta" on:click=on_new_analysis>

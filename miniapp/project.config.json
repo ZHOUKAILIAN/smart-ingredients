@@ -1,0 +1,6 @@
+{
+  "appid": "touristappid",
+  "projectname": "smart-ingredients-miniapp",
+  "miniprogramRoot": "dist/",
+  "compileType": "miniprogram"
+}

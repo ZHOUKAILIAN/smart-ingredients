@@ -16,8 +16,9 @@ use leptos_router::path;
 
 use crate::components::{MainLayout, ToastHost};
 use crate::pages::{
-    AnalyzingPage, CapturePage, ConfirmPage, DetailPage, HistoryPage, LoginPage, OcrPage,
-    OnboardingPage, ProfilePage, RegisterPage, ResultPage, SummaryPage,
+    AnalyzingPage, CapturePage, CommunityDetailPage, CommunityPage, ConfirmPage, DetailPage,
+    HistoryPage, LoginPage, OcrPage, OnboardingPage, ProfilePage, RegisterPage, ResultPage,
+    SummaryPage,
 };
 use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute, ToastLevel};
 use crate::utils::preference::{load_preference, merge_preferences, save_preference};
@@ -56,7 +57,9 @@ pub fn App() -> impl IntoView {
     let current_tab = RwSignal::new(TabRoute::Home);
     let last_home_path = RwSignal::new("/".to_string());
     let last_history_path = RwSignal::new("/history".to_string());
+    let last_community_path = RwSignal::new("/community".to_string());
     let last_profile_path = RwSignal::new("/profile".to_string());
+    let open_in_scan_mode = RwSignal::new(false);
 
     provide_context(AppState {
         analysis_id,
@@ -77,7 +80,9 @@ pub fn App() -> impl IntoView {
         current_tab,
         last_home_path,
         last_history_path,
+        last_community_path,
         last_profile_path,
+        open_in_scan_mode,
     });
 
     let auth_state = use_context::<AppState>().expect("AppState not found");
@@ -147,6 +152,16 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/history") view=move || view! {
                         <MainLayout>
                             <HistoryPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/community") view=move || view! {
+                        <MainLayout>
+                            <CommunityPage />
+                        </MainLayout>
+                    } />
+                    <Route path=path!("/community/:id") view=move || view! {
+                        <MainLayout>
+                            <CommunityDetailPage />
                         </MainLayout>
                     } />
                     <Route path=path!("/profile") view=move || view! {

@@ -72,6 +72,35 @@ pub fn export_to_data_url(data: &ExportData) -> Result<String, String> {
         .map_err(|_| "生成图片数据失败".to_string())
 }
 
+/// Convert a data URL (base64) into a Blob for upload.
+pub fn data_url_to_blob(data_url: &str) -> Result<web_sys::Blob, String> {
+    use js_sys::{Array, Uint8Array};
+
+    let parts: Vec<&str> = data_url.splitn(2, ',').collect();
+    if parts.len() != 2 {
+        return Err("无效的图片数据".to_string());
+    }
+
+    let base64_payload = parts[1];
+    let window = web_sys::window().ok_or("无法获取 window")?;
+    let decoded = window
+        .atob(base64_payload)
+        .map_err(|_| "base64 解码失败".to_string())?;
+
+    let len = decoded.len();
+    let u8_array = Uint8Array::new_with_length(len as u32);
+    for (i, ch) in decoded.chars().enumerate() {
+        u8_array.set_index(i as u32, ch as u8);
+    }
+
+    let blob_parts = Array::new();
+    blob_parts.push(&u8_array.buffer());
+    let mut opts = web_sys::BlobPropertyBag::new();
+    opts.set_type("image/png");
+    web_sys::Blob::new_with_buffer_source_sequence_and_options(&blob_parts, &opts)
+        .map_err(|_| "创建 Blob 失败".to_string())
+}
+
 /// Check if running inside Tauri (Android or desktop app).
 pub fn is_tauri_available() -> bool {
     let result = js_sys::eval(
@@ -297,8 +326,8 @@ fn calc_total_height(ctx: &CanvasRenderingContext2d, data: &ExportData) -> f64 {
     h += 60.0;
     h += SECTION_GAP;
 
-    // Score section
-    h += CARD_PAD * 2.0 + 72.0;
+    // Score section (dynamic height based on recommendation text wrapping)
+    h += calc_score_section_height(ctx, data);
     h += SECTION_GAP;
 
     // Summary
@@ -416,8 +445,19 @@ fn draw_header(ctx: &CanvasRenderingContext2d, y: f64, _data: &ExportData) -> f6
     cy
 }
 
+fn calc_score_section_height(ctx: &CanvasRenderingContext2d, data: &ExportData) -> f64 {
+    let max_text_w = CONTENT_W - 104.0 - CARD_PAD;
+    let base_h = 48.0; // title + score label
+    let rec_lines = if data.recommendation.is_empty() {
+        0
+    } else {
+        measure_wrap_lines(ctx, &data.recommendation, max_text_w, 12.0)
+    };
+    CARD_PAD * 2.0 + base_h + (rec_lines as f64) * 18.0
+}
+
 fn draw_score_section(ctx: &CanvasRenderingContext2d, y: f64, data: &ExportData) -> f64 {
-    let card_h = CARD_PAD * 2.0 + 72.0;
+    let card_h = calc_score_section_height(ctx, data);
     let card_x = PAD;
     let card_y = y;
 
@@ -464,12 +504,16 @@ fn draw_score_section(ctx: &CanvasRenderingContext2d, y: f64, data: &ExportData)
     let label = score_label(data.health_score);
     let _ = ctx.fill_text(label, lx, card_y + CARD_PAD + 40.0);
 
-    // Recommendation text (truncated to fit)
+    // Recommendation text (wrapped, not truncated)
     if !data.recommendation.is_empty() {
         set_font(ctx, "normal", 12.0);
         ctx.set_fill_style_str(TEXT_MUTED);
-        let rec = fit_text(ctx, &data.recommendation, max_text_w);
-        let _ = ctx.fill_text(&rec, lx, card_y + CARD_PAD + 58.0);
+        let lines = wrap_text_measured(ctx, &data.recommendation, max_text_w, 12.0);
+        let mut rec_y = card_y + CARD_PAD + 56.0;
+        for line in &lines {
+            let _ = ctx.fill_text(line, lx, rec_y);
+            rec_y += 18.0;
+        }
     }
 
     card_y + card_h + SECTION_GAP

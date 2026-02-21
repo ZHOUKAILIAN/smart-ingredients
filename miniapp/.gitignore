@@ -1,3 +1,5 @@
 node_modules/
 dist/
 .swc/
+project.private.config.json
+miniapp-dev.log

@@ -29,7 +29,7 @@ where
                     <div class="image-preview-loading" aria-hidden="true">
                         <span class="image-preview-spinner"></span>
                     </div>
-                    <button class="image-preview-remove" on:click=move |_| on_remove()>
+                    <button class="image-preview-remove" on:click=move |_| on_remove() aria-label="移除图片">
                         "✕"
                     </button>
                 </div>

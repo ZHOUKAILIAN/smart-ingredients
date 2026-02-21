@@ -7,12 +7,14 @@ use serde::{Deserialize, Serialize};
 
 mod analysis;
 mod auth;
+mod community;
 mod error;
 mod ingredient;
 mod user;
 
 pub use analysis::*;
 pub use auth::*;
+pub use community::*;
 pub use error::*;
 pub use ingredient::*;
 pub use user::*;

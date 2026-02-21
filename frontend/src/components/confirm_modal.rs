@@ -39,12 +39,26 @@ pub fn ConfirmModal(
         ev.stop_propagation();
     };
 
+    // Escape 键关闭模态框
+    let on_keydown = move |ev: ev::KeyboardEvent| {
+        if ev.key() == "Escape" {
+            on_cancel.run(());
+        }
+    };
+
     view! {
         <Show when=move || show.get()>
-            <div class="confirm-modal-overlay" on:click=on_backdrop_click>
+            <div
+                class="confirm-modal-overlay"
+                on:click=on_backdrop_click
+                on:keydown=on_keydown
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="confirm-modal-title"
+            >
                 <div class="confirm-modal-card" on:click=on_modal_click>
                     <div class="confirm-modal-header">
-                        <h3 class="confirm-modal-title">{title.clone()}</h3>
+                        <h3 id="confirm-modal-title" class="confirm-modal-title">{title.clone()}</h3>
                     </div>
                     <div class="confirm-modal-body">
                         <p class="confirm-modal-message">{message.get()}</p>

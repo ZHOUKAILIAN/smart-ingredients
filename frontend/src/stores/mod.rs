@@ -53,6 +53,7 @@ pub struct ToastMessage {
 pub enum TabRoute {
     Home,
     History,
+    Community,
     Profile,
 }
 
@@ -61,6 +62,7 @@ impl TabRoute {
         match self {
             TabRoute::Home => "/",
             TabRoute::History => "/history",
+            TabRoute::Community => "/community",
             TabRoute::Profile => "/profile",
         }
     }
@@ -69,6 +71,7 @@ impl TabRoute {
         match self {
             TabRoute::Home => "首页",
             TabRoute::History => "历史",
+            TabRoute::Community => "社区",
             TabRoute::Profile => "我的",
         }
     }
@@ -77,6 +80,7 @@ impl TabRoute {
         match self {
             TabRoute::Home => "🏠",
             TabRoute::History => "📋",
+            TabRoute::Community => "🧩",
             TabRoute::Profile => "👤",
         }
     }
@@ -107,5 +111,10 @@ pub struct AppState {
     pub current_tab: RwSignal<TabRoute>,
     pub last_home_path: RwSignal<String>,
     pub last_history_path: RwSignal<String>,
+    pub last_community_path: RwSignal<String>,
     pub last_profile_path: RwSignal<String>,
+
+    /// When `true`, the capture page opens directly in scan mode
+    /// (bypassing the home hero view). Set by onboarding, result, or history pages.
+    pub open_in_scan_mode: RwSignal<bool>,
 }
