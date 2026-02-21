@@ -15,6 +15,7 @@ COPY ocr_service/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY ocr_service/app.py /app/app.py
+COPY ocr_service/ocr_utils.py /app/ocr_utils.py
 
 EXPOSE 8000
 

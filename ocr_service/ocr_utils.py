@@ -24,3 +24,14 @@ def parse_ocr_result(result: Any, min_text_len: int) -> Tuple[str, List[dict]]:
         return "", lines
 
     return joined, lines
+
+
+def build_ocr_response(
+    result: Any,
+    min_text_len: int,
+    empty_message: str,
+) -> Tuple[int, dict]:
+    text, lines = parse_ocr_result(result, min_text_len)
+    if not text:
+        return 422, {"message": empty_message}
+    return 200, {"text": text, "lines": lines}
