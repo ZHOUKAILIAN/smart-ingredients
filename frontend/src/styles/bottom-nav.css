@@ -28,6 +28,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
+  text-decoration: none;
   color: #64748b;
   padding: 4px 0;
   gap: 4px;
@@ -56,6 +57,16 @@
 
 .tab-item:active {
   transform: scale(0.95);
+}
+
+@media (hover: hover) {
+  .tab-item:hover {
+    color: var(--figma-emerald-600);
+  }
+
+  .tab-item:hover .tab-icon svg {
+    stroke: var(--figma-emerald-600);
+  }
 }
 
 .tab-icon {

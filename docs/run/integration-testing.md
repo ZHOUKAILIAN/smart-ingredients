@@ -18,20 +18,19 @@ Expected response:
 }
 ```
 
-## 2) Trigger OCR + LLM analysis
+## 2) Confirm OCR text + trigger LLM analysis
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/analysis/UUID/analyze
+curl -X POST http://localhost:3000/api/v1/analysis/UUID/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"confirmed_text":"这里是OCR识别文本...","preference":"normal"}'
 ```
 
-Expected response:
+Expected response includes:
 
-```json
-{
-  "analysis_id": "UUID",
-  "status": "completed"
-}
-```
+- `status` (may be `pending`, `processing`, or `completed`)
+- `ocr_text`
+- `result` (LLM JSON, may be `null` while processing)
 
 ## 3) Query analysis result
 

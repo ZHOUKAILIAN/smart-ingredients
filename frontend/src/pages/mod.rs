@@ -12,7 +12,6 @@ mod ocr;
 mod onboarding;
 mod profile;
 mod register;
-mod result;
 mod summary;
 
 pub use analyzing::AnalyzingPage;
@@ -27,5 +26,4 @@ pub use ocr::OcrPage;
 pub use onboarding::OnboardingPage;
 pub use profile::ProfilePage;
 pub use register::RegisterPage;
-pub use result::ResultPage;
 pub use summary::SummaryPage;

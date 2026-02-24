@@ -1,13 +1,16 @@
-use crate::components::{IconHistory, IconHome, IconUser};
+use crate::components::{IconCommunity, IconHistory, IconHome, IconUser};
 use crate::stores::{AppState, TabRoute};
 use crate::utils::local_storage;
 use crate::utils::navigation::build_full_path;
 use leptos::prelude::*;
 use leptos_router::hooks::{use_location, use_navigate};
+use web_sys::MouseEvent;
 
 fn tab_for_path(path: &str) -> TabRoute {
     if path == "/history" || path.starts_with("/history/") {
         TabRoute::History
+    } else if path == "/community" || path.starts_with("/community/") {
+        TabRoute::Community
     } else if path == "/profile"
         || path.starts_with("/profile/")
         || path == "/onboarding"
@@ -21,6 +24,10 @@ fn tab_for_path(path: &str) -> TabRoute {
 
 fn should_record_last_path(path: &str) -> bool {
     path != "/login" && path != "/register"
+}
+
+fn is_modified_click(ev: &MouseEvent) -> bool {
+    ev.meta_key() || ev.ctrl_key() || ev.shift_key() || ev.alt_key() || ev.button() != 0
 }
 
 #[component]
@@ -45,27 +52,21 @@ pub fn BottomNav() -> impl IntoView {
         match tab_for_path(path.as_str()) {
             TabRoute::Home => state.last_home_path.set(full_path),
             TabRoute::History => state.last_history_path.set(full_path),
+            TabRoute::Community => state.last_community_path.set(full_path),
             TabRoute::Profile => state.last_profile_path.set(full_path),
         }
     });
 
-    let on_tab_click = move |tab: TabRoute| {
-        local_storage::set_last_tab(tab.path());
-
-        // Check if we're already on this tab
+    let tab_target = move |tab: TabRoute| {
         let current = current_tab.get();
         let is_same_tab = current == tab;
-
-        state.current_tab.set(tab);
-
-        let target = if is_same_tab {
-            // If clicking the same tab, always go to root path
+        if is_same_tab {
             tab.path().to_string()
         } else {
-            // If switching tabs, go to last visited path
             let last_path = match tab {
                 TabRoute::Home => state.last_home_path.get(),
                 TabRoute::History => state.last_history_path.get(),
+                TabRoute::Community => state.last_community_path.get(),
                 TabRoute::Profile => state.last_profile_path.get(),
             };
             if last_path.is_empty() || last_path.starts_with("/login") || last_path.starts_with("/register") {
@@ -73,15 +74,26 @@ pub fn BottomNav() -> impl IntoView {
             } else {
                 last_path
             }
-        };
+        }
+    };
 
+    let on_tab_click = move |tab: TabRoute| {
+        local_storage::set_last_tab(tab.path());
+
+        state.current_tab.set(tab);
+        let target = tab_target(tab);
         navigate(&target, Default::default());
     };
 
     view! {
         <nav class="bottom-nav">
             <For
-                each=move || [TabRoute::Home, TabRoute::History, TabRoute::Profile]
+                each=move || [
+                    TabRoute::Home,
+                    TabRoute::History,
+                    TabRoute::Community,
+                    TabRoute::Profile,
+                ]
                 key=|tab| format!("{:?}", tab)
                 children=move |tab| {
                     let is_active = move || current_tab.get() == tab;
@@ -89,10 +101,17 @@ pub fn BottomNav() -> impl IntoView {
                     let on_click = on_tab_click.clone();
 
                     view! {
-                        <button
+                        <a
                             class="tab-item"
                             class:active=is_active
-                            on:click=move |_| on_click(tab_clone)
+                            on:click=move |ev: MouseEvent| {
+                                if is_modified_click(&ev) {
+                                    return;
+                                }
+                                ev.prevent_default();
+                                on_click(tab_clone);
+                            }
+                            href=move || tab_target(tab_clone)
                             aria-label=tab.label()
                             aria-current=move || if is_active() { "page" } else { "" }
                         >
@@ -100,14 +119,35 @@ pub fn BottomNav() -> impl IntoView {
                                 {match tab {
                                     TabRoute::Home => view! { <IconHome /> }.into_any(),
                                     TabRoute::History => view! { <IconHistory /> }.into_any(),
+                                    TabRoute::Community => view! { <IconCommunity /> }.into_any(),
                                     TabRoute::Profile => view! { <IconUser /> }.into_any(),
                                 }}
                             </span>
                             <span class="tab-label">{tab.label()}</span>
-                        </button>
+                        </a>
                     }
                 }
             />
         </nav>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tab_for_path_maps_community_root() {
+        assert_eq!(tab_for_path("/community"), TabRoute::Community);
+    }
+
+    #[test]
+    fn tab_for_path_maps_community_detail() {
+        assert_eq!(tab_for_path("/community/123"), TabRoute::Community);
+    }
+
+    #[test]
+    fn tab_for_path_maps_history_root() {
+        assert_eq!(tab_for_path("/history"), TabRoute::History);
     }
 }

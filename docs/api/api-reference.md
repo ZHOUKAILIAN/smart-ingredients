@@ -25,15 +25,24 @@ Upload an image for OCR + LLM analysis.
 }
 ```
 
-## Analyze Image
+## Confirm OCR Text (Start LLM)
 
-`POST /api/v1/analysis/{id}/analyze`
+`POST /api/v1/analysis/{id}/confirm`
 
-Run OCR and LLM analysis for an uploaded image.
+Confirm OCR text and start LLM analysis.
 
 ### Path Params
 
 - `id`: analysis UUID
+
+### Request
+
+```json
+{
+  "confirmed_text": "识别文本...",
+  "preference": "normal"
+}
+```
 
 ### Response
 
@@ -81,6 +90,7 @@ Run OCR and LLM analysis for an uploaded image.
 - When `result.summary` is empty, the backend may provide a short default summary (e.g. based on ingredient count).
 - When `result.table` is empty, clients can fall back to `result.ingredients` to render a basic table.
 - While analysis is running, `status` will be `pending` or `processing` and `result` may be `null`.
+- LLM analysis is triggered by `POST /api/v1/analysis/{id}/confirm`.
 
 ## Get Analysis
 

@@ -17,8 +17,7 @@ use leptos_router::path;
 use crate::components::{MainLayout, ToastHost};
 use crate::pages::{
     AnalyzingPage, CapturePage, CommunityDetailPage, CommunityPage, ConfirmPage, DetailPage,
-    HistoryPage, LoginPage, OcrPage, OnboardingPage, ProfilePage, RegisterPage, ResultPage,
-    SummaryPage,
+    HistoryPage, LoginPage, OcrPage, OnboardingPage, ProfilePage, RegisterPage, SummaryPage,
 };
 use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute, ToastLevel};
 use crate::utils::preference::{load_preference, merge_preferences, save_preference};
@@ -139,6 +138,7 @@ pub fn App() -> impl IntoView {
     view! {
         <Router>
             <main class="app-shell">
+                <a class="skip-link" href="#main-content">"跳到主要内容"</a>
                 <ToastHost />
                 <Routes fallback=|| view! { <p>"Not found"</p> }>
                     <Route path=path!("/login") view=LoginPage />
@@ -187,11 +187,6 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/analyzing") view=move || view! {
                         <MainLayout>
                             <AnalyzingPage />
-                        </MainLayout>
-                    } />
-                    <Route path=path!("/result") view=move || view! {
-                        <MainLayout>
-                            <ResultPage />
                         </MainLayout>
                     } />
                     <Route path=path!("/summary") view=move || view! {
