@@ -25,7 +25,7 @@ pub fn MainLayout(children: Children) -> impl IntoView {
 
     view! {
         <div class="main-layout">
-            <div class="main-content">
+            <div class="main-content" id="main-content" tabindex="-1">
                 {children()}
             </div>
             <BottomNav />

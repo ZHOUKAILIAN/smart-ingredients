@@ -1,35 +1,73 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use leptos_router::hooks::use_navigate;
+use js_sys::{Date, Object, Reflect};
+use leptos_router::hooks::{use_location, use_navigate};
 use wasm_bindgen::{JsCast, JsValue};
 
 use crate::components::{ConfirmModal, ExportPreviewModal, LoadingSpinner};
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
+use crate::utils::navigation::build_full_path;
 use crate::utils::export_image::{ExportData, ExportIngredient};
 use crate::utils::{emit_toast, local_history};
 use shared::{AnalysisResponse, AnalysisStatus, LlmStatus, OcrStatus};
 
+fn format_datetime(date: &Date) -> String {
+    let options = Object::new();
+    let _ = Reflect::set(&options, &JsValue::from_str("year"), &JsValue::from_str("numeric"));
+    let _ = Reflect::set(&options, &JsValue::from_str("month"), &JsValue::from_str("2-digit"));
+    let _ = Reflect::set(&options, &JsValue::from_str("day"), &JsValue::from_str("2-digit"));
+    let _ = Reflect::set(&options, &JsValue::from_str("hour"), &JsValue::from_str("2-digit"));
+    let _ = Reflect::set(&options, &JsValue::from_str("minute"), &JsValue::from_str("2-digit"));
+    let _ = Reflect::set(&options, &JsValue::from_str("second"), &JsValue::from_str("2-digit"));
+    let _ = Reflect::set(&options, &JsValue::from_str("hour12"), &JsValue::from_bool(false));
+    date.to_locale_string("zh-CN", &options.into())
+        .as_string()
+        .unwrap_or_default()
+        .replace('/', "-")
+}
+
 fn format_timestamp(timestamp: i64) -> String {
-    let date = js_sys::Date::new(&JsValue::from_f64(timestamp as f64));
-    let iso = date.to_iso_string().as_string().unwrap_or_default();
-    let trimmed = iso.get(0..19).unwrap_or(&iso);
-    trimmed.replace('T', " ")
+    let date = Date::new(&JsValue::from_f64(timestamp as f64));
+    format_datetime(&date)
 }
 
 fn format_iso_datetime(iso_string: &str) -> String {
-    // Parse ISO 8601 format: "2026-01-31T14:44:08.106418+00:00"
-    // Convert to: "2026-01-31 14:44:08"
-    if let Some(date_time) = iso_string.split('.').next() {
-        return date_time.replace('T', " ");
+    let date = Date::new(&JsValue::from_str(iso_string));
+    if date.get_time().is_nan() {
+        return iso_string.to_string();
     }
-    // Fallback: just replace T with space
-    iso_string.split('+').next()
-        .unwrap_or(iso_string)
-        .split('.')
-        .next()
-        .unwrap_or(iso_string)
-        .replace('T', " ")
+    format_datetime(&date)
+}
+
+fn page_from_search(search: &str) -> i64 {
+    let trimmed = search.trim_start_matches('?');
+    for pair in trimmed.split('&') {
+        let mut parts = pair.splitn(2, '=');
+        let key = parts.next().unwrap_or_default();
+        if key == "page" {
+            if let Some(value) = parts.next() {
+                if let Ok(parsed) = value.parse::<i64>() {
+                    if parsed > 0 {
+                        return parsed;
+                    }
+                }
+            }
+        }
+    }
+    1
+}
+
+fn build_page_target(path: &str, page: i64) -> String {
+    if page <= 1 {
+        path.to_string()
+    } else {
+        format!("{}?page={}", path, page)
+    }
+}
+
+fn is_modified_click(ev: &web_sys::MouseEvent) -> bool {
+    ev.meta_key() || ev.ctrl_key() || ev.shift_key() || ev.alt_key() || ev.button() != 0
 }
 
 fn local_to_response(item: &local_history::LocalHistoryItem) -> Option<AnalysisResponse> {
@@ -54,6 +92,7 @@ fn local_to_response(item: &local_history::LocalHistoryItem) -> Option<AnalysisR
 pub fn HistoryPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
     let navigate = StoredValue::new(use_navigate());
+    let location = use_location();
     let loading = RwSignal::new(false);
     let page = RwSignal::new(1_i64);
     let total = RwSignal::new(0_i64);
@@ -73,6 +112,27 @@ pub fn HistoryPage() -> impl IntoView {
 
     // Export preview modal state
     let export_preview_url = RwSignal::new(None::<String>);
+
+    create_effect(move |_| {
+        let search = location.search.get();
+        let new_page = page_from_search(&search);
+        if page.get() != new_page {
+            page.set(new_page);
+        }
+    });
+
+    let navigate_for_page = navigate.clone();
+    create_effect(move |_| {
+        let current_page = page.get();
+        let path = location.pathname.get_untracked();
+        let search = location.search.get_untracked();
+        let target = build_page_target(path.as_str(), current_page);
+        let current = build_full_path(path.as_str(), search.as_str());
+        if current != target {
+            let navigate = navigate_for_page.get_value();
+            navigate(&target, Default::default());
+        }
+    });
 
     let load_page = Callback::new(move |page_number: i64| {
         if loading.get_untracked() {
@@ -225,7 +285,7 @@ pub fn HistoryPage() -> impl IntoView {
     let export_preview_signal = Signal::derive(move || export_preview_url.get());
 
     view! {
-        <section class="page page-history">
+        <section class="page page-history figma">
             <ConfirmModal
                 show=show_confirm.into()
                 title="删除记录".to_string()
@@ -275,7 +335,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                     </div>
 
                                                     <div class="history-meta-row">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                                                             <circle cx="12" cy="12" r="10"></circle>
                                                             <polyline points="12 6 12 12 16 14"></polyline>
                                                         </svg>
@@ -291,6 +351,9 @@ pub fn HistoryPage() -> impl IntoView {
                                                             src={image_url.clone().unwrap_or_default()}
                                                             alt="缩略图"
                                                             class="history-thumb-img"
+                                                            loading="lazy"
+                                                            width="72"
+                                                            height="72"
                                                             on:error=move |ev| {
                                                                 if let Some(target) = ev.target() {
                                                                     if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
@@ -319,12 +382,23 @@ pub fn HistoryPage() -> impl IntoView {
                                                     </span>
                                                 </div>
                                                 <div class="history-actions">
-                                                    <button class="history-action-btn" on:click=move |_| on_view_local(item_clone.clone())>
+                                                    <a
+                                                        class="history-action-btn"
+                                                        href="/summary"
+                                                        on:click=move |ev: web_sys::MouseEvent| {
+                                                            if is_modified_click(&ev) {
+                                                                return;
+                                                            }
+                                                            ev.prevent_default();
+                                                            on_view_local(item_clone.clone());
+                                                        }
+                                                    >
                                                         "查看"
-                                                    </button>
+                                                    </a>
                                                     <button
                                                         class="history-action-btn export"
                                                         disabled=move || exporting_local_id.get() == Some(id_value.get_value())
+                                                        aria-label="导出记录"
                                                         on:click={
                                                             let result = item.result.clone();
                                                             let exporting_local_id = exporting_local_id.clone();
@@ -405,7 +479,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                         </div>
 
                                                         <div class="history-meta-row">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                                                                 <circle cx="12" cy="12" r="10"></circle>
                                                                 <polyline points="12 6 12 12 16 14"></polyline>
                                                             </svg>
@@ -421,6 +495,9 @@ pub fn HistoryPage() -> impl IntoView {
                                                                 src={resolved_image_url.get_value()}
                                                                 alt="缩略图"
                                                                 class="history-thumb-img"
+                                                                loading="lazy"
+                                                                width="72"
+                                                                height="72"
                                                                 on:error=move |ev| {
                                                                     if let Some(target) = ev.target() {
                                                                         if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
@@ -449,16 +526,27 @@ pub fn HistoryPage() -> impl IntoView {
                                                         </span>
                                                     </div>
                                                     <div class="history-actions">
-                                                        <button
+                                                        <a
                                                             class="history-action-btn"
-                                                            disabled=move || viewing_id.get() == Some(id)
-                                                            on:click=move |_| on_view_cloud(item_clone.clone())
+                                                            href="/summary"
+                                                            aria-disabled=move || viewing_id.get() == Some(id)
+                                                            on:click=move |ev: web_sys::MouseEvent| {
+                                                                if is_modified_click(&ev) {
+                                                                    return;
+                                                                }
+                                                                ev.prevent_default();
+                                                                if viewing_id.get() == Some(id) {
+                                                                    return;
+                                                                }
+                                                                on_view_cloud(item_clone.clone());
+                                                            }
                                                         >
                                                             {move || if viewing_id.get() == Some(id) { "加载中" } else { "查看" }}
-                                                        </button>
+                                                        </a>
                                                         <button
                                                             class="history-action-btn export"
                                                             disabled=move || exporting_id.get() == Some(id)
+                                                            aria-label="导出记录"
                                                             on:click=move |_: web_sys::MouseEvent| {
                                                                 if exporting_id.get() == Some(id) {
                                                                     return;
@@ -526,7 +614,7 @@ pub fn HistoryPage() -> impl IntoView {
                                         page.set(new_page);
                                     }
                                 >
-                                    {move || if loading.get() { "加载中..." } else { "上一页" }}
+                                    {move || if loading.get() { "加载中…" } else { "上一页" }}
                                 </button>
                                 <span>{move || format!("第 {} 页 / 共 {} 条", page.get(), total.get())}</span>
                                 <button
@@ -537,13 +625,13 @@ pub fn HistoryPage() -> impl IntoView {
                                         page.set(new_page);
                                     }
                                 >
-                                    {move || if loading.get() { "加载中..." } else { "下一页" }}
+                                    {move || if loading.get() { "加载中…" } else { "下一页" }}
                                 </button>
                             </div>
                         </Show>
                     }>
                         <div class="history-loading">
-                            <LoadingSpinner message="加载历史记录中..." />
+                            <LoadingSpinner message="加载历史记录中…" />
                         </div>
                     </Show>
                 </div>

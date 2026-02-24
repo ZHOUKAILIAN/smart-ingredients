@@ -3,10 +3,15 @@ import os
 
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from paddleocr import PaddleOCR
 from PIL import Image, ImageOps
 
+from ocr_utils import build_ocr_response
+
 app = FastAPI()
+
+EMPTY_MESSAGE = "未识别到文字，请重新拍摄或上传更清晰的图片"
 
 
 def get_env_bool(name: str, default: bool) -> bool:
@@ -47,24 +52,6 @@ def preprocess_image(image: Image.Image, threshold: int, scale: float) -> Image.
     return binary.convert("RGB")
 
 
-def extract_text(result) -> tuple[str, list[dict]]:
-    if not result:
-        return "", []
-
-    lines: list[dict] = []
-    texts: list[str] = []
-    for block in result:
-        if not block:
-            continue
-        for item in block:
-            text, score = item[1]
-            if text:
-                lines.append({"text": text, "score": score})
-                texts.append(text)
-
-    return "\n".join(texts).strip(), lines
-
-
 def build_ocr() -> PaddleOCR:
     lang = os.getenv("PADDLE_OCR_LANG", "ch")
     use_angle_cls = os.getenv("PADDLE_OCR_ANGLE", "true").lower() in {
@@ -100,17 +87,17 @@ async def ocr_endpoint(file: UploadFile = File(...)) -> dict:
     scale = max(1.0, get_env_float("OCR_PREPROCESS_SCALE", 1.5))
 
     result = OCR_ENGINE.ocr(np.array(image), cls=True)
-    text, lines = extract_text(result)
+    status, payload = build_ocr_response(result, min_text_len, EMPTY_MESSAGE)
     retry_count = 0
 
-    while (
-        preprocess_enabled
-        and retry_count < retry_max
-        and len(text) < min_text_len
-    ):
+    while preprocess_enabled and retry_count < retry_max and status == 422:
         retry_count += 1
         processed = preprocess_image(image, threshold, scale)
         result = OCR_ENGINE.ocr(np.array(processed), cls=True)
-        text, lines = extract_text(result)
+        status, payload = build_ocr_response(result, min_text_len, EMPTY_MESSAGE)
 
-    return {"text": text, "lines": lines, "retry_count": retry_count}
+    if status == 422:
+        return JSONResponse(status_code=422, content=payload)
+
+    payload["retry_count"] = retry_count
+    return payload

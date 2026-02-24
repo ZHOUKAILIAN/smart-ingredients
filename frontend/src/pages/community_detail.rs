@@ -5,25 +5,59 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::{use_navigate, use_params_map};
 
 use crate::services;
+use crate::components::ConfirmModal;
 use crate::stores::ToastLevel;
 use crate::utils::{community_share_storage, community_ui, emit_toast};
+
+#[derive(Clone)]
+struct PendingDelete {
+    post_id: uuid::Uuid,
+    analysis_id: String,
+    share_token: Option<String>,
+}
 
 #[component]
 pub fn CommunityDetailPage() -> impl IntoView {
     let navigate = use_navigate();
-    let navigate_for_back = navigate.clone();
     let navigate_for_delete = navigate.clone();
     let params = use_params_map();
     let detail = RwSignal::new(None::<shared::CommunityPostDetail>);
     let loading = RwSignal::new(false);
     let last_requested_id = RwSignal::new(None::<uuid::Uuid>);
     let share_records = RwSignal::new(community_share_storage::load_share_records());
+    let show_confirm = RwSignal::new(false);
+    let pending_delete = RwSignal::new(None::<PendingDelete>);
 
-    let on_back = move |_| {
-        navigate_for_back("/community", Default::default());
-    };
     let on_delete_success = Callback::new(move |_| {
         navigate_for_delete("/community", Default::default());
+    });
+
+    let on_confirm_delete = Callback::new(move |_| {
+        show_confirm.set(false);
+        let Some(pending) = pending_delete.get() else {
+            return;
+        };
+        pending_delete.set(None);
+        let share_records = share_records;
+        let on_delete_success = on_delete_success.clone();
+        spawn_local(async move {
+            match services::delete_community_post(pending.post_id, pending.share_token).await {
+                Ok(()) => {
+                    let _ = community_share_storage::remove_share_record(&pending.analysis_id);
+                    share_records.set(community_share_storage::load_share_records());
+                    emit_toast(ToastLevel::Success, "删除成功", "已从社区移除");
+                    on_delete_success.run(());
+                }
+                Err(err) => {
+                    emit_toast(ToastLevel::Error, "删除失败", &err);
+                }
+            }
+        });
+    });
+
+    let on_cancel_delete = Callback::new(move |_| {
+        show_confirm.set(false);
+        pending_delete.set(None);
     });
 
     create_effect(move |_| {
@@ -58,15 +92,26 @@ pub fn CommunityDetailPage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-community-detail">
+        <section class="page page-community-detail figma">
             <div class="page-topbar">
-                <button class="icon-button" on:click=on_back aria-label="返回社区">
+                <a class="icon-button" href="/community" aria-label="返回社区">
                     "←"
-                </button>
+                </a>
                 <div class="icon-placeholder"></div>
             </div>
 
+            <ConfirmModal
+                show=show_confirm.into()
+                title="确认删除".to_string()
+                message="确定要删除这条分享吗？删除后无法恢复。"
+                confirm_text="删除".to_string()
+                cancel_text="取消".to_string()
+                on_confirm=on_confirm_delete
+                on_cancel=on_cancel_delete
+            />
+
             <div class="page-scrollable-content">
+                <h1 class="sr-only">"社区分享详情"</h1>
                 <Show
                     when=move || detail.get().is_some()
                     fallback=move || view! { <p class="hint">"加载中…"</p> }
@@ -118,22 +163,12 @@ pub fn CommunityDetailPage() -> impl IntoView {
                                                 emit_toast(ToastLevel::Error, "删除失败", "无效的分享记录");
                                                 return;
                                             };
-                                            let analysis_id = record.analysis_id.clone();
-                                            let share_token = record.share_token.clone();
-                                            let on_delete_success = on_delete_success.clone();
-                                            spawn_local(async move {
-                                                match services::delete_community_post(post_id, share_token).await {
-                                                    Ok(()) => {
-                                                        let _ = community_share_storage::remove_share_record(&analysis_id);
-                                                        share_records.set(community_share_storage::load_share_records());
-                                                        emit_toast(ToastLevel::Success, "删除成功", "已从社区移除");
-                                                        on_delete_success.run(());
-                                                    }
-                                                    Err(err) => {
-                                                        emit_toast(ToastLevel::Error, "删除失败", &err);
-                                                    }
-                                                }
-                                            });
+                                            pending_delete.set(Some(PendingDelete {
+                                                post_id,
+                                                analysis_id: record.analysis_id.clone(),
+                                                share_token: record.share_token.clone(),
+                                            }));
+                                            show_confirm.set(true);
                                         }
                                     >
                                         "删除"
@@ -150,7 +185,14 @@ pub fn CommunityDetailPage() -> impl IntoView {
                                         <p class="community-detail-summary">{card_summary.clone()}</p>
                                     }
                                 >
-                                    <img src={image_url_for_view.clone()} alt="社区分享图片" class="community-detail-image" />
+                                    <img
+                                        src={image_url_for_view.clone()}
+                                        alt="社区分享图片"
+                                        class="community-detail-image"
+                                        width="800"
+                                        height="600"
+                                        fetchpriority="high"
+                                    />
                                 </Show>
 
                                 <Show when=move || has_image>
@@ -163,7 +205,7 @@ pub fn CommunityDetailPage() -> impl IntoView {
                                 </Show>
 
                                 <div class="community-detail-ingredients">
-                                    <h3>"配料表"</h3>
+                                    <h2>"配料表"</h2>
                                     <p>{ingredients_raw}</p>
                                 </div>
                             </div>
