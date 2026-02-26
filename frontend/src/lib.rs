@@ -19,7 +19,9 @@ use crate::pages::{
     AnalyzingPage, CapturePage, CommunityDetailPage, CommunityPage, ConfirmPage, DetailPage,
     HistoryPage, LoginPage, OcrPage, OnboardingPage, ProfilePage, RegisterPage, SummaryPage,
 };
-use crate::stores::{AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute, ToastLevel};
+use crate::stores::{
+    AnalysisSource, AppState, LoadingState, ResultPageState, TabRoute, ToastLevel,
+};
 use crate::utils::preference::{load_preference, merge_preferences, save_preference};
 use crate::utils::{emit_toast, local_storage};
 use serde_json::json;
@@ -116,11 +118,8 @@ pub fn App() -> impl IntoView {
                         }
 
                         if selection_to_set.is_some() || seen_to_set.is_some() {
-                            let merged = merge_preferences(
-                                base,
-                                selection_to_set.as_deref(),
-                                seen_to_set,
-                            );
+                            let merged =
+                                merge_preferences(base, selection_to_set.as_deref(), seen_to_set);
                             if let Err(err) = services::update_preferences(merged).await {
                                 emit_toast(ToastLevel::Error, "同步失败", &err);
                             }

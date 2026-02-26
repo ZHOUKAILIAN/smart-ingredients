@@ -69,7 +69,10 @@ pub fn BottomNav() -> impl IntoView {
                 TabRoute::Community => state.last_community_path.get(),
                 TabRoute::Profile => state.last_profile_path.get(),
             };
-            if last_path.is_empty() || last_path.starts_with("/login") || last_path.starts_with("/register") {
+            if last_path.is_empty()
+                || last_path.starts_with("/login")
+                || last_path.starts_with("/register")
+            {
                 tab.path().to_string()
             } else {
                 last_path
@@ -86,7 +89,7 @@ pub fn BottomNav() -> impl IntoView {
     };
 
     view! {
-        <nav class="bottom-nav">
+        <nav class="fixed bottom-0 left-0 right-0 h-[clamp(48px,6.2vh,60px)] bg-white-80 border-t border-emerald-100/40 backdrop-blur-xl flex justify-around items-center px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] z-[100] shadow-[0_-10px_24px_rgba(15,23,42,0.12)]">
             <For
                 each=move || [
                     TabRoute::Home,
@@ -102,8 +105,13 @@ pub fn BottomNav() -> impl IntoView {
 
                     view! {
                         <a
-                            class="tab-item"
-                            class:active=is_active
+                            class=move || {
+                                if is_active() {
+                                    "relative flex flex-col items-center justify-center flex-1 h-full bg-transparent border-0 no-underline px-0 py-1 gap-1 text-emerald-600"
+                                } else {
+                                    "relative flex flex-col items-center justify-center flex-1 h-full bg-transparent border-0 no-underline px-0 py-1 gap-1 text-slate-500 hover:text-emerald-600"
+                                }
+                            }
                             on:click=move |ev: MouseEvent| {
                                 if is_modified_click(&ev) {
                                     return;
@@ -115,7 +123,7 @@ pub fn BottomNav() -> impl IntoView {
                             aria-label=tab.label()
                             aria-current=move || if is_active() { "page" } else { "" }
                         >
-                            <span class="tab-icon">
+                            <span class="relative flex items-center justify-center pb-[2px]">
                                 {match tab {
                                     TabRoute::Home => view! { <IconHome /> }.into_any(),
                                     TabRoute::History => view! { <IconHistory /> }.into_any(),
@@ -123,7 +131,7 @@ pub fn BottomNav() -> impl IntoView {
                                     TabRoute::Profile => view! { <IconUser /> }.into_any(),
                                 }}
                             </span>
-                            <span class="tab-label">{tab.label()}</span>
+                            <span class="text-[11px] font-medium leading-[1.2]">{tab.label()}</span>
                         </a>
                     }
                 }

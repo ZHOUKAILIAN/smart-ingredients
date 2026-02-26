@@ -1,0 +1,11 @@
+{
+  "name": "smart-ingredients-workspace",
+  "private": true,
+  "scripts": {
+    "build:tailwind": "tailwindcss -c tailwind.config.cjs -i frontend/src/styles/tailwind.css -o frontend/src/styles/tailwind.generated.css"
+  },
+  "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "tailwindcss": "^3.4.17"
+  }
+}

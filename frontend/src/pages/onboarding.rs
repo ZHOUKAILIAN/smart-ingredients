@@ -10,12 +10,6 @@ use crate::utils::emit_toast;
 use crate::utils::local_storage;
 use crate::utils::preference::{merge_preferences, save_preference};
 
-const ONBOARDING_STEPS: &[(&str, &str)] = &[
-    ("选人群", "告诉我们你更在意哪类风险"),
-    ("拍配料表", "上传清晰配料表，AI 自动识别"),
-    ("看识别结果", "先拿到文本，再决定下一步"),
-];
-
 #[component]
 pub fn OnboardingPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
@@ -76,11 +70,14 @@ pub fn OnboardingPage() -> impl IntoView {
     });
 
     let confirm_message = Signal::derive(move || {
-        format!("确定选择「{}」吗？", get_preference_label(&preference.get()))
+        format!(
+            "确定选择「{}」吗？",
+            get_preference_label(&preference.get())
+        )
     });
 
     view! {
-        <section class="page page-preference figma">
+        <section class="page figma">
             <ConfirmModal
                 show=show_confirm.into()
                 title="确认人群定位".to_string()
@@ -92,24 +89,7 @@ pub fn OnboardingPage() -> impl IntoView {
             />
 
             <div class="page-scrollable-content">
-                <div class="preference-page-container">
-                    <div class="preference-intro">
-                        <h2>"先选人群定位"</h2>
-                        <p>"只做最关键的判断，把结果对准你的关注点"</p>
-                        <p class="analysis-desc">"随时可在个人中心修改"</p>
-                    </div>
-
-                    <div class="analysis-list compact">
-                        {ONBOARDING_STEPS
-                            .iter()
-                            .map(|(title, desc)| view! {
-                                <div class="analysis-item">
-                                    <p class="analysis-summary">{*title}</p>
-                                    <p class="analysis-desc">{*desc}</p>
-                                </div>
-                            })
-                            .collect_view()}
-                    </div>
+                <div class="px-5 pt-8 pb-6">
 
                     <PreferenceCard
                         value=Signal::derive(move || preference.get())
@@ -118,16 +98,16 @@ pub fn OnboardingPage() -> impl IntoView {
                         })
                     />
 
-                    <div class="preference-actions">
-                        <button class="secondary-cta" on:click=on_skip>
+                    <div class="flex items-center gap-4 mt-8 px-2">
+                        <button class="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-2xl transition-all cursor-pointer border-0" on:click=on_skip>
                             "先体验，后设置"
                         </button>
-                        <button class="primary-cta" on:click=on_save_click>
+                        <button class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold rounded-2xl transition-all cursor-pointer border-0 shadow-lg shadow-emerald-500/20" on:click=on_save_click>
                             "确认人群并开始"
                         </button>
                     </div>
 
-                    <div class="preference-hint">
+                    <div class="mt-4 text-xs text-gray-600 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
                         "💡 识别到配料文本后，你可以继续深入分析"
                     </div>
                 </div>

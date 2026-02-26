@@ -25,6 +25,9 @@ pub fn get_has_seen_onboarding() -> bool {
 
 pub fn set_has_seen_onboarding(value: bool) {
     if let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) {
-        let _ = storage.set_item(KEY_HAS_SEEN_ONBOARDING, if value { "true" } else { "false" });
+        let _ = storage.set_item(
+            KEY_HAS_SEEN_ONBOARDING,
+            if value { "true" } else { "false" },
+        );
     }
 }

@@ -31,15 +31,16 @@ pub struct ExportData {
 
 // ── Constants ───────────────────────────────────────────────────────────
 
-const IMG_W: f64 = 480.0;       // mobile-friendly width
-const PAD: f64 = 24.0;           // outer padding
-const CONTENT_W: f64 = IMG_W - PAD * 2.0;  // 432
-const CARD_PAD: f64 = 18.0;      // inner card padding
-const CARD_R: f64 = 12.0;        // card border radius
-const SECTION_GAP: f64 = 16.0;   // gap between cards
+const IMG_W: f64 = 480.0; // mobile-friendly width
+const PAD: f64 = 24.0; // outer padding
+const CONTENT_W: f64 = IMG_W - PAD * 2.0; // 432
+const CARD_PAD: f64 = 18.0; // inner card padding
+const CARD_R: f64 = 12.0; // card border radius
+const SECTION_GAP: f64 = 16.0; // gap between cards
 
 // Fonts – use system fonts available in WebView
-const FONT_FAMILY: &str = "'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif";
+const FONT_FAMILY: &str =
+    "'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif";
 
 // Colors
 const BG_TOP: &str = "#ecfdf5";
@@ -131,7 +132,12 @@ pub async fn save_via_tauri(data_url: &str) -> Result<String, String> {
     let window = web_sys::window().ok_or("无法获取 window")?;
 
     web_sys::console::log_1(
-        &format!("[SI-WASM] saving as: {}, payload len: {}", filename, base64_payload.len()).into(),
+        &format!(
+            "[SI-WASM] saving as: {}, payload len: {}",
+            filename,
+            base64_payload.len()
+        )
+        .into(),
     );
 
     // Store args as temporary window properties for JS eval access
@@ -165,20 +171,16 @@ pub async fn save_via_tauri(data_url: &str) -> Result<String, String> {
         msg
     })?;
 
-    let promise: js_sys::Promise = promise
-        .dyn_into()
-        .map_err(|_| {
-            let msg = "invoke 返回值不是 Promise".to_string();
-            web_sys::console::error_1(&msg.clone().into());
-            msg
-        })?;
+    let promise: js_sys::Promise = promise.dyn_into().map_err(|_| {
+        let msg = "invoke 返回值不是 Promise".to_string();
+        web_sys::console::error_1(&msg.clone().into());
+        msg
+    })?;
 
     let result = wasm_bindgen_futures::JsFuture::from(promise)
         .await
         .map_err(|e| {
-            let msg = e
-                .as_string()
-                .unwrap_or_else(|| format!("{:?}", e));
+            let msg = e.as_string().unwrap_or_else(|| format!("{:?}", e));
             let err = format!("保存失败: {}", msg);
             web_sys::console::error_1(&err.clone().into());
             err
@@ -222,8 +224,8 @@ pub fn download_from_data_url(data_url: &str) -> Result<(), String> {
     let blob = web_sys::Blob::new_with_buffer_source_sequence_and_options(&blob_parts, &opts)
         .map_err(|_| "创建 Blob 失败".to_string())?;
 
-    let object_url =
-        web_sys::Url::create_object_url_with_blob(&blob).map_err(|_| "创建下载链接失败".to_string())?;
+    let object_url = web_sys::Url::create_object_url_with_blob(&blob)
+        .map_err(|_| "创建下载链接失败".to_string())?;
 
     let document = window.document().ok_or("无法获取 document")?;
     let anchor: web_sys::HtmlAnchorElement = document
@@ -251,7 +253,9 @@ pub fn export_and_share(data: &ExportData) -> Result<(), String> {
 
 // ── Core rendering ──────────────────────────────────────────────────────
 
-fn render_image(data: &ExportData) -> Result<(HtmlCanvasElement, CanvasRenderingContext2d), String> {
+fn render_image(
+    data: &ExportData,
+) -> Result<(HtmlCanvasElement, CanvasRenderingContext2d), String> {
     let document = web_sys::window()
         .and_then(|w| w.document())
         .ok_or("无法获取 document")?;
@@ -287,8 +291,12 @@ fn render_image(data: &ExportData) -> Result<(HtmlCanvasElement, CanvasRendering
 
     // ── Background gradient ─────────────────────────────────────────
     let gradient = ctx.create_linear_gradient(0.0, 0.0, 0.0, total_height);
-    gradient.add_color_stop(0.0, BG_TOP).map_err(|_| "gradient err")?;
-    gradient.add_color_stop(1.0, BG_BOT).map_err(|_| "gradient err")?;
+    gradient
+        .add_color_stop(0.0, BG_TOP)
+        .map_err(|_| "gradient err")?;
+    gradient
+        .add_color_stop(1.0, BG_BOT)
+        .map_err(|_| "gradient err")?;
     ctx.set_fill_style(&JsValue::from(&gradient));
     ctx.fill_rect(0.0, 0.0, IMG_W, total_height);
 
@@ -357,7 +365,12 @@ fn calc_total_height(ctx: &CanvasRenderingContext2d, data: &ExportData) -> f64 {
 }
 
 /// Measure how many lines text will wrap into at a given font size.
-fn measure_wrap_lines(ctx: &CanvasRenderingContext2d, text: &str, max_w: f64, font_size: f64) -> usize {
+fn measure_wrap_lines(
+    ctx: &CanvasRenderingContext2d,
+    text: &str,
+    max_w: f64,
+    font_size: f64,
+) -> usize {
     ctx.set_font(&format!("{}px {}", font_size, FONT_FAMILY));
     let mut lines = 0usize;
     for paragraph in text.split('\n') {
@@ -380,7 +393,11 @@ fn measure_wrap_lines(ctx: &CanvasRenderingContext2d, text: &str, max_w: f64, fo
                 end += 1;
             }
             // end-1 chars fit on this line (or all remaining)
-            let line_end = if end > chars.len() { chars.len() } else { (end - 1).max(start + 1) };
+            let line_end = if end > chars.len() {
+                chars.len()
+            } else {
+                (end - 1).max(start + 1)
+            };
             lines += 1;
             start = line_end;
         }
@@ -389,7 +406,12 @@ fn measure_wrap_lines(ctx: &CanvasRenderingContext2d, text: &str, max_w: f64, fo
 }
 
 /// Actually wrap text into lines that fit within max_w pixels.
-fn wrap_text_measured(ctx: &CanvasRenderingContext2d, text: &str, max_w: f64, font_size: f64) -> Vec<String> {
+fn wrap_text_measured(
+    ctx: &CanvasRenderingContext2d,
+    text: &str,
+    max_w: f64,
+    font_size: f64,
+) -> Vec<String> {
     ctx.set_font(&format!("{}px {}", font_size, FONT_FAMILY));
     let mut result = Vec::new();
     for paragraph in text.split('\n') {
@@ -410,7 +432,11 @@ fn wrap_text_measured(ctx: &CanvasRenderingContext2d, text: &str, max_w: f64, fo
                 }
                 end += 1;
             }
-            let line_end = if end > chars.len() { chars.len() } else { (end - 1).max(start + 1) };
+            let line_end = if end > chars.len() {
+                chars.len()
+            } else {
+                (end - 1).max(start + 1)
+            };
             let line: String = chars[start..line_end].iter().collect();
             result.push(line);
             start = line_end;

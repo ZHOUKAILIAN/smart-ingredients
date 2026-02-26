@@ -1,9 +1,9 @@
 //! Export preview modal — shows the generated image in a floating overlay.
 //! User can long-press to save, tap the download button, or close the modal.
 
-use leptos::prelude::*;
 use crate::stores::ToastLevel;
 use crate::utils::emit_toast;
+use leptos::prelude::*;
 
 #[component]
 pub fn ExportPreviewModal(
@@ -69,34 +69,34 @@ pub fn ExportPreviewModal(
     view! {
         <Show when=move || image_url.get().is_some()>
             <div
-                class="export-preview-backdrop"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/55 px-4"
                 on:click=on_backdrop
                 on:keydown=on_keydown
                 role="dialog"
                 aria-modal="true"
                 aria-label="导出预览"
             >
-                <div class="export-preview-modal" on:click=stop_propagation>
-                    <div class="export-preview-header">
-                        <span class="export-preview-title">"分析结果图片"</span>
-                        <button class="export-preview-close" on:click=on_close_btn aria-label="关闭">
+                <div class="w-full max-w-[420px] rounded-3xl border border-emerald-100 bg-white-95 shadow-2xl overflow-hidden" on:click=stop_propagation>
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-emerald-100">
+                        <span class="text-base font-semibold text-gray-900">"分析结果图片"</span>
+                        <button class="w-9 h-9 rounded-full border-0 bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors" on:click=on_close_btn aria-label="关闭">
                             "✕"
                         </button>
                     </div>
 
-                    <div class="export-preview-body">
-                        <p class="export-preview-hint">"长按图片可保存到相册"</p>
-                        <div class="export-preview-image-container">
+                    <div class="px-5 py-4">
+                        <p class="m-0 mb-3 text-center text-xs text-gray-500">"长按图片可保存到相册"</p>
+                        <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-2">
                             <img
                                 src=move || image_url.get().unwrap_or_default()
                                 alt="分析结果"
-                                class="export-preview-image"
+                                class="block w-full rounded-xl object-contain max-h-[60vh]"
                             />
                         </div>
                     </div>
 
-                    <div class="export-preview-footer">
-                        <button class="export-preview-download-btn" on:click=on_download>
+                    <div class="px-5 pb-5">
+                        <button class="w-full h-11 rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-lg transition-all flex items-center justify-center gap-2" on:click=on_download>
                             <span aria-hidden="true">"💾"</span>
                             <span>"保存图片"</span>
                         </button>

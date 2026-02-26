@@ -3,7 +3,7 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use wasm_bindgen::JsCast;
 
-use crate::components::{get_preference_description, get_preference_label, IconArrowLeft};
+use crate::components::{get_preference_description, IconArrowLeft};
 use crate::services;
 use crate::stores::{AppState, LoadingState, ToastLevel};
 use crate::utils::emit_toast;
@@ -86,19 +86,23 @@ pub fn ConfirmPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-confirm figma">
-            <div class="page-topbar">
-                <button class="icon-button" on:click=on_back aria-label="返回上一页">
+        <section class="page figma">
+            <div class="flex items-center px-4 py-3 bg-white-80 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+                <button
+                    class="mr-3 -ml-2 w-10 h-10 rounded-full border-0 bg-transparent flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                    on:click=on_back
+                    aria-label="返回上一页"
+                >
                     <IconArrowLeft />
                 </button>
-                <div class="icon-placeholder"></div>
+                <div class="w-10 h-10"></div>
             </div>
 
-            <div class="page-scrollable-content">
-                <div class="text-editor-container">
-                    <h3 class="section-label">"识别结果"</h3>
+            <div class="page-scrollable-content px-5 py-5">
+                <div class="mt-2">
+                    <h3 class="m-0 mb-2 text-base font-semibold text-gray-900 text-center">"识别结果"</h3>
                     <textarea
-                        class="text-editor"
+                        class="w-full min-h-[220px] rounded-2xl border border-emerald-100 bg-white-95 p-4 text-sm leading-relaxed text-gray-800 shadow-sm focus:outline-none focus:border-emerald-500"
                         rows="10"
                         name="ocr-text"
                         placeholder="OCR识别的文本…"
@@ -107,13 +111,13 @@ pub fn ConfirmPage() -> impl IntoView {
                             set_edited_text.set(event_target_value(&ev));
                         }
                     />
-                    <p class="edit-tips">
+                    <p class="mt-2 mb-0 text-xs text-gray-600">
                         "💡 提示：您可以修改识别错误的文字，以提高分析准确性"
                     </p>
                 </div>
 
-                <div class="preference-container">
-                    <p class="preference-tips">
+                <div class="mt-3 px-1">
+                    <p class="m-0 text-xs text-gray-600">
                         {move || format!(
                             "💡 当前分析更注重：{}。如需修改请前往「我的」页面",
                             get_preference_description(&preference.get()),
@@ -121,16 +125,16 @@ pub fn ConfirmPage() -> impl IntoView {
                     </p>
                 </div>
 
-                <div class="action-buttons">
+                <div class="mt-4 flex gap-3">
                     <button
-                        class="btn-secondary"
+                        class="flex-1 min-h-11 rounded-xl border border-emerald-100 bg-white-95 text-gray-800 text-sm font-semibold shadow-sm transition-all disabled:opacity-50"
                         on:click=on_retake
                         disabled=move || state.loading_state.get() != LoadingState::Idle
                     >
                         "重新拍照"
                     </button>
                     <button
-                        class="btn-primary"
+                        class="flex-1 min-h-11 rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-lg transition-all disabled:opacity-50"
                         on:click=on_confirm
                         disabled=move || state.loading_state.get() != LoadingState::Idle
                     >

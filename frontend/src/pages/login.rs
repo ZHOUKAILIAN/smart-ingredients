@@ -134,9 +134,7 @@ pub fn LoginPage() -> impl IntoView {
                         selection_to_set = Some(pref.clone());
                     }
 
-                    if let Some(flag) =
-                        base.get("has_seen_onboarding").and_then(|v| v.as_bool())
-                    {
+                    if let Some(flag) = base.get("has_seen_onboarding").and_then(|v| v.as_bool()) {
                         local_storage::set_has_seen_onboarding(flag);
                         state.has_seen_onboarding.set(flag);
                     } else if local_seen {
@@ -144,11 +142,8 @@ pub fn LoginPage() -> impl IntoView {
                     }
 
                     if selection_to_set.is_some() || seen_to_set.is_some() {
-                        let merged = merge_preferences(
-                            base,
-                            selection_to_set.as_deref(),
-                            seen_to_set,
-                        );
+                        let merged =
+                            merge_preferences(base, selection_to_set.as_deref(), seen_to_set);
                         if let Err(err) = services::update_preferences(merged).await {
                             emit_toast(ToastLevel::Error, "同步失败", &err);
                         }
@@ -207,24 +202,24 @@ pub fn LoginPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-login figma">
+        <section class="page figma">
             <div class="page-scrollable-content">
-                <div class="login-hero">
-                <div class="brand-mark">
-                    <div class="brand-icon brand-icon-float">"SI"</div>
-                    <div class="brand-ai brand-ai-float">"AI"</div>
+                <div class="px-6 pt-12 pb-6 text-center">
+                <div class="relative inline-block mb-3">
+                    <div class="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xl font-bold flex items-center justify-center shadow-xl animate-float">"SI"</div>
+                    <div class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 text-white text-xs font-bold flex items-center justify-center shadow-md animate-bounce-slow">"AI"</div>
                 </div>
-                <h2 class="login-title">"Smart Ingredients"</h2>
-                <p class="login-subtitle">"登录以同步您的数据"</p>
+                <h2 class="m-0 text-2xl font-bold text-gray-900">"Smart Ingredients"</h2>
+                <p class="mt-2 mb-0 text-sm text-gray-600">"登录以同步您的数据"</p>
             </div>
 
-            <div class="login-form">
-                <div class="input-field-group">
-                    <label class="input-label" for="login-username">"账号"</label>
-                    <div class="input-wrapper">
+            <div class="px-6 pb-4 space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-sm font-semibold text-gray-700" for="login-username">"账号"</label>
+                    <div>
                         <input
                             id="login-username"
-                            class="custom-input"
+                            class="w-full h-11 rounded-xl border border-emerald-100 bg-white-95 px-3 text-sm text-gray-800 shadow-sm focus:outline-none focus:border-emerald-500"
                             type="text"
                             name="username"
                             autocomplete="username"
@@ -235,12 +230,12 @@ pub fn LoginPage() -> impl IntoView {
                     </div>
                 </div>
 
-                <div class="input-field-group">
-                    <label class="input-label" for="login-password">"密码"</label>
-                    <div class="input-wrapper">
+                <div class="space-y-1.5">
+                    <label class="text-sm font-semibold text-gray-700" for="login-password">"密码"</label>
+                    <div>
                         <input
                             id="login-password"
-                            class="custom-input"
+                            class="w-full h-11 rounded-xl border border-emerald-100 bg-white-95 px-3 text-sm text-gray-800 shadow-sm focus:outline-none focus:border-emerald-500"
                             type="password"
                             name="password"
                             autocomplete="current-password"
@@ -251,8 +246,7 @@ pub fn LoginPage() -> impl IntoView {
                 </div>
 
                 <button
-                    class="primary-button"
-                    style="width: 100%;"
+                    class="w-full h-11 rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-lg transition-all disabled:opacity-50"
                     on:click=on_login
                     disabled=move || logging_in.get()
                 >
@@ -260,7 +254,7 @@ pub fn LoginPage() -> impl IntoView {
                 </button>
 
                 <button
-                    class="link-button login-switch"
+                    class="w-full text-sm text-emerald-600 font-medium bg-transparent border-0 py-2"
                     on:click=move |_| {
                         let navigate = navigate.get_value();
                         navigate("/register", Default::default());
@@ -270,9 +264,9 @@ pub fn LoginPage() -> impl IntoView {
                 </button>
             </div>
 
-            <div class="login-footer">
+            <div class="px-6 pb-8 text-center">
                 <button
-                    class="link-button"
+                    class="text-sm text-gray-500 bg-transparent border-0 py-2"
                     on:click=move |_| {
                         if let Some(window) = web_sys::window() {
                             if let Some(history) = window.history().ok() {

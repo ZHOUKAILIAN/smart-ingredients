@@ -3,4 +3,9 @@ target = "frontend/index.html"
 dist = "frontend/dist"
 
 [serve]
-port = 8080
+port = 8085
+
+[[hooks]]
+stage = "pre_build"
+command = "npm"
+command_arguments = ["run", "build:tailwind"]
