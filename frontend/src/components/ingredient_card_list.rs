@@ -6,7 +6,7 @@ use leptos::prelude::*;
 #[component]
 pub fn IngredientCardList(items: Vec<IngredientRow>) -> impl IntoView {
     view! {
-        <div class="ingredient-card-list">
+        <div class="space-y-3">
             {items
                 .into_iter()
                 .map(|item| {

@@ -25,8 +25,7 @@ pub fn save_share_records(records: &[CommunityShareRecord]) -> Result<(), String
     let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) else {
         return Err("localStorage 不可用".to_string());
     };
-    let payload =
-        serde_json::to_string(records).map_err(|_| "分享记录序列化失败".to_string())?;
+    let payload = serde_json::to_string(records).map_err(|_| "分享记录序列化失败".to_string())?;
     storage
         .set_item(COMMUNITY_SHARE_KEY, &payload)
         .map_err(|_| "分享记录写入失败".to_string())?;

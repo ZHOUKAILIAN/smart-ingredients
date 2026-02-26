@@ -51,31 +51,31 @@ pub fn ProfilePage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-profile figma">
+        <section class="page figma">
             <div class="page-scrollable-content">
                 <Show when=move || state.auth_user.get().is_some() fallback=move || {
                 view! {
                     // 未登录状态
-                    <div class="profile-container">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <span class="avatar-icon">"👤"</span>
-                            </div>
-                            <div class="profile-name">"未登录"</div>
-                            <button class="profile-login-btn" on:click=move |_| {
+                    <div class="px-5 pt-8 pb-6">
+                        <div class="rounded-3xl border border-emerald-100 bg-white-95 shadow-lg p-5 text-center">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-2xl flex items-center justify-center">"👤"</div>
+                            <div class="mt-3 text-lg font-bold text-gray-900">"未登录"</div>
+                            <button class="mt-3 h-10 px-4 rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-md" on:click=move |_| {
                                 let navigate = navigate.get_value();
                                 navigate("/login", Default::default());
                             }>"登录 / 注册"</button>
                         </div>
 
-                        <div class="profile-menu">
-                            <button class="menu-item" on:click=move |_| {
+                        <div class="mt-4 rounded-2xl border border-emerald-100 bg-white-95 shadow-sm overflow-hidden">
+                            <button class="w-full h-12 px-4 flex items-center justify-between text-left bg-transparent border-0 hover:bg-emerald-50 transition-colors" on:click=move |_| {
                                 let navigate = navigate.get_value();
                                 navigate("/onboarding", Default::default());
                             }>
-                                <span class="menu-icon">"⚙️"</span>
-                                <span class="menu-label">"人群设置"</span>
-                                <span class="menu-arrow">"›"</span>
+                                <span class="flex items-center gap-2 text-gray-800">
+                                    <span>"⚙️"</span>
+                                    <span class="text-sm font-medium">"人群设置"</span>
+                                </span>
+                                <span class="text-gray-400">"›"</span>
                             </button>
                         </div>
                     </div>
@@ -85,42 +85,41 @@ pub fn ProfilePage() -> impl IntoView {
                 {move || {
                     state.auth_user.get().map(|user| {
                         view! {
-                            <div class="profile-container">
-                                <div class="profile-header">
-                                    <div class="profile-avatar">
-                                        <span class="avatar-icon">"👤"</span>
-                                    </div>
-                                    <div class="profile-name">{user.login_id}</div>
-                                    <div class="profile-stats">
-                                        <span class="stat-item">
-                                            <span class="stat-label">"分析次数"</span>
-                                            <span class="stat-value">{user.analysis_count}</span>
-                                        </span>
+                            <div class="px-5 pt-8 pb-6">
+                                <div class="rounded-3xl border border-emerald-100 bg-white-95 shadow-lg p-5 text-center">
+                                    <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-2xl flex items-center justify-center">"👤"</div>
+                                    <div class="mt-3 text-lg font-bold text-gray-900">{user.login_id}</div>
+                                    <div class="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1">
+                                        <span class="text-xs text-gray-500">"分析次数"</span>
+                                        <span class="text-sm font-semibold text-emerald-700">{user.analysis_count}</span>
                                     </div>
                                 </div>
 
-                                <div class="profile-menu">
-                                    <button class="menu-item" on:click=move |_| {
+                                <div class="mt-4 rounded-2xl border border-emerald-100 bg-white-95 shadow-sm overflow-hidden">
+                                    <button class="w-full h-12 px-4 flex items-center justify-between text-left bg-transparent border-0 hover:bg-emerald-50 transition-colors" on:click=move |_| {
                                         let navigate = navigate.get_value();
                                         navigate("/onboarding", Default::default());
                                     }>
-                                        <span class="menu-icon">"⚙️"</span>
-                                        <span class="menu-label">"人群设置"</span>
-                                        <span class="menu-arrow">"›"</span>
+                                        <span class="flex items-center gap-2 text-gray-800">
+                                            <span>"⚙️"</span>
+                                            <span class="text-sm font-medium">"人群设置"</span>
+                                        </span>
+                                        <span class="text-gray-400">"›"</span>
                                     </button>
-
-                                    <div class="menu-divider"></div>
-
-                                    <button class="menu-item" on:click=move |_| on_logout.run(())>
-                                        <span class="menu-icon">"🚪"</span>
-                                        <span class="menu-label">"退出登录"</span>
-                                        <span class="menu-arrow">"›"</span>
+                                    <div class="h-px bg-emerald-100"></div>
+                                    <button class="w-full h-12 px-4 flex items-center justify-between text-left bg-transparent border-0 hover:bg-emerald-50 transition-colors" on:click=move |_| on_logout.run(())>
+                                        <span class="flex items-center gap-2 text-gray-800">
+                                            <span>"🚪"</span>
+                                            <span class="text-sm font-medium">"退出登录"</span>
+                                        </span>
+                                        <span class="text-gray-400">"›"</span>
                                     </button>
-
-                                    <button class="menu-item danger" on:click=move |_| on_delete.run(())>
-                                        <span class="menu-icon">"⚠️"</span>
-                                        <span class="menu-label">"注销账号"</span>
-                                        <span class="menu-arrow">"›"</span>
+                                    <button class="w-full h-12 px-4 flex items-center justify-between text-left bg-transparent border-0 hover:bg-red-50 transition-colors" on:click=move |_| on_delete.run(())>
+                                        <span class="flex items-center gap-2 text-red-600">
+                                            <span>"⚠️"</span>
+                                            <span class="text-sm font-medium">"注销账号"</span>
+                                        </span>
+                                        <span class="text-red-300">"›"</span>
                                     </button>
                                 </div>
                             </div>

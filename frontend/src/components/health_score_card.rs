@@ -14,21 +14,29 @@ pub fn HealthScoreCard(score: i32, recommendation: String) -> impl IntoView {
         recommendation
     };
     let progress_style = format!("width: {}%; background: {}", normalized_score, score_color);
-    let label_style = format!("color: {}", score_color);
+    let score_class = move || {
+        if normalized_score >= 70 {
+            "text-emerald-600"
+        } else if normalized_score >= 50 {
+            "text-amber-600"
+        } else {
+            "text-red-600"
+        }
+    };
 
     view! {
-        <div class="surface-card score-card">
-            <div class="score-header">
-                <span class="score-label">"健康评分"</span>
-                <span class="score-level" style={label_style.clone()}>{score_label}</span>
+        <div class="rounded-2xl border border-emerald-100 bg-white-95 shadow-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-gray-800">"健康评分"</span>
+                <span class=move || format!("text-sm font-semibold {}", score_class())>{score_label}</span>
             </div>
-            <div class="score-main">
-                <span class="score-value" style={label_style.clone()}>{normalized_score}</span>
-                <span class="score-unit">"/100"</span>
+            <div class="flex items-end gap-1 mb-2">
+                <span class=move || format!("text-4xl font-bold leading-none {}", score_class())>{normalized_score}</span>
+                <span class="text-sm text-gray-500 mb-1">"/100"</span>
             </div>
-            <p class="score-recommendation">{display_text}</p>
-            <div class="score-progress">
-                <div class="score-progress-bar" style={progress_style}></div>
+            <p class="text-sm text-gray-700 m-0 mb-3">{display_text}</p>
+            <div class="w-full h-2 rounded-full bg-emerald-100 overflow-hidden">
+                <div class="h-full rounded-full transition-all" style={progress_style}></div>
             </div>
         </div>
     }

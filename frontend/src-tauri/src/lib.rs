@@ -7,8 +7,16 @@ use tauri::Manager;
 /// On Android, saves to app cache dir (no permissions required).
 /// Returns the file path on success.
 #[tauri::command]
-fn save_image_file(app: tauri::AppHandle, base64_data: String, filename: String) -> Result<String, String> {
-    println!("[SI-NATIVE] save_image_file called, filename={}, data_len={}", filename, base64_data.len());
+fn save_image_file(
+    app: tauri::AppHandle,
+    base64_data: String,
+    filename: String,
+) -> Result<String, String> {
+    println!(
+        "[SI-NATIVE] save_image_file called, filename={}, data_len={}",
+        filename,
+        base64_data.len()
+    );
 
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(&base64_data)
@@ -26,7 +34,10 @@ fn save_image_file(app: tauri::AppHandle, base64_data: String, filename: String)
         .download_dir()
         .inspect(|p| println!("[SI-NATIVE] using download_dir: {:?}", p))
         .or_else(|e| {
-            println!("[SI-NATIVE] download_dir failed: {}, trying app_cache_dir", e);
+            println!(
+                "[SI-NATIVE] download_dir failed: {}, trying app_cache_dir",
+                e
+            );
             app.path().app_cache_dir()
         })
         .map_err(|e| {

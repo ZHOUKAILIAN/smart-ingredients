@@ -33,9 +33,7 @@ impl From<ShareExportProps> for ExportData {
 }
 
 #[component]
-pub fn ShareButton(
-    #[prop(into)] props: ShareExportProps,
-) -> impl IntoView {
+pub fn ShareButton(#[prop(into)] props: ShareExportProps) -> impl IntoView {
     let exporting = RwSignal::new(false);
     let preview_url = RwSignal::new(None::<String>);
     let data = props.clone();
@@ -70,7 +68,7 @@ pub fn ShareButton(
 
     view! {
         <button
-            class="export-btn"
+            class="w-full h-12 rounded-2xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             on:click=on_export
             disabled=move || exporting.get()
             aria-label="导出分析结果为图片"
@@ -78,12 +76,12 @@ pub fn ShareButton(
             <Show
                 when=move || exporting.get()
                 fallback=|| view! {
-                    <span class="export-btn-icon">"📤"</span>
-                    <span class="export-btn-text">"导出图片"</span>
+                    <span class="text-base leading-none">"📤"</span>
+                    <span class="text-sm font-semibold leading-none">"导出图片"</span>
                 }
             >
-                <span class="export-btn-icon export-loading">"⏳"</span>
-                <span class="export-btn-text">"生成中…"</span>
+                <span class="text-base leading-none animate-pulse">"⏳"</span>
+                <span class="text-sm font-semibold leading-none">"生成中…"</span>
             </Show>
         </button>
 

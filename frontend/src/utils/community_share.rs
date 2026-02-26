@@ -144,6 +144,9 @@ mod tests {
         assert_eq!(payload.summary_text, "focus");
         assert_eq!(payload.ingredients_raw, "confirmed");
         assert_eq!(payload.health_score, 92);
-        assert_eq!(payload.card_payload.preference_label.as_deref(), Some("偏好"));
+        assert_eq!(
+            payload.card_payload.preference_label.as_deref(),
+            Some("偏好")
+        );
     }
 }

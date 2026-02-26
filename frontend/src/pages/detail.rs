@@ -1,7 +1,6 @@
 //! Detail page - shows full ingredient list
 
 use leptos::prelude::*;
-use leptos_router::hooks::use_navigate;
 use wasm_bindgen::JsCast;
 
 use crate::components::{IconArrowLeft, IngredientCardList, IngredientRow};
@@ -64,7 +63,6 @@ fn sort_rows_by_risk(rows: Vec<IngredientRow>) -> Vec<IngredientRow> {
 #[component]
 pub fn DetailPage() -> impl IntoView {
     let state = use_context::<AppState>().expect("AppState not found");
-    let navigate = use_navigate();
 
     let on_back = move |_| {
         // Navigate back using browser history
@@ -91,18 +89,22 @@ pub fn DetailPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-detail figma">
-            <div class="page-topbar">
-                <button class="icon-button" on:click=on_back aria-label="返回上一页">
+        <section class="page figma">
+            <div class="flex items-center px-4 py-3 bg-white-80 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+                <button
+                    class="mr-3 -ml-2 w-10 h-10 rounded-full border-0 bg-transparent flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                    on:click=on_back
+                    aria-label="返回上一页"
+                >
                     <IconArrowLeft />
                 </button>
-                <div class="icon-placeholder"></div>
+                <div class="w-10 h-10"></div>
             </div>
 
-            <div class="page-scrollable-content">
+            <div class="page-scrollable-content px-5 py-5">
                 <Show
                     when=move || !table_rows().is_empty()
-                    fallback=move || view! { <p class="hint">"暂无配料数据"</p> }
+                    fallback=move || view! { <p class="text-sm text-gray-600 text-center m-0 py-6">"暂无配料数据"</p> }
                 >
                     <IngredientCardList items=table_rows() />
                 </Show>

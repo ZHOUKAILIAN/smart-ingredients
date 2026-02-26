@@ -6,8 +6,8 @@ use uuid::Uuid;
 
 use crate::services;
 use crate::stores::ToastLevel;
-use crate::utils::{community_share, community_share_storage, community_ui, emit_toast};
 use crate::utils::export_image::{data_url_to_blob, ExportData, ExportIngredient};
+use crate::utils::{community_share, community_share_storage, community_ui, emit_toast};
 
 #[component]
 pub fn CommunityShareButton(
@@ -41,7 +41,9 @@ pub fn CommunityShareButton(
         let result = analysis_result.clone();
         let confirmed = confirmed_text.clone();
         let ocr = ocr_text.clone();
-        let preference = preference_label.clone().filter(|label| !label.trim().is_empty());
+        let preference = preference_label
+            .clone()
+            .filter(|label| !label.trim().is_empty());
         spawn_local(async move {
             let share_token = Uuid::new_v4().to_string();
             let create_payload = community_share::build_create_payload(
@@ -85,7 +87,11 @@ pub fn CommunityShareButton(
                         share_token: Some(share_token.clone()),
                     };
                     if let Err(err) = community_share_storage::upsert_share_record(record.clone()) {
-                        emit_toast(ToastLevel::Warning, "分享成功", &format!("记录保存失败: {err}"));
+                        emit_toast(
+                            ToastLevel::Warning,
+                            "分享成功",
+                            &format!("记录保存失败: {err}"),
+                        );
                     } else {
                         emit_toast(ToastLevel::Success, "已分享到社区", "分享成功");
                     }
@@ -108,13 +114,13 @@ pub fn CommunityShareButton(
             fallback=move || {
                 let on_publish = on_publish;
                 view! {
-                    <button class="secondary-cta" on:click=move |ev| on_publish.run(ev) disabled=move || publishing.get()>
+                    <button class="w-full h-11 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-semibold transition-all hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed" on:click=move |ev| on_publish.run(ev) disabled=move || publishing.get()>
                         <span>{move || if publishing.get() { "分享中…" } else { "分享到社区" }}</span>
                     </button>
                 }
             }
         >
-            <span class="community-share-status">"已分享"</span>
+            <span class="inline-flex items-center px-3 h-9 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold border border-emerald-200">"已分享"</span>
         </Show>
     }
 }

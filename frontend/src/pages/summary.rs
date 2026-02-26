@@ -11,9 +11,9 @@ use crate::components::{
     get_preference_label, CommunityShareButton, HealthScoreCard, IconArrowLeft, ShareButton,
     ShareExportProps, SummaryCard,
 };
-use crate::utils::export_image::ExportIngredient;
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
+use crate::utils::export_image::ExportIngredient;
 use crate::utils::{emit_toast, local_history};
 use shared::AnalysisStatus;
 
@@ -171,15 +171,19 @@ pub fn SummaryPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-summary figma">
-            <div class="page-topbar">
-                <button class="icon-button" on:click=on_back aria-label="返回上一页">
+        <section class="page figma">
+            <div class="flex items-center px-4 py-3 bg-white-80 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+                <button
+                    class="mr-3 -ml-2 w-10 h-10 rounded-full border-0 bg-transparent flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                    on:click=on_back
+                    aria-label="返回上一页"
+                >
                     <IconArrowLeft />
                 </button>
-                <div class="icon-placeholder"></div>
+                <div class="w-10 h-10"></div>
             </div>
 
-            <div class="page-scrollable-content">
+            <div class="page-scrollable-content px-5 py-5">
                 // Health score card
                 <Show when=move || {
                     state.analysis_result.get()
@@ -221,10 +225,13 @@ pub fn SummaryPage() -> impl IntoView {
                 </Show>
 
                 // Action buttons
-                <div class="summary-actions">
-                    <button class="btn-view-detail" on:click=on_view_detail>
-                        <span class="btn-icon">"📋"</span>
-                        <span class="btn-title">"查看详细配料表"</span>
+                <div class="flex flex-col gap-3 pb-5">
+                    <button
+                        class="w-full h-12 px-5 rounded-2xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white font-semibold shadow-lg transition-all flex items-center justify-center gap-2"
+                        on:click=on_view_detail
+                    >
+                        <span class="text-xl leading-none">"📋"</span>
+                        <span class="text-base font-semibold leading-none">"查看详细配料表"</span>
                     </button>
 
                     {move || {

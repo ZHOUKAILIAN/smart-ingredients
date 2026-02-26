@@ -22,7 +22,6 @@ pub fn OcrPage() -> impl IntoView {
     let state_for_retry = StoredValue::new(state.clone());
     let state_for_error = StoredValue::new(state.clone());
     let navigate_for_home = StoredValue::new(navigate.clone());
-    let navigate_for_back = navigate.clone();
 
     create_effect(move |_| {
         if fetching.get() {
@@ -118,28 +117,34 @@ pub fn OcrPage() -> impl IntoView {
     };
 
     view! {
-        <section class="page page-ocr figma">
-            <div class="page-topbar">
-                <button class="icon-button" on:click=on_back aria-label="返回上一页">
+        <section class="page figma">
+            <div class="flex items-center px-4 py-3 bg-white-80 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+                <button
+                    class="mr-3 -ml-2 w-10 h-10 rounded-full border-0 bg-transparent flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                    on:click=on_back
+                    aria-label="返回上一页"
+                >
                     <IconArrowLeft />
                 </button>
-                <div class="icon-placeholder"></div>
+                <div class="w-10 h-10"></div>
             </div>
 
-            <div class="page-scrollable-content">
-                <div class="surface-card status-card">
-                    <div class="status-icon">"OCR"</div>
-                    <div class="progress-bar" aria-hidden="true">
-                        <div class="progress-bar-fill"></div>
+            <div class="page-scrollable-content px-5 py-5">
+                <div class="w-full max-w-[360px] mx-auto my-4 flex flex-col gap-3 items-center text-center bg-white-80 border border-emerald-100 shadow-lg backdrop-blur-sm rounded-2xl p-5">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-sm tracking-wider shadow-lg">
+                        "OCR"
                     </div>
-                    <h2 class="status-title">"正在识别配料表…"</h2>
-                    <p class="status-text">"请稍候，通常需要3-5秒"</p>
+                    <div class="w-full h-1 rounded-full bg-emerald-100 overflow-hidden" aria-hidden="true">
+                        <div class="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-pulse"></div>
+                    </div>
+                    <h2 class="m-0 text-lg font-bold text-gray-900">"正在识别配料表…"</h2>
+                    <p class="m-0 text-sm text-gray-600">"请稍候，通常需要3-5秒"</p>
                 </div>
 
                 <Show when=move || state_for_error.with_value(|state| state.error_message.get().is_some())>
-                    <div class="error-actions">
+                    <div class="mt-4 flex gap-3 px-5">
                     <button
-                        class="secondary-cta"
+                        class="flex-1 min-h-11 rounded-xl border border-emerald-100 bg-white-95 text-gray-800 text-sm font-semibold shadow-sm transition-all"
                         on:click=move |_| {
                             // Clear state and go back to home
                             state.analysis_id.set(None);
@@ -153,7 +158,7 @@ pub fn OcrPage() -> impl IntoView {
                         "返回首页"
                     </button>
                     <button
-                        class="primary-cta"
+                        class="flex-1 min-h-11 rounded-xl border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-lg transition-all"
                         on:click=move |_| {
                             let state = state_for_retry.get_value();
                             let analysis_id = state.analysis_id.get();

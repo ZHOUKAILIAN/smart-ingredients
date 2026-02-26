@@ -2,9 +2,9 @@
 
 mod analyzing;
 mod capture;
-mod confirm;
 mod community;
 mod community_detail;
+mod confirm;
 mod detail;
 mod history;
 mod login;
@@ -16,9 +16,9 @@ mod summary;
 
 pub use analyzing::AnalyzingPage;
 pub use capture::CapturePage;
-pub use confirm::ConfirmPage;
 pub use community::CommunityPage;
 pub use community_detail::CommunityDetailPage;
+pub use confirm::ConfirmPage;
 pub use detail::DetailPage;
 pub use history::HistoryPage;
 pub use login::LoginPage;

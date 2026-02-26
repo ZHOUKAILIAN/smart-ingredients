@@ -86,11 +86,8 @@ async fn create_post(
 
     let payload = payload.ok_or_else(|| AppError::BadRequest("缺少 payload".to_string()))?;
 
-    let validated = community::validate_create_payload(
-        &payload,
-        auth_user,
-        &state.config.auth.login_hash_key,
-    )?;
+    let validated =
+        community::validate_create_payload(&payload, auth_user, &state.config.auth.login_hash_key)?;
 
     let card_image_url = if let Some(bytes) = image_bytes {
         Some(
@@ -107,10 +104,8 @@ async fn create_post(
         None
     };
 
-    let card_payload =
-        serde_json::to_value(&payload.card_payload).map_err(|_| {
-            AppError::BadRequest("卡片数据格式不正确".to_string())
-        })?;
+    let card_payload = serde_json::to_value(&payload.card_payload)
+        .map_err(|_| AppError::BadRequest("卡片数据格式不正确".to_string()))?;
 
     let author_type = match validated.author_type {
         shared::CommunityAuthorType::Anonymous => "anonymous",

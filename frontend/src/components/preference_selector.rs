@@ -99,11 +99,11 @@ pub fn PreferenceSelector(
     let label_text = label.unwrap_or("人群定位");
 
     view! {
-        <div class="preference-selector">
-            <label class="preference-label" for="preference-select">{label_text}</label>
+        <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700" for="preference-select">{label_text}</label>
             <select
                 id="preference-select"
-                class="preference-select"
+                class="w-full h-11 rounded-xl border border-emerald-100 bg-white-95 px-3 text-sm text-gray-800 shadow-sm focus:outline-none focus:border-emerald-500"
                 name="preference"
                 prop:value=move || value.get()
                 on:change=move |ev| {
@@ -128,7 +128,7 @@ pub fn PreferenceSelector(
             </select>
             {show_description.then(|| {
                 view! {
-                    <p class="preference-description">
+                    <p class="m-0 text-xs text-gray-500 leading-relaxed">
                         {move || {
                             let current_value = value.get();
                             PREFERENCE_OPTIONS
@@ -150,7 +150,7 @@ pub fn PreferenceCard(
     #[prop(into)] on_change: Callback<String>,
 ) -> impl IntoView {
     view! {
-        <div class="preference-cards">
+        <div class="grid grid-cols-2 gap-3">
             {PREFERENCE_OPTIONS
                 .iter()
                 .map(|opt| {
@@ -159,15 +159,20 @@ pub fn PreferenceCard(
                     let is_selected = move || value.get() == opt_value_for_selected;
                     view! {
                         <button
-                            class="preference-card"
-                            class:selected=is_selected
+                            class=move || {
+                                if is_selected() {
+                                    "w-full text-left rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 shadow-sm transition-all"
+                                } else {
+                                    "w-full text-left rounded-2xl border border-emerald-100 bg-white-95 px-4 py-3 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50/40"
+                                }
+                            }
                             on:click=move |_| {
                                 on_change.run(opt_value.clone());
                             }
                         >
-                            <div class="preference-card-icon">{opt.icon}</div>
-                            <div class="preference-card-label">{opt.label}</div>
-                            <div class="preference-card-description">{opt.description}</div>
+                            <div class="text-lg leading-none mb-1">{opt.icon}</div>
+                            <div class="text-sm font-semibold text-gray-900">{opt.label}</div>
+                            <div class="mt-1 text-xs text-gray-600 leading-relaxed">{opt.description}</div>
                         </button>
                     }
                 })

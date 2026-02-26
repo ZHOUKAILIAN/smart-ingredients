@@ -49,25 +49,25 @@ pub fn ConfirmModal(
     view! {
         <Show when=move || show.get()>
             <div
-                class="confirm-modal-overlay"
+                class="fixed inset-0 z-[1000] bg-slate-900/45 flex items-center justify-center px-5"
                 on:click=on_backdrop_click
                 on:keydown=on_keydown
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="confirm-modal-title"
             >
-                <div class="confirm-modal-card" on:click=on_modal_click>
-                    <div class="confirm-modal-header">
-                        <h3 id="confirm-modal-title" class="confirm-modal-title">{title.clone()}</h3>
+                <div class="w-full max-w-[340px] rounded-2xl border border-emerald-100 bg-white-95 shadow-2xl overflow-hidden" on:click=on_modal_click>
+                    <div class="px-5 pt-5">
+                        <h3 id="confirm-modal-title" class="m-0 text-lg font-semibold text-gray-900">{title.clone()}</h3>
                     </div>
-                    <div class="confirm-modal-body">
-                        <p class="confirm-modal-message">{message.get()}</p>
+                    <div class="px-5 pt-3">
+                        <p class="m-0 text-sm text-gray-600 leading-relaxed">{message.get()}</p>
                     </div>
-                    <div class="confirm-modal-actions">
-                        <button class="confirm-modal-btn cancel" on:click=on_cancel_click>
+                    <div class="px-5 py-5 mt-1 flex gap-3">
+                        <button class="flex-1 h-10 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50" on:click=on_cancel_click>
                             {cancel_text.clone()}
                         </button>
-                        <button class="confirm-modal-btn confirm" on:click=on_confirm_click>
+                        <button class="flex-1 h-10 rounded-xl border-0 bg-red-500 text-sm font-semibold text-white transition-colors hover:bg-red-600" on:click=on_confirm_click>
                             {confirm_text.clone()}
                         </button>
                     </div>

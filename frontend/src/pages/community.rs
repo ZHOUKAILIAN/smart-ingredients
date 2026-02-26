@@ -5,8 +5,8 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::{use_location, use_navigate};
 use web_sys::MouseEvent;
 
-use crate::services;
 use crate::components::ConfirmModal;
+use crate::services;
 use crate::stores::ToastLevel;
 use crate::utils::navigation::build_full_path;
 use crate::utils::{community_share_storage, community_ui, emit_toast};
@@ -158,7 +158,7 @@ pub fn CommunityPage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-community figma">
+        <section class="page figma">
             <ConfirmModal
                 show=show_confirm.into()
                 title="确认删除".to_string()
@@ -168,125 +168,175 @@ pub fn CommunityPage() -> impl IntoView {
                 on_confirm=on_confirm_delete
                 on_cancel=on_cancel_delete
             />
-            <div class="page-scrollable-content">
-                <Show when=move || page_title.is_some() fallback=move || ()>
-                    <h1 class="page-title">{page_title.unwrap_or_default()}</h1>
-                </Show>
-                <Show
-                    when=move || !items.get().is_empty()
-                    fallback=move || view! { <p class="hint">"暂无社区分享"</p> }
-                >
-                    <ul class="community-list">
-                        {move || items.get().into_iter().map(|item| {
-                            let id = item.id;
-                            let summary = item.summary_text.clone();
-                            let author = item.author_label.clone();
-                            let created_at = community_ui::format_community_datetime(&item.created_at);
-                            let detail_href = format!("/community/{}", id);
-                            let on_open_detail = on_open_detail;
-                            let image_url = item
-                                .card_image_url
-                                .clone()
-                                .map(|url| services::resolve_media_url(&url))
-                                .unwrap_or_default();
-                            let has_image = !image_url.is_empty();
-                            let image_url_for_view = image_url.clone();
-                            let score = item.health_score;
-                            let can_delete = community_ui::should_show_delete_button(
-                                community_ui::find_share_record_by_post_id(
-                                    &share_records.get(),
-                                    &id.to_string(),
-                                )
-                                .is_some(),
-                            );
-                            view! {
-                                <li class="community-card">
-                                    <a
-                                        class="community-card-main"
-                                        href=detail_href
-                                        on:click=move |ev: MouseEvent| {
-                                            if is_modified_click(&ev) {
-                                                return;
-                                            }
-                                            ev.prevent_default();
-                                            on_open_detail.run(id);
-                                        }
-                                    >
-                                        <div class="community-card-content">
-                                            <div class="community-card-meta">
-                                                <span>{author}</span>
-                                                <span>{created_at}</span>
-                                            </div>
-                                            <p class="community-summary">{summary}</p>
-                                        </div>
-                                        <div class="community-thumb">
-                                            <Show when=move || has_image fallback=move || view! {
-                                                <div class="community-thumb-placeholder">"📷"</div>
-                                            }>
-                                                <img
-                                                    src={image_url_for_view.clone()}
-                                                    alt="社区分享图片"
-                                                    class="community-thumb-image"
-                                                    loading="lazy"
-                                                    width="72"
-                                                    height="72"
-                                                />
-                                            </Show>
+            <div class="page-scrollable-content pb-20">
+                <div class="px-5 pb-4">
+                    <Show when=move || page_title.is_some() fallback=move || ()>
+                        <h1 class="text-2xl font-bold text-gray-900 m-0">{page_title.unwrap_or_default()}</h1>
+                    </Show>
+                </div>
+
+                <div class="px-5 mb-6">
+                    <Show
+                        when=move || loading.get() && items.get().is_empty()
+                        fallback=move || view! {
+                            <Show
+                                when=move || !items.get().is_empty()
+                                fallback=move || view! {
+                                    <a href="/" class="block mt-4 p-4 shadow-sm border border-emerald-100 bg-white-50/50 backdrop-blur-sm rounded-2xl transition-all hover:bg-emerald-50 cursor-pointer text-left" style="text-decoration: none;">
+                                        <div class="text-center py-3">
+                                            <div class="text-2xl leading-none text-emerald-500">"✦"</div>
+                                            <h3 class="m-0 mt-2 text-base font-semibold text-gray-900">"社区还没有分享"</h3>
+                                            <p class="m-0 mt-1 text-sm text-gray-500">"去完成一次分析并分享，成为第一个发布者"</p>
                                         </div>
                                     </a>
-                                    <div class="community-card-footer">
-                                        <span class="community-score-label">"健康评分"</span>
-                                        <span class="community-score-value">{score}</span>
-                                        <Show when=move || can_delete>
-                                            <button
-                                                class="community-delete-button"
-                                                on:click=move |ev| {
-                                                    ev.stop_propagation();
-                                                    let records = community_share_storage::load_share_records();
-                                                    let Some(record) = community_ui::find_share_record_by_post_id(
-                                                        &records,
-                                                        &id.to_string(),
-                                                    ) else {
-                                                        emit_toast(ToastLevel::Error, "删除失败", "无效的分享记录");
-                                                        return;
-                                                    };
-                                                    pending_delete.set(Some(PendingDelete {
-                                                        post_id: id,
-                                                        analysis_id: record.analysis_id.clone(),
-                                                        share_token: record.share_token.clone(),
-                                                    }));
-                                                    show_confirm.set(true);
-                                                }
-                                            >
-                                                "删除"
-                                            </button>
-                                        </Show>
-                                    </div>
-                                </li>
-                            }
-                        }).collect_view()}
-                    </ul>
-                </Show>
+                                }
+                            >
+                                <div class="space-y-3">
+                                    {move || items.get().into_iter().map(|item| {
+                                        let id = item.id;
+                                        let summary = item.summary_text.clone();
+                                        let author = item.author_label.clone();
+                                        let created_at = community_ui::format_community_datetime(&item.created_at);
+                                        let detail_href = format!("/community/{}", id);
+                                        let on_open_detail = on_open_detail;
+                                        let image_url = item
+                                            .card_image_url
+                                            .clone()
+                                            .map(|url| services::resolve_media_url(&url))
+                                            .unwrap_or_default();
+                                        let has_image = !image_url.is_empty();
+                                        let image_url_for_view = image_url.clone();
+                                        let score = item.health_score;
+                                        let can_delete = community_ui::should_show_delete_button(
+                                            community_ui::find_share_record_by_post_id(
+                                                &share_records.get(),
+                                                &id.to_string(),
+                                            )
+                                            .is_some(),
+                                        );
+                                        view! {
+                                            <div class="p-4 shadow-lg border-0 bg-white-95 backdrop-blur-sm rounded-2xl transition-all duration-300">
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <span class="bg-blue-500 text-white border-0 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                                                        {author}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">{created_at}</span>
+                                                </div>
 
-                <Show when=has_pages>
-                    <div class="community-pagination">
-                        <button
-                            class="secondary-cta"
-                            disabled=move || page.get() <= 1
-                            on:click=move |_| page.set(page.get() - 1)
-                        >
-                            "上一页"
-                        </button>
-                        <span>{move || format!("第 {} 页 / 共 {} 条", page.get(), total.get())}</span>
-                        <button
-                            class="secondary-cta"
-                            disabled=move || page.get() * 20 >= total.get()
-                            on:click=move |_| page.set(page.get() + 1)
-                        >
-                            "下一页"
-                        </button>
-                    </div>
-                </Show>
+                                                <a
+                                                    href=detail_href
+                                                    class="block cursor-pointer text-gray-900 no-underline"
+                                                    on:click=move |ev: MouseEvent| {
+                                                        if is_modified_click(&ev) {
+                                                            return;
+                                                        }
+                                                        ev.prevent_default();
+                                                        on_open_detail.run(id);
+                                                    }
+                                                >
+                                                    <div class="flex items-start gap-3 mb-3">
+                                                        <Show when=move || has_image>
+                                                            <img
+                                                                src={image_url_for_view.clone()}
+                                                                alt="社区分享图片"
+                                                                class="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                                                                loading="lazy"
+                                                            />
+                                                        </Show>
+                                                        <p class="text-sm text-gray-700 leading-relaxed m-0 flex-1 line-clamp-3">
+                                                            {summary}
+                                                        </p>
+                                                    </div>
+                                                </a>
+
+                                                <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                    <span class="text-sm text-gray-600">
+                                                        "健康评分："
+                                                        <span class=format!("font-bold {}",
+                                                            if score >= 80 { "text-emerald-600" }
+                                                            else if score >= 60 { "text-amber-600" }
+                                                            else { "text-red-600" }
+                                                        )>{score}</span>
+                                                    </span>
+
+                                                    <div class="flex items-center gap-2">
+                                                        <Show when=move || can_delete>
+                                                            <button
+                                                                class="h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center justify-center transition-colors bg-transparent border-0 cursor-pointer"
+                                                                on:click=move |ev| {
+                                                                    ev.stop_propagation();
+                                                                    let records = community_share_storage::load_share_records();
+                                                                    let Some(record) = community_ui::find_share_record_by_post_id(
+                                                                        &records,
+                                                                        &id.to_string(),
+                                                                    ) else {
+                                                                        emit_toast(ToastLevel::Error, "删除失败", "无效的分享记录");
+                                                                        return;
+                                                                    };
+                                                                    pending_delete.set(Some(PendingDelete {
+                                                                        post_id: id,
+                                                                        analysis_id: record.analysis_id.clone(),
+                                                                        share_token: record.share_token.clone(),
+                                                                    }));
+                                                                    show_confirm.set(true);
+                                                                }
+                                                            >
+                                                                "删除"
+                                                            </button>
+                                                        </Show>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }).collect_view()}
+                                </div>
+                            </Show>
+                        }
+                    >
+                        <div class="space-y-3">
+                            {(0..3).map(|_| view! {
+                                <article class="rounded-2xl border border-emerald-100 bg-white-95 p-4 shadow-sm animate-pulse">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="h-5 w-16 rounded-full bg-emerald-100"></div>
+                                        <div class="h-3 w-24 rounded bg-emerald-50"></div>
+                                    </div>
+                                    <div class="flex items-start gap-3 mb-3">
+                                        <div class="w-16 h-16 rounded-lg bg-emerald-50"></div>
+                                        <div class="flex-1 space-y-2">
+                                            <div class="h-3 w-95 rounded bg-emerald-50"></div>
+                                            <div class="h-3 w-80 rounded bg-emerald-50"></div>
+                                            <div class="h-3 w-70 rounded bg-emerald-50"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-3 border-t border-emerald-100">
+                                        <div class="h-3 w-45 rounded bg-emerald-50"></div>
+                                        <div class="h-3 w-20 rounded bg-emerald-50"></div>
+                                    </div>
+                                </article>
+                            }).collect_view()}
+                        </div>
+                    </Show>
+
+                    <Show when=has_pages>
+                        <div class="flex justify-center items-center gap-4 mt-6">
+                            <button
+                                class="px-4 py-2 border-2 border-emerald-100 text-emerald-600 rounded-xl bg-white-80 hover:bg-emerald-50 transition-colors disabled:opacity-50 cursor-pointer"
+                                disabled=move || page.get() <= 1
+                                on:click=move |_| page.set(page.get() - 1)
+                            >
+                                "上一页"
+                            </button>
+                            <span class="text-sm text-gray-500">{move || format!("{} / {}", page.get(), (total.get() + 19) / 20)}</span>
+                            <button
+                                class="px-4 py-2 border-2 border-emerald-100 text-emerald-600 rounded-xl bg-white-80 hover:bg-emerald-50 transition-colors disabled:opacity-50 cursor-pointer"
+                                disabled=move || page.get() * 20 >= total.get()
+                                on:click=move |_| page.set(page.get() + 1)
+                            >
+                                "下一页"
+                            </button>
+                        </div>
+                    </Show>
+                </div>
             </div>
         </section>
     }

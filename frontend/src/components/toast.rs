@@ -60,27 +60,27 @@ pub fn ToastHost() -> impl IntoView {
     });
 
     view! {
-        <div class="toast-host" aria-live="polite" role="status">
+        <div class="fixed top-4 right-4 z-[1200] flex w-[min(92vw,360px)] flex-col gap-2" aria-live="polite" role="status">
             <For
                 each=move || toasts.get()
                 key=|toast| toast.id
                 children=move |toast| {
                     let class = match toast.level {
-                        ToastLevel::Error => "toast toast-error",
-                        ToastLevel::Warning => "toast toast-warning",
-                        ToastLevel::Success => "toast toast-success",
-                        ToastLevel::Info => "toast toast-info",
+                        ToastLevel::Error => "rounded-xl border px-3 py-2 shadow-xl backdrop-blur-sm flex items-start gap-2 border-red-200 bg-red-50 text-red-800",
+                        ToastLevel::Warning => "rounded-xl border px-3 py-2 shadow-xl backdrop-blur-sm flex items-start gap-2 border-amber-200 bg-amber-50 text-amber-800",
+                        ToastLevel::Success => "rounded-xl border px-3 py-2 shadow-xl backdrop-blur-sm flex items-start gap-2 border-emerald-200 bg-emerald-50 text-emerald-800",
+                        ToastLevel::Info => "rounded-xl border px-3 py-2 shadow-xl backdrop-blur-sm flex items-start gap-2 border-sky-200 bg-sky-50 text-sky-800",
                     };
                     let id = toast.id;
                     let toasts_for_close = toasts.clone();
                     view! {
                         <div class=class>
-                            <div class="toast-content">
-                                <p class="toast-title">{toast.title}</p>
-                                <p class="toast-message">{toast.message}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="m-0 text-sm font-semibold leading-tight">{toast.title}</p>
+                                <p class="m-0 mt-1 text-xs leading-relaxed opacity-90">{toast.message}</p>
                             </div>
                             <button
-                                class="toast-close"
+                                class="h-7 w-7 rounded-md border-0 bg-transparent text-base leading-none opacity-70 hover:opacity-100 hover:bg-black/5"
                                 aria-label="关闭"
                                 on:click=move |_| {
                                     toasts_for_close.update(|items| {

@@ -52,3 +52,7 @@ uploads/
 tmp/
 temp/
 .worktrees/
+
+# Frontend toolchain
+node_modules/
+frontend/src/styles/tailwind.generated.css

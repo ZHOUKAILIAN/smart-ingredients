@@ -1,26 +1,53 @@
+use js_sys::{Date, Object, Reflect};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use js_sys::{Date, Object, Reflect};
 use leptos_router::hooks::{use_location, use_navigate};
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::components::{ConfirmModal, ExportPreviewModal, LoadingSpinner};
+use crate::components::ConfirmModal;
 use crate::services;
 use crate::stores::{AnalysisSource, AppState, ToastLevel};
 use crate::utils::navigation::build_full_path;
-use crate::utils::export_image::{ExportData, ExportIngredient};
 use crate::utils::{emit_toast, local_history};
 use shared::{AnalysisResponse, AnalysisStatus, LlmStatus, OcrStatus};
 
 fn format_datetime(date: &Date) -> String {
     let options = Object::new();
-    let _ = Reflect::set(&options, &JsValue::from_str("year"), &JsValue::from_str("numeric"));
-    let _ = Reflect::set(&options, &JsValue::from_str("month"), &JsValue::from_str("2-digit"));
-    let _ = Reflect::set(&options, &JsValue::from_str("day"), &JsValue::from_str("2-digit"));
-    let _ = Reflect::set(&options, &JsValue::from_str("hour"), &JsValue::from_str("2-digit"));
-    let _ = Reflect::set(&options, &JsValue::from_str("minute"), &JsValue::from_str("2-digit"));
-    let _ = Reflect::set(&options, &JsValue::from_str("second"), &JsValue::from_str("2-digit"));
-    let _ = Reflect::set(&options, &JsValue::from_str("hour12"), &JsValue::from_bool(false));
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("year"),
+        &JsValue::from_str("numeric"),
+    );
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("month"),
+        &JsValue::from_str("2-digit"),
+    );
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("day"),
+        &JsValue::from_str("2-digit"),
+    );
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("hour"),
+        &JsValue::from_str("2-digit"),
+    );
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("minute"),
+        &JsValue::from_str("2-digit"),
+    );
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("second"),
+        &JsValue::from_str("2-digit"),
+    );
+    let _ = Reflect::set(
+        &options,
+        &JsValue::from_str("hour12"),
+        &JsValue::from_bool(false),
+    );
     date.to_locale_string("zh-CN", &options.into())
         .as_string()
         .unwrap_or_default()
@@ -100,18 +127,13 @@ pub fn HistoryPage() -> impl IntoView {
     let local_items = RwSignal::new(Vec::<local_history::LocalHistoryItem>::new());
     let last_load_key = RwSignal::new(None::<(uuid::Uuid, i64)>);
     let viewing_id = RwSignal::new(None::<uuid::Uuid>);
-    let exporting_id = RwSignal::new(None::<uuid::Uuid>);
     let deleting_id = RwSignal::new(None::<uuid::Uuid>);
-    let exporting_local_id = RwSignal::new(None::<String>);
     let deleting_local_id = RwSignal::new(None::<String>);
 
     // Confirm modal state
     let show_confirm = RwSignal::new(false);
     let pending_delete_id = RwSignal::new(None::<uuid::Uuid>);
     let pending_delete_local_id = RwSignal::new(None::<String>);
-
-    // Export preview modal state
-    let export_preview_url = RwSignal::new(None::<String>);
 
     create_effect(move |_| {
         let search = location.search.get();
@@ -279,13 +301,8 @@ pub fn HistoryPage() -> impl IntoView {
         }
     };
 
-    let on_close_preview = Callback::new(move |_: ()| {
-        export_preview_url.set(None);
-    });
-    let export_preview_signal = Signal::derive(move || export_preview_url.get());
-
     view! {
-        <section class="page page-history figma">
+        <section class="page figma">
             <ConfirmModal
                 show=show_confirm.into()
                 title="删除记录".to_string()
@@ -296,21 +313,138 @@ pub fn HistoryPage() -> impl IntoView {
                 on_cancel=on_cancel_delete
             />
 
-            <ExportPreviewModal
-                image_url=export_preview_signal
-                on_close=on_close_preview
-            />
+            <div class="page-scrollable-content pb-20">
 
-            <div class="page-scrollable-content">
                 <Show when=move || state.auth_user.get().is_some() fallback=move || {
                 view! {
                     <div>
+                        <div class="px-5 mb-4">
+                            <Show when=move || !local_items.get().is_empty() fallback=move || view! {
+                                <a href="/" class="block mt-4 p-4 shadow-sm border border-emerald-100 bg-white-50/50 backdrop-blur-sm rounded-2xl transition-all hover:bg-emerald-50 cursor-pointer text-left" style="text-decoration: none;">
+                                    <div class="animate-pulse">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="h-4 bg-emerald-100/50 rounded w-16"></div>
+                                            <div class="h-3 bg-emerald-50 rounded w-20"></div>
+                                        </div>
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="w-16 h-16 bg-emerald-50 rounded-lg flex-shrink-0 flex items-center justify-center">
+                                                <div class="text-emerald-300 text-3xl font-light mb-1">"+"</div>
+                                            </div>
+                                            <div class="flex-1 space-y-2 py-1">
+                                                <div class="h-4 bg-emerald-50 rounded w-3/4"></div>
+                                                <div class="h-3 bg-emerald-50 rounded w-1/2"></div>
+                                                <div class="h-3 bg-emerald-50 rounded w-5/6"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-center pt-3 border-t border-emerald-50">
+                                        <span class="text-sm font-medium text-emerald-600">"点击开启第一次分析"</span>
+                                    </div>
+                                </a>
+                            }>
+                                <div class="space-y-3">
+                                    {move || local_items.get().into_iter().map(|item| {
+                                        let id = item.id.clone();
+                                        let id_value = StoredValue::new(id.clone());
+                                        let summary = item.summary.clone();
+                                        let score = item.health_score;
+                                        let timestamp = format_timestamp(item.timestamp);
+                                        let item_clone = item.clone();
+                                        let image_path = StoredValue::new(item.image_path.clone());
+                                        let image_url = image_path
+                                            .get_value()
+                                            .map(|path| services::resolve_media_url(&path));
+                                        let has_image = image_url
+                                            .as_ref()
+                                            .map(|url| !url.is_empty())
+                                            .unwrap_or(false);
+                                        view! {
+                                            <div class="p-4 shadow-lg border-0 bg-white-95 backdrop-blur-sm rounded-2xl transition-all duration-300">
+                                                <div class="flex justify-end mb-3">
+                                                    <span class="text-xs text-gray-500">{timestamp}</span>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 mb-3">
+                                                    <Show when=move || has_image>
+                                                        <img
+                                                            src={image_url.clone().unwrap_or_default()}
+                                                            alt=""
+                                                            class="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                                                            loading="lazy"
+                                                            on:error=move |ev| {
+                                                                if let Some(target) = ev.target() {
+                                                                    if let Ok(el) = target.dyn_into::<web_sys::HtmlElement>() {
+                                                                        let _ = el.style().set_property("display", "none");
+                                                                    }
+                                                                }
+                                                            }
+                                                        />
+                                                    </Show>
+                                                    <p class="text-sm text-gray-700 leading-relaxed m-0 flex-1 line-clamp-3">
+                                                        {summary}
+                                                    </p>
+                                                </div>
+
+                                                <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                    <span class="text-sm text-gray-600">
+                                                        "健康评分："
+                                                        <span class=format!("font-bold {}",
+                                                            if score >= 80 { "text-emerald-600" }
+                                                            else if score >= 60 { "text-amber-600" }
+                                                            else { "text-red-600" }
+                                                        )>{score}</span>
+                                                    </span>
+                                                    <div class="flex items-center gap-2">
+                                                        <a
+                                                            class="h-8 px-3 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                                                            href="/summary"
+                                                            on:click=move |ev: web_sys::MouseEvent| {
+                                                                if is_modified_click(&ev) {
+                                                                    return;
+                                                                }
+                                                                ev.prevent_default();
+                                                                on_view_local(item_clone.clone());
+                                                            }
+                                                        >
+                                                            "查看"
+                                                        </a>
+                                                        <button
+                                                            class="h-8 px-3 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors bg-transparent border-0 cursor-pointer"
+                                                            disabled=move || deleting_local_id.get() == Some(id_value.get_value())
+                                                            on:click=move |_| on_delete_local(id_value.get_value())
+                                                        >
+                                                            {move || if deleting_local_id.get() == Some(id_value.get_value()) { "删除中" } else { "删除" }}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }).collect_view()}
+                                </div>
+                            </Show>
+                        </div>
+
+                        <div class="px-5 mb-6">
+                            <div class="text-center mb-4">
+                                <a
+                                    href="/profile"
+                                    class="text-sm text-emerald-600 font-medium no-underline hover:text-emerald-700"
+                                >
+                                    "登录后可同步云端历史记录"
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }>
+                <div>
+                    <div class="px-5 mb-4">
                         <Show when=move || !local_items.get().is_empty() fallback=move || view! {
-                            <div class="empty-state">
-                                <p class="hint">"暂无本地记录"</p>
+                            <div class="text-center py-3">
+                                <p class="text-xs text-gray-400">"暂无本地专属记录"</p>
                             </div>
                         }>
-                            <ul class="history-list">
+                            <div class="space-y-3 mb-6">
                                 {move || local_items.get().into_iter().map(|item| {
                                     let id = item.id.clone();
                                     let id_value = StoredValue::new(id.clone());
@@ -327,63 +461,37 @@ pub fn HistoryPage() -> impl IntoView {
                                         .map(|url| !url.is_empty())
                                         .unwrap_or(false);
                                     view! {
-                                        <li class="history-item-card">
-                                            <div class="history-card-main">
-                                                <div class="history-card-content">
-                                                    <div class="history-badges">
-                                                        <span class="history-badge local">"本地记录"</span>
-                                                    </div>
-
-                                                    <div class="history-meta-row">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                                            <circle cx="12" cy="12" r="10"></circle>
-                                                            <polyline points="12 6 12 12 16 14"></polyline>
-                                                        </svg>
-                                                        <span>{timestamp}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="history-thumb-wrapper">
-                                                    <Show when=move || has_image fallback=move || view! {
-                                                        <div class="history-thumb-img">"📷"</div>
-                                                    }>
-                                                        <img
-                                                            src={image_url.clone().unwrap_or_default()}
-                                                            alt="缩略图"
-                                                            class="history-thumb-img"
-                                                            loading="lazy"
-                                                            width="72"
-                                                            height="72"
-                                                            on:error=move |ev| {
-                                                                if let Some(target) = ev.target() {
-                                                                    if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
-                                                                        img.set_attribute("data-error", "true").ok();
-                                                                    }
-                                                                }
-                                                            }
-                                                        />
-                                                    </Show>
-                                                </div>
+                                        <div class="p-4 shadow-lg border-0 bg-white-95 backdrop-blur-sm rounded-2xl transition-all duration-300">
+                                            <div class="flex justify-end mb-3">
+                                                <span class="text-xs text-gray-500">{timestamp}</span>
                                             </div>
 
-                                            <p class="history-description">{summary}</p>
+                                            <div class="flex items-start gap-3 mb-3">
+                                                <Show when=move || has_image>
+                                                    <img
+                                                        src={image_url.clone().unwrap_or_default()}
+                                                        alt=""
+                                                        class="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                                                        loading="lazy"
+                                                    />
+                                                </Show>
+                                                <p class="text-sm text-gray-700 leading-relaxed m-0 flex-1 line-clamp-3">
+                                                    {summary}
+                                                </p>
+                                            </div>
 
-                                            <div class="history-divider"></div>
-
-                                            <div class="history-footer">
-                                                <div class="history-score-display">
-                                                    "健康评分 "
-                                                    <span class={format!("history-score-value {}",
-                                                        if score >= 80 { "score-high" }
-                                                        else if score >= 60 { "score-medium" }
-                                                        else { "score-low" }
-                                                    )}>
-                                                        {score}
-                                                    </span>
-                                                </div>
-                                                <div class="history-actions">
+                                            <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                <span class="text-sm text-gray-600">
+                                                    "健康评分："
+                                                    <span class=format!("font-bold {}",
+                                                        if score >= 80 { "text-emerald-600" }
+                                                        else if score >= 60 { "text-amber-600" }
+                                                        else { "text-red-600" }
+                                                    )>{score}</span>
+                                                </span>
+                                                <div class="flex items-center gap-2">
                                                     <a
-                                                        class="history-action-btn"
+                                                        class="h-8 px-3 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                                                         href="/summary"
                                                         on:click=move |ev: web_sys::MouseEvent| {
                                                             if is_modified_click(&ev) {
@@ -396,49 +504,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                         "查看"
                                                     </a>
                                                     <button
-                                                        class="history-action-btn export"
-                                                        disabled=move || exporting_local_id.get() == Some(id_value.get_value())
-                                                        aria-label="导出记录"
-                                                        on:click={
-                                                            let result = item.result.clone();
-                                                            let exporting_local_id = exporting_local_id.clone();
-                                                            move |_: web_sys::MouseEvent| {
-                                                                let export_id = id_value.get_value();
-                                                                if exporting_local_id.get() == Some(export_id.clone()) {
-                                                                    return;
-                                                                }
-                                                                exporting_local_id.set(Some(export_id.clone()));
-                                                                let result = result.clone();
-                                                                let exporting_local_id = exporting_local_id.clone();
-                                                                spawn_local(async move {
-                                                                    let data = ExportData {
-                                                                        health_score: result.health_score,
-                                                                        recommendation: result.recommendation.clone(),
-                                                                        ingredients: result.ingredients.iter().map(|i| {
-                                                                            ExportIngredient {
-                                                                                name: i.name.clone(),
-                                                                                risk_level: i.risk_level.clone(),
-                                                                                description: i.description.clone().unwrap_or_default(),
-                                                                                is_focus: false,
-                                                                            }
-                                                                        }).collect(),
-                                                                        warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
-                                                                        summary: result.summary.clone(),
-                                                                        preference_label: String::new(),
-                                                                    };
-                                                                    match crate::utils::export_image::export_to_data_url(&data) {
-                                                                        Ok(url) => export_preview_url.set(Some(url)),
-                                                                        Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
-                                                                    }
-                                                                    exporting_local_id.set(None);
-                                                                });
-                                                            }
-                                                        }
-                                                    >
-                                                        {move || if exporting_local_id.get() == Some(id_value.get_value()) { "导出中" } else { "📤" }}
-                                                    </button>
-                                                    <button
-                                                        class="history-action-btn delete"
+                                                        class="h-8 px-3 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors bg-transparent border-0 cursor-pointer"
                                                         disabled=move || deleting_local_id.get() == Some(id_value.get_value())
                                                         on:click=move |_| on_delete_local(id_value.get_value())
                                                     >
@@ -446,88 +512,97 @@ pub fn HistoryPage() -> impl IntoView {
                                                     </button>
                                                 </div>
                                             </div>
-                                        </li>
+                                        </div>
                                     }
                                 }).collect_view()}
-                            </ul>
+                            </div>
                         </Show>
                     </div>
-                }
-            }>
-                <div>
-                    <Show when=move || loading.get() fallback=move || view! {
-                        <Show when=move || !items.get().is_empty() fallback=move || view! {
-                            <div class="empty-state">
-                                <p class="hint">"暂无历史记录"</p>
-                            </div>
-                        }>
-                            <ul class="history-list">
-                                {move || items.get().into_iter().map(|item| {
-                                    let id = item.id;
-                                    let item_clone = item.clone();
-                                    let summary = item.summary.clone().unwrap_or_default();
-                                    let formatted_time = format_iso_datetime(&item.created_at);
-                                    let image_url = StoredValue::new(item.image_url.clone());
-                                    let resolved_image_url =
-                                        StoredValue::new(services::resolve_media_url(&image_url.get_value()));
+
+                    <div class="px-5 mb-6">
+                        <div class="flex items-center justify-between mb-3 px-1">
+                            <h2 class="text-base font-bold text-gray-900 m-0">"云端历史"</h2>
+                            <span class="text-xs text-emerald-600 flex items-center gap-1">
+                                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                "已同步"
+                            </span>
+                        </div>
+                        <Show when=move || loading.get() && items.get().is_empty() fallback=move || view! {
+                            <Show when=move || !items.get().is_empty() fallback=move || view! {
+                                <a href="/" class="block mt-4 p-4 shadow-sm border border-emerald-100 bg-white-50/50 backdrop-blur-sm rounded-2xl transition-all hover:bg-emerald-50 cursor-pointer text-left" style="text-decoration: none;">
+                                    <div class="animate-pulse">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="h-4 bg-emerald-100/50 rounded w-16"></div>
+                                            <div class="h-3 bg-emerald-50 rounded w-20"></div>
+                                        </div>
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="w-16 h-16 bg-emerald-50 rounded-lg flex-shrink-0 flex items-center justify-center">
+                                                <div class="text-emerald-300 text-3xl font-light mb-1">"+"</div>
+                                            </div>
+                                            <div class="flex-1 space-y-2 py-1">
+                                                <div class="h-4 bg-emerald-50 rounded w-3/4"></div>
+                                                <div class="h-3 bg-emerald-50 rounded w-1/2"></div>
+                                                <div class="h-3 bg-emerald-50 rounded w-5/6"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-center pt-3 border-t border-emerald-50">
+                                        <span class="text-sm font-medium text-emerald-600">"云端暂无数据，去分析一条？"</span>
+                                    </div>
+                                </a>
+                            }>
+                                <div class="space-y-3">
+                                    {move || items.get().into_iter().map(|item| {
+                                        let id = item.id;
+                                        let item_clone = item.clone();
+                                        let summary = item.summary.clone().unwrap_or_default();
+                                        let formatted_time = format_iso_datetime(&item.created_at);
+                                        let image_url = StoredValue::new(item.image_url.clone());
+                                        let resolved_image_url =
+                                            StoredValue::new(services::resolve_media_url(&image_url.get_value()));
+                                        let has_image = !resolved_image_url.get_value().is_empty();
                                         view! {
-                                            <li class="history-item-card">
-                                                <div class="history-card-main">
-                                                    <div class="history-card-content">
-                                                        <div class="history-badges">
-                                                            <span class="history-badge cloud">"云端记录"</span>
-                                                        </div>
-
-                                                        <div class="history-meta-row">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                                                <circle cx="12" cy="12" r="10"></circle>
-                                                                <polyline points="12 6 12 12 16 14"></polyline>
-                                                            </svg>
-                                                            <span>{formatted_time}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="history-thumb-wrapper">
-                                                        <Show when=move || !resolved_image_url.get_value().is_empty() fallback=move || view! {
-                                                            <div class="history-thumb-img">"📷"</div>
-                                                        }>
-                                                            <img
-                                                                src={resolved_image_url.get_value()}
-                                                                alt="缩略图"
-                                                                class="history-thumb-img"
-                                                                loading="lazy"
-                                                                width="72"
-                                                                height="72"
-                                                                on:error=move |ev| {
-                                                                    if let Some(target) = ev.target() {
-                                                                        if let Ok(img) = target.dyn_into::<web_sys::HtmlImageElement>() {
-                                                                            img.set_attribute("data-error", "true").ok();
-                                                                        }
-                                                                    }
-                                                                }
-                                                            />
-                                                        </Show>
-                                                    </div>
+                                            <div class="p-4 shadow-lg border-0 bg-white-95 backdrop-blur-sm rounded-2xl transition-all duration-300">
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <span class="bg-blue-500 text-white border-0 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                                                        "云端记录"
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">{formatted_time}</span>
                                                 </div>
 
-                                                <p class="history-description">{summary}</p>
+                                                <div class="flex items-start gap-3 mb-3">
+                                                    <Show when=move || has_image>
+                                                        <img
+                                                            src={resolved_image_url.get_value()}
+                                                            alt=""
+                                                            class="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                                                            loading="lazy"
+                                                            on:error=move |ev| {
+                                                                if let Some(target) = ev.target() {
+                                                                    if let Ok(el) = target.dyn_into::<web_sys::HtmlElement>() {
+                                                                        let _ = el.style().set_property("display", "none");
+                                                                    }
+                                                                }
+                                                            }
+                                                        />
+                                                    </Show>
+                                                    <p class="text-sm text-gray-700 leading-relaxed m-0 flex-1 line-clamp-3">
+                                                        {summary}
+                                                    </p>
+                                                </div>
 
-                                                <div class="history-divider"></div>
-
-                                                <div class="history-footer">
-                                                    <div class="history-score-display">
-                                                        "健康评分 "
-                                                        <span class={format!("history-score-value {}",
-                                                            if item.health_score.unwrap_or(0) >= 80 { "score-high" }
-                                                            else if item.health_score.unwrap_or(0) >= 60 { "score-medium" }
-                                                            else { "score-low" }
-                                                        )}>
-                                                            {item.health_score.unwrap_or(0)}
-                                                        </span>
-                                                    </div>
-                                                    <div class="history-actions">
+                                                <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                    <span class="text-sm text-gray-600">
+                                                        "健康评分："
+                                                        <span class=format!("font-bold {}",
+                                                            if item.health_score.unwrap_or(0) >= 80 { "text-emerald-600" }
+                                                            else if item.health_score.unwrap_or(0) >= 60 { "text-amber-600" }
+                                                            else { "text-red-600" }
+                                                        )>{item.health_score.unwrap_or(0)}</span>
+                                                    </span>
+                                                    <div class="flex items-center gap-2">
                                                         <a
-                                                            class="history-action-btn"
+                                                            class="h-8 px-3 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                                                             href="/summary"
                                                             aria-disabled=move || viewing_id.get() == Some(id)
                                                             on:click=move |ev: web_sys::MouseEvent| {
@@ -544,55 +619,7 @@ pub fn HistoryPage() -> impl IntoView {
                                                             {move || if viewing_id.get() == Some(id) { "加载中" } else { "查看" }}
                                                         </a>
                                                         <button
-                                                            class="history-action-btn export"
-                                                            disabled=move || exporting_id.get() == Some(id)
-                                                            aria-label="导出记录"
-                                                            on:click=move |_: web_sys::MouseEvent| {
-                                                                if exporting_id.get() == Some(id) {
-                                                                    return;
-                                                                }
-                                                                exporting_id.set(Some(id));
-                                                                let analysis_id = id;
-                                                                let exporting_id = exporting_id.clone();
-                                                                spawn_local(async move {
-                                                                    match services::fetch_analysis(analysis_id).await {
-                                                                        Ok(response) => {
-                                                                            if let Some(result) = response.result {
-                                                                                let data = ExportData {
-                                                                                    health_score: result.health_score,
-                                                                                    recommendation: result.recommendation.clone(),
-                                                                                    ingredients: result.ingredients.iter().map(|i| {
-                                                                                        ExportIngredient {
-                                                                                            name: i.name.clone(),
-                                                                                            risk_level: i.risk_level.clone(),
-                                                                                            description: i.description.clone().unwrap_or_default(),
-                                                                                            is_focus: false,
-                                                                                        }
-                                                                                    }).collect(),
-                                                                                    warnings: result.warnings.iter().map(|w| w.message.clone()).collect(),
-                                                                                    summary: result.summary.clone(),
-                                                                                    preference_label: String::new(),
-                                                                                };
-                                                                                match crate::utils::export_image::export_to_data_url(&data) {
-                                                                                    Ok(url) => export_preview_url.set(Some(url)),
-                                                                                    Err(e) => emit_toast(ToastLevel::Error, "导出失败", &e),
-                                                                                }
-                                                                            } else {
-                                                                                emit_toast(ToastLevel::Error, "导出失败", "该记录没有分析结果");
-                                                                            }
-                                                                        }
-                                                                        Err(err) => {
-                                                                            emit_toast(ToastLevel::Error, "导出失败", &err);
-                                                                        }
-                                                                    }
-                                                                    exporting_id.set(None);
-                                                                });
-                                                            }
-                                                        >
-                                                            {move || if exporting_id.get() == Some(id) { "导出中" } else { "📤" }}
-                                                        </button>
-                                                        <button
-                                                            class="history-action-btn delete"
+                                                            class="h-8 px-3 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors bg-transparent border-0 cursor-pointer"
                                                             disabled=move || deleting_id.get() == Some(id)
                                                             on:click=move |_| on_delete(id)
                                                         >
@@ -600,40 +627,61 @@ pub fn HistoryPage() -> impl IntoView {
                                                         </button>
                                                     </div>
                                                 </div>
-                                            </li>
-                                        }                          }).collect_view()}
-                            </ul>
-                        </Show>
-                        <Show when=move || { total.get() > 20 }>
-                            <div class="history-pagination">
-                                <button
-                                    class="secondary-cta"
-                                    disabled=move || page.get() <= 1 || loading.get()
-                                    on:click=move |_| {
-                                        let new_page = page.get() - 1;
-                                        page.set(new_page);
-                                    }
-                                >
-                                    {move || if loading.get() { "加载中…" } else { "上一页" }}
-                                </button>
-                                <span>{move || format!("第 {} 页 / 共 {} 条", page.get(), total.get())}</span>
-                                <button
-                                    class="secondary-cta"
-                                    disabled=move || page.get() * 20 >= total.get() || loading.get()
-                                    on:click=move |_| {
-                                        let new_page = page.get() + 1;
-                                        page.set(new_page);
-                                    }
-                                >
-                                    {move || if loading.get() { "加载中…" } else { "下一页" }}
-                                </button>
+                                            </div>
+                                        }
+                                    }).collect_view()}
+                                </div>
+                            </Show>
+                            <Show when=move || { total.get() > 20 }>
+                                <div class="flex justify-center items-center gap-4 mt-6">
+                                    <button
+                                        class="px-4 py-2 border-2 border-emerald-100 text-emerald-600 rounded-xl bg-white-80 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                                        disabled=move || page.get() <= 1 || loading.get()
+                                        on:click=move |_| {
+                                            let new_page = page.get() - 1;
+                                            page.set(new_page);
+                                        }
+                                    >
+                                        {move || if loading.get() { "加载中…" } else { "上一页" }}
+                                    </button>
+                                    <span class="text-sm text-gray-500">{move || format!("{} / {}", page.get(), (total.get() + 19) / 20)}</span>
+                                    <button
+                                        class="px-4 py-2 border-2 border-emerald-100 text-emerald-600 rounded-xl bg-white-80 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                                        disabled=move || page.get() * 20 >= total.get() || loading.get()
+                                        on:click=move |_| {
+                                            let new_page = page.get() + 1;
+                                            page.set(new_page);
+                                        }
+                                    >
+                                        {move || if loading.get() { "加载中…" } else { "下一页" }}
+                                    </button>
+                                </div>
+                            </Show>
+                        }>
+                            <div class="space-y-3">
+                                {(0..3).map(|_| view! {
+                                    <article class="rounded-2xl border border-emerald-300 bg-white-95 p-4 shadow-sm animate-pulse">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="h-5 w-16 rounded-full bg-emerald-100"></div>
+                                            <div class="h-3 w-24 rounded bg-emerald-50"></div>
+                                        </div>
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="w-16 h-16 rounded-lg bg-emerald-50"></div>
+                                            <div class="flex-1 space-y-2">
+                                                <div class="h-3 w-95 rounded bg-emerald-50"></div>
+                                                <div class="h-3 w-80 rounded bg-emerald-50"></div>
+                                                <div class="h-3 w-70 rounded bg-emerald-50"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between pt-3 border-t border-emerald-300">
+                                            <div class="h-3 w-45 rounded bg-emerald-50"></div>
+                                            <div class="h-3 w-20 rounded bg-emerald-50"></div>
+                                        </div>
+                                    </article>
+                                }).collect_view()}
                             </div>
                         </Show>
-                    }>
-                        <div class="history-loading">
-                            <LoadingSpinner message="加载历史记录中…" />
-                        </div>
-                    </Show>
+                    </div>
                 </div>
             </Show>
             </div>

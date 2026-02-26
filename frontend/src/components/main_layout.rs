@@ -24,8 +24,12 @@ pub fn MainLayout(children: Children) -> impl IntoView {
     });
 
     view! {
-        <div class="main-layout">
-            <div class="main-content" id="main-content" tabindex="-1">
+        <div class="flex flex-col min-h-full h-full w-full overflow-hidden">
+            <div
+                class="flex-1 w-full max-w-[480px] mx-auto pb-[calc(45px+env(safe-area-inset-bottom,0))] box-border overflow-hidden flex flex-col min-h-0"
+                id="main-content"
+                tabindex="-1"
+            >
                 {children()}
             </div>
             <BottomNav />

@@ -51,7 +51,8 @@ pub fn validate_create_payload(
             })
         }
         CommunityAuthorType::User => {
-            let user_id = auth_user.ok_or_else(|| AppError::Unauthorized("请先登录".to_string()))?;
+            let user_id =
+                auth_user.ok_or_else(|| AppError::Unauthorized("请先登录".to_string()))?;
             Ok(ValidatedCreate {
                 author_type: CommunityAuthorType::User,
                 user_id: Some(user_id),

@@ -4,8 +4,8 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::{use_navigate, use_params_map};
 
-use crate::services;
 use crate::components::ConfirmModal;
+use crate::services;
 use crate::stores::ToastLevel;
 use crate::utils::{community_share_storage, community_ui, emit_toast};
 
@@ -92,12 +92,16 @@ pub fn CommunityDetailPage() -> impl IntoView {
     });
 
     view! {
-        <section class="page page-community-detail figma">
-            <div class="page-topbar">
-                <a class="icon-button" href="/community" aria-label="返回社区">
+        <section class="page figma">
+            <div class="flex items-center px-4 py-3 bg-white-80 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+                <a
+                    class="mr-3 -ml-2 w-10 h-10 rounded-full border-0 bg-transparent flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors no-underline"
+                    href="/community"
+                    aria-label="返回社区"
+                >
                     "←"
                 </a>
-                <div class="icon-placeholder"></div>
+                <div class="w-10 h-10"></div>
             </div>
 
             <ConfirmModal
@@ -110,11 +114,11 @@ pub fn CommunityDetailPage() -> impl IntoView {
                 on_cancel=on_cancel_delete
             />
 
-            <div class="page-scrollable-content">
+            <div class="page-scrollable-content px-5 py-5">
                 <h1 class="sr-only">"社区分享详情"</h1>
                 <Show
                     when=move || detail.get().is_some()
-                    fallback=move || view! { <p class="hint">"加载中…"</p> }
+                    fallback=move || view! { <p class="text-sm text-gray-600 text-center m-0 py-6">"加载中…"</p> }
                 >
                     {move || detail.get().map(|item| {
                         let item_id = item.id;
@@ -141,14 +145,14 @@ pub fn CommunityDetailPage() -> impl IntoView {
                         let has_image = !image_url.is_empty();
                         let image_url_for_view = image_url.clone();
                         view! {
-                            <div class="community-detail-card">
-                                <div class="community-detail-meta">
+                            <div class="rounded-2xl border border-emerald-100 bg-white-95 shadow-lg p-4">
+                                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
                                     <span>{author_label}</span>
                                     <span>{created_at}</span>
                                 </div>
                                 <Show when=move || can_delete>
                                     <button
-                                        class="community-delete-button"
+                                        class="mb-3 h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center justify-center transition-colors bg-transparent border-0 cursor-pointer"
                                         on:click=move |_| {
                                             let item_id_string = item_id.to_string();
                                             let records = community_share_storage::load_share_records();
@@ -178,17 +182,17 @@ pub fn CommunityDetailPage() -> impl IntoView {
                                     <Show
                                         when=move || has_image
                                     fallback=move || view! {
-                                        <div class="community-detail-score">
+                                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium text-sm">
                                             <span>"健康评分"</span>
-                                            <strong>{card_score}</strong>
+                                            <strong class="text-base">{card_score}</strong>
                                         </div>
-                                        <p class="community-detail-summary">{card_summary.clone()}</p>
+                                        <p class="mt-3 mb-0 text-sm text-gray-700 leading-relaxed">{card_summary.clone()}</p>
                                     }
                                 >
                                     <img
                                         src={image_url_for_view.clone()}
                                         alt="社区分享图片"
-                                        class="community-detail-image"
+                                        class="w-full rounded-xl border border-gray-100 object-cover mb-3"
                                         width="800"
                                         height="600"
                                         fetchpriority="high"
@@ -196,17 +200,17 @@ pub fn CommunityDetailPage() -> impl IntoView {
                                 </Show>
 
                                 <Show when=move || has_image>
-                                    <div class="community-detail-score">
+                                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium text-sm">
                                         <span>"健康评分"</span>
-                                        <strong>{health_score}</strong>
+                                        <strong class="text-base">{health_score}</strong>
                                     </div>
 
-                                    <p class="community-detail-summary">{summary_text.clone()}</p>
+                                    <p class="mt-3 mb-0 text-sm text-gray-700 leading-relaxed">{summary_text.clone()}</p>
                                 </Show>
 
-                                <div class="community-detail-ingredients">
-                                    <h2>"配料表"</h2>
-                                    <p>{ingredients_raw}</p>
+                                <div class="mt-4 p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                                    <h2 class="m-0 mb-2 text-sm font-semibold text-gray-900">"配料表"</h2>
+                                    <p class="m-0 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{ingredients_raw}</p>
                                 </div>
                             </div>
                         }
