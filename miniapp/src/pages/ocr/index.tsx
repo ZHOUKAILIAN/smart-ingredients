@@ -1,65 +1,67 @@
 import { View, Text } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { fetchAnalysis } from '../../utils/api';
 import './index.scss';
 
 export default function Ocr() {
   const router = useRouter();
   const id = router.params?.id;
-  const [status, setStatus] = useState('ocr_pending');
-  const [ocrText, setOcrText] = useState('');
-  const [loading, setLoading] = useState(true);
+  const isDemo = router.params?.demo === '1';
 
   useEffect(() => {
     let timer: number | undefined;
+
+    if (isDemo) {
+      timer = setTimeout(() => {
+        Taro.redirectTo({ url: '/pages/ocr-result/index?demo=1' });
+      }, 900);
+      return;
+    }
+
+    if (!id) {
+      Taro.showToast({ title: '缺少记录 ID', icon: 'none' });
+      return;
+    }
+
     const poll = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
       try {
         const res = await fetchAnalysis(id);
-        setStatus(res.status || res.ocr_status || 'ocr_pending');
-        if (res.ocr_text) {
-          setOcrText(res.ocr_text);
-        }
         if (res.status === 'ocr_completed' || res.ocr_status === 'completed') {
-          setLoading(false);
+          Taro.redirectTo({ url: `/pages/ocr-result/index?id=${id}` });
           return;
         }
       } catch {
         Taro.showToast({ title: '识别失败', icon: 'none' });
-        setLoading(false);
         return;
       }
-      timer = window.setTimeout(poll, 1200);
+      timer = setTimeout(poll, 1200);
     };
     poll();
+
     return () => {
       if (timer) {
         clearTimeout(timer);
       }
     };
-  }, [id]);
+  }, [id, isDemo]);
 
   return (
-    <View className='container'>
-      <View className='card'>
-        <Text className='section-title'>OCR 识别结果</Text>
-        {loading ? (
-          <Text className='subtle'>识别中，请稍候…</Text>
-        ) : (
-          <Text className='ocr-text'>{ocrText || '未识别到文本'}</Text>
-        )}
-        {!loading && (
-          <Text className='subtle'>状态：{status}</Text>
-        )}
+    <View className='container ocr-page'>
+      <View className='status-card'>
+        <View className='ocr-badge'>
+          <Text>OCR</Text>
+        </View>
+        <Text className='status-title'>正在识别配料表…</Text>
+        <Text className='status-subtle'>请稍候，通常需要 3-5 秒</Text>
+        <View className='status-track'>
+          <View className='status-bar' />
+        </View>
       </View>
 
       <View className='actions'>
         <View className='secondary-btn' onClick={() => Taro.navigateBack()}>
-          重新拍照
+          返回重拍
         </View>
       </View>
     </View>

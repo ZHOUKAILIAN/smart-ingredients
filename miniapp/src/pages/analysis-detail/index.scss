@@ -1,0 +1,148 @@
+.analysis-detail-page {
+  min-height: 100vh;
+  height: 100vh;
+  padding-top: 8px;
+  padding-bottom: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.analysis-detail-page .detail-card {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.analysis-detail-page .detail-head {
+  margin-bottom: 10px;
+}
+
+.analysis-detail-page .detail-head .section-title {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.analysis-detail-page .detail-scroll {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.analysis-detail-page .ingredient-card {
+  border: 1px solid #d1fae5;
+  border-radius: 12px;
+  background: #f9fdfb;
+  padding: 10px;
+}
+
+.analysis-detail-page .ingredient-card + .ingredient-card {
+  margin-top: 8px;
+}
+
+.analysis-detail-page .ingredient-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.analysis-detail-page .ingredient-name {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  flex: 1;
+  min-width: 0;
+}
+
+.analysis-detail-page .risk-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.analysis-detail-page .risk-badge.risk-high {
+  color: #991b1b;
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.analysis-detail-page .risk-badge.risk-medium {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.analysis-detail-page .risk-badge.risk-low {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #bbf7d0;
+}
+
+.analysis-detail-page .risk-badge.risk-unknown {
+  color: #334155;
+  background: #f1f5f9;
+  border-color: #dbe3ee;
+}
+
+.analysis-detail-page .ingredient-category {
+  display: block;
+  margin-top: 5px;
+  color: #0f766e;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.analysis-detail-page .ingredient-function {
+  display: block;
+  margin-top: 5px;
+  color: #1e293b;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.analysis-detail-page .ingredient-note {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.analysis-detail-page .error-text {
+  display: block;
+  color: #dc2626;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.analysis-detail-page .actions {
+  margin-top: 12px;
+  width: 100%;
+  flex: none;
+}
+
+.analysis-detail-page .action-row {
+  display: flex;
+  gap: 10px;
+}
+
+.analysis-detail-page .compact-btn {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+}

@@ -1,0 +1,69 @@
+{
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "uglifyFileName": false,
+    "enhance": true,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": false,
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
+  },
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "../backend",
+        "type": "folder"
+      },
+      {
+        "value": "../frontend",
+        "type": "folder"
+      },
+      {
+        "value": "../shared",
+        "type": "folder"
+      },
+      {
+        "value": "../docs",
+        "type": "folder"
+      },
+      {
+        "value": "../ocr_service",
+        "type": "folder"
+      },
+      {
+        "value": "../scripts",
+        "type": "folder"
+      },
+      {
+        "value": "../target",
+        "type": "folder"
+      },
+      {
+        "value": "../node_modules",
+        "type": "folder"
+      }
+    ],
+    "include": []
+  },
+  "appid": "touristappid",
+  "editorSetting": {},
+  "miniprogramRoot": "./",
+  "libVersion": "2.31.0"
+}

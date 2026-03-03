@@ -1,8 +1,13 @@
 export default defineAppConfig({
   pages: [
-    'pages/onboarding/index',
     'pages/capture/index',
-    'pages/ocr/index'
+    'pages/capture-scan/index',
+    'pages/onboarding/index',
+    'pages/ocr/index',
+    'pages/ocr-result/index',
+    'pages/analysis/index',
+    'pages/analysis-result/index',
+    'pages/analysis-detail/index'
   ],
   window: {
     navigationBarTitleText: 'Smart Ingredients',

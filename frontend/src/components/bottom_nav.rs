@@ -89,7 +89,8 @@ pub fn BottomNav() -> impl IntoView {
     };
 
     view! {
-        <nav class="fixed bottom-0 left-0 right-0 h-[clamp(48px,6.2vh,60px)] bg-white-80 border-t border-emerald-100/40 backdrop-blur-xl flex justify-around items-center px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] z-[100] shadow-[0_-10px_24px_rgba(15,23,42,0.12)]">
+        <nav class="fixed bottom-0 left-0 right-0 z-[100] border-t border-emerald-100/40 bg-white-80 backdrop-blur-xl shadow-[0_-10px_24px_rgba(15,23,42,0.12)] pb-[env(safe-area-inset-bottom)]">
+            <div class="mx-auto flex h-14 w-full max-w-[480px] items-center justify-around px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <For
                 each=move || [
                     TabRoute::Home,
@@ -107,9 +108,9 @@ pub fn BottomNav() -> impl IntoView {
                         <a
                             class=move || {
                                 if is_active() {
-                                    "relative flex flex-col items-center justify-center flex-1 h-full bg-transparent border-0 no-underline px-0 py-1 gap-1 text-emerald-600"
+                                    "relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-[2px] bg-transparent border-0 px-0 py-0 no-underline text-emerald-600"
                                 } else {
-                                    "relative flex flex-col items-center justify-center flex-1 h-full bg-transparent border-0 no-underline px-0 py-1 gap-1 text-slate-500 hover:text-emerald-600"
+                                    "relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-[2px] bg-transparent border-0 px-0 py-0 no-underline text-slate-500 hover:text-emerald-600"
                                 }
                             }
                             on:click=move |ev: MouseEvent| {
@@ -123,7 +124,7 @@ pub fn BottomNav() -> impl IntoView {
                             aria-label=tab.label()
                             aria-current=move || if is_active() { "page" } else { "" }
                         >
-                            <span class="relative flex items-center justify-center pb-[2px]">
+                            <span class="relative flex h-6 w-6 items-center justify-center">
                                 {match tab {
                                     TabRoute::Home => view! { <IconHome /> }.into_any(),
                                     TabRoute::History => view! { <IconHistory /> }.into_any(),
@@ -131,11 +132,12 @@ pub fn BottomNav() -> impl IntoView {
                                     TabRoute::Profile => view! { <IconUser /> }.into_any(),
                                 }}
                             </span>
-                            <span class="text-[11px] font-medium leading-[1.2]">{tab.label()}</span>
+                            <span class="text-[11px] font-medium leading-[1]">{tab.label()}</span>
                         </a>
                     }
                 }
             />
+            </div>
         </nav>
     }
 }

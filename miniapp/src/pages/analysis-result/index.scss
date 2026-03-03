@@ -1,0 +1,156 @@
+.analysis-summary-page {
+  min-height: 100vh;
+  padding-top: 8px;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.analysis-summary-page .summary-hero-card {
+  border-color: #bfeeda;
+  background: linear-gradient(145deg, rgba(232, 251, 241, 0.95), rgba(255, 255, 255, 0.95));
+  padding: 14px;
+}
+
+.analysis-summary-page .hero-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analysis-summary-page .hero-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.analysis-summary-page .score-label {
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.analysis-summary-page .score-value {
+  color: #065f46;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.analysis-summary-page .hero-divider {
+  height: 1px;
+  background: #d1fae5;
+}
+
+.analysis-summary-page .hero-content .section-title {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.analysis-summary-page .headline-text {
+  display: block;
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.analysis-summary-page .ingredient-focus-card,
+.analysis-summary-page .warning-card {
+  margin-top: 10px;
+  padding: 14px;
+}
+
+.analysis-summary-page .card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.analysis-summary-page .card-head .section-title {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.analysis-summary-page .head-tag {
+  color: #287a5d;
+  font-size: 10px;
+  font-weight: 600;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.analysis-summary-page .chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.analysis-summary-page .focus-chip {
+  color: #14532d;
+  font-size: 10px;
+  font-weight: 600;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.analysis-summary-page .warning-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-summary-page .warning-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.analysis-summary-page .warning-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  margin-top: 7px;
+  flex: none;
+  background: #ef4444;
+}
+
+.analysis-summary-page .warning-text {
+  color: #334155;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.analysis-summary-page .error-text {
+  display: block;
+  color: #dc2626;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.analysis-summary-page .actions {
+  margin-top: 12px;
+  width: 100%;
+  flex: none;
+}
+
+.analysis-summary-page .action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-summary-page .compact-btn {
+  width: 100%;
+  box-sizing: border-box;
+}

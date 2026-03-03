@@ -5,7 +5,10 @@
   "description": "Smart Ingredients WeChat Mini Program",
   "scripts": {
     "dev:weapp": "taro build --type weapp --watch",
-    "build:weapp": "taro build --type weapp"
+    "build:weapp": "taro build --type weapp",
+    "dev:weapp:auto": "node scripts/run-weapp-with-orbstack.js dev",
+    "build:weapp:auto": "node scripts/run-weapp-with-orbstack.js build",
+    "verify:flow": "node scripts/verify-flow.js"
   },
   "dependencies": {
     "@tarojs/components": "^3.6.30",

@@ -1,0 +1,245 @@
+.capture-scan-page {
+  padding-top: 14px;
+}
+
+.capture-scan-page .upload-card {
+  border-radius: 24px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.capture-scan-page .upload-hero {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.capture-scan-page .hero-icon-box {
+  width: 86px;
+  height: 86px;
+  border-radius: 24px;
+  background: linear-gradient(165deg, #eefaf4, #e4f7ee);
+  border: 1px solid #daf3e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.12);
+}
+
+.capture-scan-page .hero-camera-icon {
+  position: relative;
+  width: 34px;
+  height: 22px;
+  border: 4px solid #47ae87;
+  border-radius: 7px;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .hero-camera-icon::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 6px;
+  width: 12px;
+  height: 7px;
+  border: 4px solid #47ae87;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .hero-camera-icon::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  width: 8px;
+  height: 8px;
+  border: 3px solid #47ae87;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .section-title {
+  text-align: center;
+  font-size: 17px;
+  margin-bottom: 6px;
+}
+
+.capture-scan-page .subtle {
+  text-align: center;
+  font-size: 13px;
+  color: #5b6575;
+}
+
+.capture-scan-page .middle-gap {
+  height: 20px;
+}
+
+.capture-scan-page .capture-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+}
+
+.capture-scan-page .capture-actions .action-btn {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  min-height: 46px;
+  padding: 0 10px;
+  border-radius: 16px;
+  font-size: 15px;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.capture-scan-page .capture-actions .disabled-btn {
+  opacity: 0.75;
+}
+
+.capture-scan-page .capture-actions .action-btn text {
+  margin-left: 6px;
+}
+
+.capture-scan-page .capture-actions .primary-btn.action-btn {
+  background: #5bc399;
+}
+
+.capture-scan-page .capture-actions .secondary-btn.action-btn {
+  border-color: #8fdabb;
+  color: #287a5d;
+}
+
+.capture-scan-page .btn-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  flex: none;
+}
+
+.capture-scan-page .camera-mini {
+  width: 14px;
+  height: 10px;
+  margin-top: 1px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .camera-mini::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 2px;
+  width: 5px;
+  height: 3px;
+  border: 2px solid currentColor;
+  border-bottom: 0;
+  border-radius: 2px 2px 0 0;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .camera-mini::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  width: 4px;
+  height: 4px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .album-mini {
+  width: 14px;
+  height: 12px;
+  margin-top: 2px;
+  border: 2px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+  box-sizing: border-box;
+}
+
+.capture-scan-page .album-mini::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 5px;
+  width: 2px;
+  height: 7px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.capture-scan-page .album-mini::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 3px;
+  width: 5px;
+  height: 5px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(-45deg);
+  box-sizing: border-box;
+}
+
+.capture-scan-page .demo-btn {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.capture-scan-page .tips-card {
+  margin-top: 14px;
+  border-radius: 18px;
+  border-color: #cdeedd;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.capture-scan-page .tips-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.capture-scan-page .tips-mark {
+  width: 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: #56bf96;
+}
+
+.capture-scan-page .tips-title {
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.capture-scan-page .tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.capture-scan-page .tip-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #67c9a3;
+  flex: none;
+}
+
+.capture-scan-page .tip-text {
+  color: #5b6575;
+  font-size: 13px;
+  line-height: 1.6;
+}
