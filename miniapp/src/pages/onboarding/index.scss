@@ -1,58 +1,87 @@
-.intro-card {
-  margin-bottom: 16px;
+.onboarding-page {
+  padding-top: 12px;
 }
 
-.steps-card {
-  margin-bottom: 16px;
+.onboarding-page .intro-card {
+  margin-bottom: 12px;
+  border-color: #86efac;
+  background: linear-gradient(145deg, rgba(236, 253, 245, 0.95), rgba(255, 255, 255, 0.95));
 }
 
-.step {
-  margin-top: 12px;
-}
-
-.step-title {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.step-desc {
+.onboarding-page .current-tip {
   display: block;
-  color: #64748b;
+  margin-top: 8px;
+  color: #047857;
   font-size: 12px;
-}
-
-.options-card {
-  margin-bottom: 16px;
-}
-
-.option {
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  margin-top: 10px;
-}
-
-.option.selected {
-  border-color: #10b981;
-  background: #ecfdf5;
-}
-
-.option-label {
   font-weight: 600;
-  display: block;
 }
 
-.option-desc {
-  display: block;
-  color: #64748b;
-  font-size: 12px;
+.onboarding-page .option-card {
+  padding: 14px;
+  border-color: #bbf7d0;
 }
 
-.actions {
+.onboarding-page .option-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.tips {
-  text-align: center;
+.onboarding-page .option-item {
+  border: 1px solid #d1fae5;
+  border-radius: 14px;
+  padding: 10px;
+  min-height: 98px;
+  box-sizing: border-box;
+  background: rgba(249, 253, 251, 0.95);
+}
+
+.onboarding-page .option-item.selected {
+  border-color: #34d399;
+  background: #ecfdf5;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.16);
+}
+
+.onboarding-page .option-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onboarding-page .option-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.onboarding-page .option-check.checked {
+  border-color: #10b981;
+  background: #10b981;
+  color: #ffffff;
+}
+
+.onboarding-page .option-label {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.onboarding-page .option-desc {
+  display: block;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+.onboarding-page .actions {
+  margin-top: 14px;
 }

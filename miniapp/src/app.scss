@@ -1,47 +1,74 @@
 page {
-  background: #f5f7fb;
-  color: #1f2d2d;
+  background: linear-gradient(to bottom, #a7f3d0 0, #f7f5f2 220px);
+  color: #111827;
   font-size: 14px;
+  font-family: 'Source Han Serif SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', serif;
 }
 
 .container {
-  padding: 20px 16px 32px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 20px 16px 28px;
 }
 
 .card {
-  background: #ffffff;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d1fae5;
+  border-radius: 24px;
   padding: 16px;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(8px);
 }
 
 .primary-btn {
   width: 100%;
-  background: #10b981;
+  min-height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
   color: #ffffff;
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 0 12px;
   text-align: center;
+  font-size: 13px;
   font-weight: 600;
+  box-shadow: none;
 }
 
 .secondary-btn {
   width: 100%;
-  background: #f1f5f9;
+  min-height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
   color: #1f2937;
+  border: 1px solid #a7f3d0;
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 0 12px;
   text-align: center;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .section-title {
-  font-size: 18px;
-  font-weight: 600;
+  display: block;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
 .subtle {
-  color: #64748b;
+  display: block;
+  color: #6b7280;
   font-size: 12px;
+  line-height: 1.6;
+}
+
+.actions {
+  margin-top: 16px;
 }

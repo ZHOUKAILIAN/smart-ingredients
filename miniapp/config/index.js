@@ -6,6 +6,7 @@ const config = {
   designWidth: 375,
   deviceRatio: {
     640: 2.34 / 2,
+    375: 2 / 1,
     750: 1,
     828: 1.81 / 2
   },
@@ -13,7 +14,7 @@ const config = {
   outputRoot: 'dist',
   plugins: [],
   defineConstants: {
-    API_BASE: JSON.stringify(process.env.API_BASE || 'http://127.0.0.1:3000')
+    __API_BASE__: JSON.stringify(process.env.API_BASE || 'http://127.0.0.1:3000')
   },
   framework: 'react',
   compiler: 'webpack5',

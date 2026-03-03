@@ -1,0 +1,77 @@
+.ocr-result-page {
+  min-height: 100vh;
+  height: 100vh;
+  padding-top: 12px;
+  padding-bottom: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ocr-result-page .result-card {
+  margin-top: 0;
+  width: 100%;
+  box-sizing: border-box;
+  height: 44vh;
+  min-height: 260px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ocr-result-page .result-scroll-wrap {
+  margin-top: 8px;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid #d1fae5;
+  border-radius: 12px;
+  background: #f9fdfb;
+  overflow: hidden;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.ocr-result-page .ocr-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.ocr-result-page .ocr-status {
+  display: block;
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.ocr-result-page .actions {
+  margin-top: 10px;
+  width: 100%;
+  flex: none;
+}
+
+.ocr-result-page .action-row {
+  display: flex;
+  gap: 10px;
+}
+
+.ocr-result-page .action-row .secondary-btn,
+.ocr-result-page .action-row .primary-btn {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ocr-result-page .action-row .disabled-btn {
+  opacity: 0.75;
+}

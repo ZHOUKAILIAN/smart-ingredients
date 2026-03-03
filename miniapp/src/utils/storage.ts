@@ -16,3 +16,12 @@ export const setPreference = (value: string) => {
     // ignore
   }
 };
+
+export const hasPreferenceConfigured = (): boolean => {
+  try {
+    const value = wx.getStorageSync(KEY);
+    return typeof value === 'string' ? value.trim().length > 0 : !!value;
+  } catch {
+    return false;
+  }
+};
