@@ -1,329 +1,51 @@
 # AGENTS.md
 
-## Workflow
+本文件是 Smart Ingredients 的共享项目执行入口。工具专用入口引用本文件；详细编码规则在规范中维护，不在多个入口重复复制。
 
-- 设计/代码变更必须走 "小周调研 → 小周计划 → 小周执行 → 小周验证"；验证通过后再汇报。
-- 简单需求可直接执行。
-- Write requirements and technical plan first; get user confirmation before implementation.
+## 开始前
 
-## Execution Finish Checklist
+- 阅读 [文档入口](docs/README.md)，按其中的归属规则决定更新还是新建文档。
+- 写代码前必读 [编码规范](docs/standards/coding-standards.md)、[错误处理规范](docs/standards/error-handling-standards.md) 和 [项目约定](docs/standards/project-conventions.md)。
+- 项目结构与运行配置入口见 [README.md](README.md)。当前实现须检查源码、共享类型和配置，不以旧总结或 Git 历史代替。
+- 旧功能文档已删除；不得自动恢复整套文档，也不得把“没有旧文档”理解为可以省略本次需求、设计和用户确认。
 
-After any implementation work completes:
+## 工作流程
 
-- Start local services (docker compose) and confirm they are healthy.
-- Run the full API flow end-to-end to ensure it works.
-- Run `cargo check` for the frontend to ensure no compile errors.
+设计和代码变更遵循：**小周调研 → 小周计划 → 小周执行 → 小周验证**。
 
-## Notes
+1. **小周调研**：确认工作区、变更范围和文档归属，阅读相关实现与规范，说明已知事实、差异及待确认项。
+2. **小周计划**：实施前先更新或补齐所属功能需求与技术方案，写明验收标准、影响范围、数据/API 契约（如涉及）、错误处理和验证方式，获得用户确认。纯治理更新直接落在所属治理文档。
+3. **小周执行**：按确认方案最小化修改。实现需要偏离方案时，先更新文档并重新确认，不悄悄改变产品语义。
+4. **小周验证**：按下述要求完成检查，再汇报结果与剩余风险；失败或无法运行时报告阻塞，不宣称完成验证。
 
-- Prioritize rules-based conclusions and explainability.
-- Keep changes minimal and documented.
+错字、排版等不改变行为的简单修改可直接处理；不得将行为、架构或契约变更视为简单修改而跳过确认。
 
-# Agent Instructions - Smart Ingredients
+## 实施约束
 
-## Project Overview
+- 优先规则驱动的结论和可解释性；保持变更最小、依据可追溯。
+- 需求不清、文档缺失或多个来源冲突时先澄清；代码证明当前实现，不自动证明预期行为正确。
+- 修复、回归和优化回写所属功能原文档，不为每个任务另建需求设计对。
+- UI/Figma 工作先确认本次设计来源与验收范围，检查现有组件、样式和资源；在所属设计记录决定，不沿用已删除的视觉规范或臆造默认风格。
+- `docs/deployment/` 中的 Compose、Nginx 和监控文件是运行配置，不能作为普通文档批量删除或挪动。
+- 不把密钥、个人环境值、原始用户数据、会话状态或临时日志写入共享文档和提交。
 
-**Smart Ingredients** (食品配料表分析助手) - 智能食品配料表分析工具
+## 验证与完成
 
-- **Frontend**: Rust + Tauri + Leptos
-- **Backend**: Rust + Axum + SQLx
-- **Database**: PostgreSQL + Redis
-- **OCR**: PaddleOCR
-- **LLM**: DeepSeek / 智谱 AI
+### 代码或运行配置实现
 
----
+- 启动本地服务（Docker Compose），确认服务及依赖健康。
+- 跑完整 API 链路：上传 → OCR → 确认 → 分析 → 结果，并验证本轮涉及的其他流程。
+- 前端编译必须通过：从仓库根执行 `cargo check --manifest-path frontend/Cargo.toml --target wasm32-unknown-unknown`，按实际环境配置 `API_BASE`。
+- 后端有改动时运行 `cargo check -p backend`，确认本地后端实际启动成功。
+- 执行测试；Rust 代码运行 `cargo fmt`、`cargo clippy`，修复错误并处理告警，例外需说明并确认。
+- 具体测试模式遵循编码规范；单元测试不能替代服务启动及端到端验证。
 
-## Documentation-Driven Development Workflow
+### 纯文档治理
 
-### 🚨 MANDATORY: Documentation First - NO EXCEPTIONS 🚨
+仅在没有源码、运行配置或行为变更时，执行文档引用、规则一致性、保留/删除范围和 `git diff --check` 检查；不需要为文档清理启动服务或编译。必须明确这不代表运行验证通过。
 
-**ABSOLUTE RULE**: This project enforces strict documentation-driven development.
+### 汇报与回写
 
-#### You MUST
-
-1. ✅ **NEVER write code without prior documentation**
-2. ✅ **ALWAYS create/update docs before implementing features**
-3. ✅ **ENSURE all design decisions are documented first**
-4. ✅ **STOP and ask if documentation is unclear or missing**
-5. ✅ **UPDATE docs immediately when implementation deviates from design**
-
-#### You MUST NOT
-
-1. ❌ **Start coding without reading relevant docs first**
-2. ❌ **Skip documentation "to save time"**
-3. ❌ **Assume implementation details not in docs**
-4. ❌ **Make architectural decisions without documenting them**
-5. ❌ **Proceed with ambiguous requirements**
-
-### Workflow Steps (MANDATORY SEQUENCE)
-
-```
-┌──────────────────────────────────────────────────────────┐
-│ 1. READ EXISTING DOCS                                    │
-│    - Check docs/requirements/ for feature specs          │
-│    - Check docs/design/ for technical design             │
-│    - Check docs/standards/ for coding conventions        │
-└──────────────────────────────────────────────────────────┘
-                         ↓
-┌──────────────────────────────────────────────────────────┐
-│ 2. VERIFY COMPLETENESS                                   │
-│    - Requirements clear and complete?                    │
-│    - Design decisions documented?                        │
-│    - API contracts defined?                              │
-│    - If NO → Create missing documentation                │
-└──────────────────────────────────────────────────────────┘
-                         ↓
-┌──────────────────────────────────────────────────────────┐
-│ 3. ASK QUESTIONS (if needed)                             │
-│    - Clarify ambiguous requirements                      │
-│    - Confirm architectural choices                       │
-│    - Validate assumptions                                │
-└──────────────────────────────────────────────────────────┘
-                         ↓
-┌──────────────────────────────────────────────────────────┐
-│ 4. DOCUMENT DESIGN (if not exists)                       │
-│    - Create technical design doc                         │
-│    - Define data structures                              │
-│    - Specify API contracts                               │
-│    - Document error handling                             │
-└──────────────────────────────────────────────────────────┘
-                         ↓
-┌──────────────────────────────────────────────────────────┐
-│ 5. IMPLEMENT CODE                                        │
-│    - Follow documented design exactly                    │
-│    - Use patterns from docs/standards/                   │
-│    - Reference doc sections in code comments             │
-└──────────────────────────────────────────────────────────┘
-                         ↓
-┌──────────────────────────────────────────────────────────┐
-│ 6. UPDATE DOCS (if implementation differs)               │
-│    - Document deviations from design                     │
-│    - Update API specs if changed                         │
-│    - Add lessons learned                                 │
-└──────────────────────────────────────────────────────────┘
-```
-
-### Documentation Structure
-
-```
-docs/
-├── requirements/          # Feature requirements and specifications
-│   └── XXX-feature-requirements.md
-├── design/               # Technical design documents
-│   ├── technical-design.md
-│   ├── ui-design.md
-│   ├── figma-design-system.md
-│   └── XXX-feature-technical-plan.md
-├── api/                  # API documentation
-│   └── api-reference.md
-├── standards/            # Coding standards and conventions
-│   ├── coding-standards.md
-│   ├── error-handling-standards.md
-│   ├── project-conventions.md
-│   ├── requirements-template.md
-│   └── technical-design-template.md
-├── analysis/             # Project analysis and research
-│   └── project-analysis.md
-└── run/                  # Operational guides
-    ├── backend-startup.md
-    └── integration-testing.md
-```
-
----
-
-## Before Writing Code - Mandatory Checklist
-
-### ✅ Pre-Implementation Checklist
-
-Before writing ANY code, you MUST verify:
-
-- [ ] **Requirements exist** in `docs/requirements/`
-  - Feature purpose clearly stated
-  - User stories or use cases defined
-  - Success criteria specified
-
-- [ ] **Design documented** in `docs/design/`
-  - Architecture decisions explained
-  - Data structures defined
-  - API contracts specified
-  - Error handling strategy documented
-
-- [ ] **Standards reviewed** in `docs/standards/`
-  - Coding conventions understood
-  - Project patterns identified
-  - Naming conventions clear
-
-- [ ] **API contracts** in `docs/api/` (if applicable)
-  - Request/response formats defined
-  - Error responses documented
-  - Authentication requirements clear
-
-**If ANY checkbox is unchecked → STOP and create missing documentation**
-
-### Example: Adding a New Feature
-
-#### ❌ WRONG (do not do this)
-
-```
-User: "Add user authentication"
-Assistant: "I'll add JWT authentication to the backend..."
-[Starts writing code immediately]
-```
-
-**Why wrong**: No requirements documented, no design decisions made, no API contracts defined.
-
-#### ✅ CORRECT (do this instead)
-
-```
-User: "Add user authentication"
-Assistant: "I need to document this feature first. Let me check existing docs..."
-[Reads docs/requirements/ and docs/design/]
-Assistant: "I don't see authentication requirements. Let me create the documentation."
-
-[Creates docs/requirements/005-authentication-requirements.md]
-[Creates docs/design/005-authentication-technical-plan.md]
-[Creates docs/design/auth-flow.md]
-[Updates docs/api/api-reference.md with auth endpoints]
-```
-
-**Why correct**: Requirements documented first, design decisions made, API contracts defined before any code.
-
----
-
-## Project Architecture
-
-### Monorepo Structure
-
-```
-smart-ingredients/
-├── frontend/           # Rust + Tauri + Leptos
-├── backend/            # Rust + Axum + SQLx
-├── shared/             # Shared types (workspace member)
-├── docs/               # Documentation
-├── scripts/            # Development scripts
-└── Cargo.toml         # Workspace config
-```
-
-### Tech Stack Details
-
-| Layer              | Technology                 |
-| ------------------ | -------------------------- |
-| Frontend Framework | Tauri 2.x + Leptos 0.7.x   |
-| Backend Framework  | Axum 0.7.x                 |
-| Database           | PostgreSQL 16.x + SQLx     |
-| Cache              | Redis 7.x                  |
-| OCR                | PaddleOCR (Python service) |
-| LLM                | DeepSeek / 智谱 AI         |
-
----
-
-## Coding Standards
-
-**IMPORTANT**: All implementation details are in `docs/standards/`. You MUST read these before writing code:
-
-- **`coding-standards.md`** - General Rust coding conventions, formatting, linting
-- **`error-handling-standards.md`** - Error handling rules, patterns, and decision guides
-- **`project-conventions.md`** - Project-specific patterns and conventions
-
----
-
-## UI Design & Figma Integration
-
-**IMPORTANT**: When implementing UI designs from Figma, you MUST refer to:
-
-- **`docs/design/figma-design-system.md`** - Complete design system rules for Figma integration
-
-This document provides:
-
-- Design token definitions (colors, shadows, transitions)
-- Component library architecture and patterns
-- CSS methodology and naming conventions
-- Icon system and asset management
-- Step-by-step Figma-to-code workflow
-- Best practices and common UI patterns
-
-**When to use:**
-
-- Implementing new UI components from Figma designs
-- Creating new pages or screens
-- Adding icons or updating visual styles
-- Ensuring design consistency across the app
-
----
-
-### Quick Reference
-
-| Topic              | Rule                                                                                                               | See Details                   |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| **Formatting**     | Use `cargo fmt` before committing                                                                                  | `coding-standards.md`         |
-| **Linting**        | Use `cargo clippy` and fix all warnings                                                                            | `coding-standards.md`         |
-| **Error Handling** | Backend: `Result<impl IntoResponse, AppError>`<br>Service: `anyhow::Result<T>`<br>Frontend: `Result<T, ErrorInfo>` | `error-handling-standards.md` |
-| **Logging**        | Use `tracing` macros (`error!`, `warn!`, `info!`, `debug!`)                                                        | `coding-standards.md`         |
-| **Async/Await**    | Entry: `#[tokio::main]`<br>Handlers: `async fn handler() -> Result<...>`                                           | `coding-standards.md`         |
-| **File Naming**    | Frontend components: `kebab-case.rs`<br>Backend modules: `snake_case.rs`                                           | `project-conventions.md`      |
-| **Database**       | Use SQLx with `query_as!` for type safety<br>Migrations: `YYYYMMDDHHMMSS_description.sql`                          | `coding-standards.md`         |
-| **Shared Types**   | Always derive `Serialize` + `Deserialize`<br>Location: `shared/src/`                                               | `project-conventions.md`      |
-
----
-
-## Development Commands
-
-```bash
-# Run backend
-cd backend && cargo run
-
-# Run frontend
-cd frontend && cargo tauri dev
-
-# Run tests
-cargo test
-
-# Format code
-cargo fmt
-
-# Lint code
-cargo clippy
-```
-
----
-
-## Environment Variables
-
-```bash
-# Backend
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
-OCR_SERVICE_URL=http://...
-LLM_API_KEY=...
-
-# Frontend
-VITE_API_URL=http://localhost:3000
-```
-
----
-
-## Testing Strategy
-
-See `docs/standards/coding-standards.md` for detailed testing patterns.
-
-- Unit tests for business logic
-- Integration tests for API endpoints
-- E2E tests for critical user flows
-
----
-
-## Deployment
-
-- **Frontend**: Tauri installers (.dmg, .exe, .AppImage)
-- **Backend**: Docker + K8s
-- **Database**: RDS PostgreSQL
-- **Cache**: Redis Cluster
-
----
-
-## Important Notes
-
-- This is a new project - establish patterns early
-- Document decisions as you make them
-- Keep docs in sync with code changes
-- **ALWAYS read `docs/standards/` before implementing features**
+- 说明修改文件、验证命令和结果、未执行项及原因、遗留风险。
+- 区分“文档已批准”“功能已实现”“验证已通过”；验证结论绑定提交与环境。
+- 将稳定规则和产品决策回写到所属文档，单次任务记录不升级为共享规则。
