@@ -1,375 +1,41 @@
-# Documentation Guide - Smart Ingredients
-
-## Overview
-
-This directory contains all project documentation following a documentation-driven development approach. **All features must be documented before implementation.**
-
-## Directory Structure
-
-```
-docs/
-├── README.md                     # This file - documentation guide
-├── requirements/                 # Feature requirements and specifications
-│   └── XXX-feature-requirements.md
-├── design/                       # Technical design documents
-│   ├── technical-design.md       # Overall system design
-│   ├── ui-design.md             # UI/UX design decisions
-│   ├── figma-design-system.md   # Figma design system rules
-│   └── XXX-feature-technical-plan.md # Technical plans
-├── api/                          # API documentation
-│   └── api-reference.md         # API endpoint reference
-├── standards/                    # Coding standards and conventions
-│   ├── coding-standards.md      # Rust coding standards
-│   ├── project-conventions.md   # Project-specific conventions
-│   ├── requirements-template.md # Template for requirements docs
-│   └── technical-design-template.md # Template for design docs
-├── analysis/                     # Project analysis and research
-│   └── project-analysis.md      # Codebase analysis
-└── run/                          # Operational guides
-    ├── backend-startup.md       # Backend setup guide
-    └── integration-testing.md   # Testing guide
-```
-
-## Documentation Workflow
-
-### 1. Requirements Phase
-
-**When**: Before starting any new feature
-
-**Create**: `docs/requirements/NNN-feature-name-requirements.md`
-
-**Template**: Use `docs/standards/requirements-template.md`
-
-**Contents**:
-- Feature overview and motivation
-- User stories or use cases
-- Success criteria
-- Non-goals (what we're NOT doing)
-- Dependencies and constraints
-
-**Example**:
-```bash
-# For feature "User Authentication"
-docs/requirements/005-authentication-requirements.md
-docs/design/005-authentication-technical-plan.md
-```
-
-### 2. Design Phase
-
-**When**: After requirements are clear, before implementation
-
-**Create**: `docs/design/feature-name-design.md` or update `technical-design.md`
-
-**Template**: Use `docs/standards/technical-design-template.md`
-
-**Contents**:
-- Architecture decisions
-- Data structures and models
-- API contracts (request/response formats)
-- Error handling strategy
-- Security considerations
-- Performance considerations
-
-### 3. Implementation Phase
-
-**When**: After design is documented and approved
-
-**Do**:
-- Implement code following documented design
-- Reference design doc sections in code comments
-- Use patterns from `docs/standards/`
-
-### 4. Update Phase
-
-**When**: If implementation deviates from design
-
-**Do**:
-- Update design docs to reflect actual implementation
-- Document reasons for deviations
-- Update API docs if contracts changed
-
-## Document Naming Conventions
-
-### Requirements Documents
-
-Format: `NNN-feature-name-requirements.md`
-
-Examples:
-- `001-mobile-ui-requirements.md`
-- `002-mvp-backend-requirements.md`
-- `003-ocr-quality-requirements.md`
-
-### Technical Plans
-
-Format: `NNN-feature-name-technical-plan.md` (located in `design/`)
-
-Examples:
-- `design/001-mobile-ui-technical-plan.md`
-- `design/002-mvp-backend-technical-plan.md`
-
-### Design Documents
-
-Format: `feature-name-design.md` or `component-name-design.md`
-
-Examples:
-- `authentication-design.md`
-- `caching-strategy-design.md`
-- `ui-design.md`
-
-## How to Use This Documentation
-
-### For New Features
-
-1. **Read existing docs first**
-   ```bash
-   # Check if feature already documented
-   grep -r "feature name" docs/requirements/
-   grep -r "feature name" docs/design/
-   ```
-
-2. **Create requirements doc**
-   ```bash
-   cp docs/standards/requirements-template.md \
-      docs/requirements/NNN-feature-requirements.md
-   # Fill in the template
-   ```
-
-3. **Create technical plan**
-   ```bash
-   cp docs/standards/technical-design-template.md \
-      docs/design/NNN-feature-technical-plan.md
-   # Fill in the template
-   ```
-
-4. **Update design docs**
-   - Add to `docs/design/technical-design.md` if architectural
-   - Create separate design doc if complex feature
-
-5. **Update API docs**
-   - Add new endpoints to `docs/api/api-reference.md`
-   - Document request/response formats
-   - Include error responses
-
-### For Bug Fixes
-
-1. **Document the bug**
-   - What is the expected behavior?
-   - What is the actual behavior?
-   - Root cause analysis
-
-2. **Document the fix**
-   - What changes are needed?
-   - Why this approach?
-   - Any side effects?
-
-3. **Update relevant docs**
-   - Fix incorrect information
-   - Add lessons learned
-
-### For Refactoring
-
-1. **Document motivation**
-   - Why refactor?
-   - What problems does it solve?
-
-2. **Document approach**
-   - What will change?
-   - Migration strategy
-   - Backwards compatibility
-
-3. **Update affected docs**
-   - Design docs
-   - API docs (if contracts change)
-   - Coding standards (if patterns change)
-
-### For UI/Figma Implementation
-
-1. **Read the design system guide**
-   - See [Figma Design System](./design/figma-design-system.md)
-   - Understand design tokens and component patterns
-
-2. **Extract design tokens**
-   - Map Figma colors to CSS custom properties
-   - Identify spacing, shadows, transitions
-   - Check if tokens already exist
-
-3. **Follow component patterns**
-   - Use Leptos component architecture
-   - Follow CSS naming conventions (BEM-inspired)
-   - Reuse existing components when possible
-
-4. **Implement step-by-step**
-   - Create Rust component with typed props
-   - Write scoped CSS with design tokens
-   - Add to component exports
-   - Test with different states
-
-## Document Templates
-
-### Requirements Template
-
-Located at: `docs/standards/requirements-template.md`
-
-Use for: All new feature requirements
-
-### Technical Design Template
-
-Located at: `docs/standards/technical-design-template.md`
-
-Use for: All technical design documents
-
-## Documentation Standards
-
-### Writing Style
-
-- **Clear and concise**: Avoid jargon, use simple language
-- **Structured**: Use headings, lists, tables
-- **Examples**: Include code examples where helpful
-- **Up-to-date**: Keep docs in sync with code
-
-### Code Examples
-
-- Use syntax highlighting (```rust)
-- Keep examples minimal and focused
-- Include comments explaining key points
-- Ensure examples actually work
-
-### Diagrams
-
-- Use Mermaid for diagrams (supported in GitHub)
-- Keep diagrams simple and focused
-- Include text description for accessibility
-
-Example:
-```mermaid
-graph LR
-    A[User] --> B[Frontend]
-    B --> C[Backend API]
-    C --> D[Database]
-```
-
-### Links
-
-- Use relative links within docs: `[Design](./design/technical-design.md)`
-- Use absolute links for external resources
-- Check links periodically
-
-## Review Process
-
-### Documentation Review
-
-Before implementation:
-1. Requirements reviewed by team
-2. Design reviewed by tech lead
-3. API contracts reviewed by frontend/backend
-
-During implementation:
-1. Code references design docs
-2. Deviations documented immediately
-
-After implementation:
-1. Docs updated to match reality
-2. Lessons learned added
-3. Examples validated
-
-### Documentation Checklist
-
-- [ ] Requirements clearly stated
-- [ ] Success criteria defined
-- [ ] Design decisions documented
-- [ ] API contracts specified
-- [ ] Error handling documented
-- [ ] Security considerations addressed
-- [ ] Performance considerations addressed
-- [ ] Examples provided
-- [ ] Links work
-- [ ] No typos or grammar issues
-
-## Maintenance
-
-### Regular Tasks
-
-**Weekly**:
-- Review new documentation
-- Check for outdated information
-
-**Monthly**:
-- Validate code examples still work
-- Update links
-- Archive obsolete documents
-
-**Per Release**:
-- Update version numbers
-- Update deployment docs
-- Archive old API versions
-
-### Archiving Old Docs
-
-When documentation becomes obsolete:
-
-1. Move to `docs/archive/` directory
-2. Add "ARCHIVED" prefix to filename
-3. Add archive notice at top of document:
-   ```markdown
-   > **ARCHIVED**: This document is outdated as of YYYY-MM-DD.
-   > See [new-doc.md](../path/to/new-doc.md) for current information.
-   ```
-
-## FAQ
-
-### Q: Do I need to document small changes?
-
-**A**: For trivial changes (typo fixes, formatting), no. For anything that changes behavior or adds features, yes.
-
-### Q: What if requirements change during implementation?
-
-**A**: Update the requirements doc immediately. Document why requirements changed. Update design docs if needed.
-
-### Q: How detailed should design docs be?
-
-**A**: Detailed enough that someone else could implement the feature without asking questions. Include:
-- Data structures
-- API contracts
-- Error handling
-- Edge cases
-
-### Q: Can I start coding before docs are complete?
-
-**A**: No. This is a hard rule. Documentation first, always. It saves time in the long run.
-
-### Q: What if I discover a better approach during implementation?
-
-**A**: Stop, update the design doc, get approval if needed, then continue. Document why the new approach is better.
-
-### Q: How do I handle experimental features?
-
-**A**: Create a design doc in `docs/design/experiments/`. Mark it as experimental. If successful, move to main design docs.
-
-## Resources
-
-### Internal Resources
-
-- [Coding Standards](./standards/coding-standards.md)
-- [Project Conventions](./standards/project-conventions.md)
-- [API Reference](./api/api-reference.md)
-- [Technical Design](./design/technical-design.md)
-- [Figma Design System](./design/figma-design-system.md) - UI design implementation guide
-
-### External Resources
-
-- [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
-- [Axum Documentation](https://docs.rs/axum/)
-- [Leptos Documentation](https://leptos.dev/)
-- [SQLx Documentation](https://docs.rs/sqlx/)
-
-## Contact
-
-For questions about documentation:
-- Check this guide first
-- Review existing docs for examples
-- Ask in team chat
-- Open a discussion issue
-
----
-
-**Remember**: Good documentation is an investment. It saves time, prevents bugs, and makes collaboration easier.
+# 文档入口
+
+旧需求、设计、计划、状态快照及运行说明已按维护者确认删除，不另建归档，也不批量重建。Git 历史仅供追溯，不自动成为当前需求或执行规则。
+
+## 保留内容
+
+| 入口 | 职责 |
+| --- | --- |
+| [AGENTS.md](../AGENTS.md) | 项目执行规则、确认门槛与验证要求 |
+| [编码规范](standards/coding-standards.md) | Rust 编码、测试与安全约定 |
+| [错误处理规范](standards/error-handling-standards.md) | 错误类型、响应、日志与用户提示 |
+| [项目约定](standards/project-conventions.md) | 项目工程约定 |
+| [需求模板](standards/requirements-template.md) | 确需新建或补齐需求时使用 |
+| [技术方案模板](standards/technical-design-template.md) | 确需新建或补齐设计时使用 |
+| [监控配置](deployment/monitoring/) / [Nginx 配置](deployment/nginx/) | 实际部署配置，不是待清理的历史文档 |
+
+保留的规范没有在本次整理中做全面技术校准；遇到规范之间或规范与实现的冲突，先说明差异并确认，不按文件日期或代码现状自行裁决。
+
+## 修改前先确定归属
+
+1. 按功能、用户旅程、模块或 API 查找当前已有的需求和设计；使用完整文件路径定位，不只看编号。
+2. 修复、回归和优化默认更新所属功能原有的需求与设计，修订正文和验收标准，不只追加零散备注。
+3. 仅当新增独立功能边界，或没有合理归属时，才新建必要的需求与设计。只缺一侧时补齐缺失侧；多个候选归属时先请用户确认，不再创建平行文档。
+4. 清理后的首次功能改动若没有文档，先确认本次目标、范围和验收，再为该功能补最小文档对；不恢复整套历史资料。
+5. 纯治理或规范更新直接修改所属入口、规范或模板，不额外生成“治理功能”文档对。错字、格式等不改变行为的修改不新建需求设计。
+
+## 后续文档按需维护
+
+- 新增功能文档时才创建 `docs/requirements/` 和 `docs/design/`，沿用 `NNN-feature-name-requirements.md` 与 `NNN-feature-name-technical-plan.md` 命名；完整功能名称必须明确，检查编号与路径冲突。
+- 需求与设计互相链接，记明所属功能、批准依据及替代关系。模板不是已批准需求。
+- **文档已批准、功能已实现、验证已通过是不同状态**；实现和验证结论需注明适用提交、环境与证据，不由文档状态推断。
+- 涉及 API 时，实施前记录请求、响应、鉴权、错误和兼容性约定；在所属技术方案维护，需独立接口文档时再按需创建 `docs/api/` 并相互引用，不恢复旧 API 全集。
+- 只保留当前需要维护的文档；删除前确认范围、引用和是否夹带运行配置。过期内容不默认复制到 archive。
+- 单次任务步骤、现场日志和临时验证输出不是长期规范，不写入共享规则；正式文档只引用必要且已脱敏的验证结论。
+
+## 怎样判断当前事实
+
+- **预期行为**：维护者确认的当前需求和设计。缺失时先确认，不能用代码直接反推产品决策。
+- **实现现实**：源码、共享类型、迁移与实际配置；它们不证明服务已部署或测试通过。
+- **运行与验证**：以绑定提交和环境的实际检查结果为准，不能用旧记录代替重跑。
+- **执行规则**：以 [AGENTS.md](../AGENTS.md) 为入口，工具专用说明只引用它，不维护第二套规则。

@@ -315,14 +315,15 @@ async fn test_upload_endpoint() { }
 
 ## Documentation Conventions
 
+### Ownership and Updates
+
+Follow the [documentation routing rules](../README.md#修改前先确定归属) before creating documents. Update the owning requirement/design for fixes, regressions, and optimizations; create a new pair only when no reasonable owner exists, and fill only a missing side when its counterpart exists. Workflow and approval gates live in [AGENTS.md](../../AGENTS.md), not in a second checklist here.
+
+Historical feature documents have been removed with maintainer approval. Do not restore them in bulk or create an archive by default. Keep new documentation scoped to current work and separate approval, implementation, and verification status.
+
 ### API Documentation
 
-All API endpoints documented in `docs/api/`:
-
-```
-docs/api/
-└── api-reference.md  # API reference
-```
+Document intended request/response, authentication, errors, and compatibility in the owning technical design before implementation. Create a separate API reference only when needed and link it from that design; there is no current API reference to assume or restore. Shared types and handlers describe implementation reality, not automatic product approval.
 
 ### Code Documentation
 
